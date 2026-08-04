@@ -1,0 +1,72 @@
+name: Web build & deploy
+
+# 푸시할 때마다 웹 빌드를 GitHub Pages에 올린다.
+# 폰 브라우저에서 최신 빌드를 바로 열어볼 수 있게 하는 것이 목적이다
+# (ARCHITECTURE §12.1, ROADMAP M0).
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot + 익스포트 템플릿 설치
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "${BASE}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "${BASE}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          unzip -q templates.tpz
+          TEMPLATE_DIR="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "${TEMPLATE_DIR}"
+          mv templates/* "${TEMPLATE_DIR}/"
+
+      # build/ 안에 .gdignore를 두지 않으면 Godot이 이전 익스포트 산출물을
+      # 프로젝트 자산으로 스캔해 임포트가 오염된다.
+      - name: 익스포트 디렉터리 준비
+        run: |
+          mkdir -p build/web
+          touch build/.gdignore
+
+      - name: 프로젝트 임포트
+        run: godot --headless --import
+
+      - name: 테스트
+        run: godot --headless --script res://tests/run_tests.gd
+
+      - name: 웹 익스포트
+        run: godot --headless --export-release "Web" build/web/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -5,8 +5,31 @@
 **장르:** 중세 판타지 마을 경영 + 실시간 자동 전투
 **플랫폼:** **안드로이드 폰** (가로 고정, 모바일 전용)
 **그래픽:** 2D 픽셀아트 — 마을 파노라마 + 건물별 화면
-**엔진:** Godot 4 / GDScript
-**현재 상태:** 기획 단계 (코드 없음)
+**엔진:** Godot 4.7.1 / GDScript
+**현재 상태:** **M0 완료** — 뼈대 · 화면 스택 · 게임 시계 · 웹/APK 배포 파이프라인
+
+## 개발
+
+```bash
+# 임포트 (최초 1회, 그리고 새 에셋 추가 시)
+godot --headless --import
+
+# 테스트 (sim 계층은 엔진 없이 헤드리스로 돈다)
+godot --headless --script res://tests/run_tests.gd
+
+# 웹 익스포트 — build/ 를 Godot이 스캔하지 않도록 .gdignore를 먼저 만든다
+mkdir -p build/web && touch build/.gdignore
+godot --headless --export-release "Web" build/web/index.html
+
+# 로컬 확인
+cd build/web && python3 -m http.server 8000
+```
+
+**Android APK**는 SDK와 디버그 키스토어가 필요하다.
+`.github/workflows/android.yml`이 전 과정을 담고 있으니 그대로 따라하면 된다.
+
+푸시하면 웹 빌드가 GitHub Pages에 자동 배포된다 (`.github/workflows/web.yml`).
+**최초 1회만** 저장소 Settings → Pages → Source를 **GitHub Actions**로 설정해야 한다.
 
 ## 화면 구조
 

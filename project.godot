@@ -1,0 +1,41 @@
+; Engine configuration file.
+; Frostmarch — 서리 변경
+;
+; 모바일 전용 / 안드로이드 폰 / 가로 고정 (GDD D12)
+
+config_version=5
+
+[application]
+
+config/name="Frostmarch"
+config/description="북부 최전선의 장원에서 몬스터의 습격을 막아내고, 그 사체를 팔아 겨울을 나는 게임"
+run/main_scene="res://game/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+; 안드로이드 뒤로가기 버튼을 엔진이 가로채 앱을 종료하지 않도록 한다.
+; ScreenStack이 직접 처리한다 (ARCHITECTURE §6.1).
+config/quit_on_go_back=false
+
+[autoload]
+
+; 게임 전역 상태 — 시뮬레이션 소유 + 실시간→게임시간 변환
+Game="*res://game/game.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+; 0 = Landscape (GDD D12 — 가로 고정)
+window/handheld/orientation=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+; Compatibility 렌더러: 웹 익스포트 필수 조건이자 구형 안드로이드 대응
+; (ARCHITECTURE §12)
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+; 안드로이드 익스포트 필수 조건.
+; 켜지 않으면 "ETC2/ASTC texture compression is required"로 익스포트가 실패한다.
+textures/vram_compression/import_etc2_astc=true

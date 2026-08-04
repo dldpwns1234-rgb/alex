@@ -1,0 +1,89 @@
+name: Android APK
+
+# 실기 검증용 디버그 APK를 만든다.
+# 웹 빌드는 WebAssembly라 성능 한계가 있으므로, 터치 반응과 실제 성능은
+# APK로 확인한다 (ARCHITECTURE §12.1).
+#
+# 수동 실행 전용이다. 매 푸시마다 돌리기에는 SDK 준비 비용이 크고,
+# 상시 확인은 웹 빌드로 충분하다.
+
+on:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Android SDK 구성 요소
+        run: sdkmanager --install "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Godot + 익스포트 템플릿 설치
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "${BASE}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "${BASE}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          unzip -q templates.tpz
+          TEMPLATE_DIR="${HOME}/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "${TEMPLATE_DIR}"
+          mv templates/* "${TEMPLATE_DIR}/"
+
+      # 디버그 서명용 키스토어. 배포용이 아니라 실기 설치용이므로
+      # 표준 안드로이드 디버그 자격증명을 그대로 쓴다.
+      - name: 디버그 키스토어 생성
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android \
+            -keystore "${PWD}/debug.keystore" -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+
+      # Godot은 SDK 경로와 키스토어를 에디터 설정에서 읽는다.
+      # 파일명의 4.7은 메이저.마이너 버전이다.
+      - name: Godot 에디터 설정
+        run: |
+          mkdir -p "${HOME}/.config/godot"
+          cat > "${HOME}/.config/godot/editor_settings-4.7.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_HOME}"
+          export/android/debug_keystore = "${PWD}/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: 익스포트 디렉터리 준비
+        run: |
+          mkdir -p build/android
+          touch build/.gdignore
+
+      - name: 프로젝트 임포트
+        run: godot --headless --import
+
+      - name: 테스트
+        run: godot --headless --script res://tests/run_tests.gd
+
+      - name: APK 익스포트
+        run: godot --headless --export-debug "Android" build/android/frostmarch.apk
+
+      - name: 서명 검증
+        run: "${ANDROID_HOME}/build-tools/34.0.0/apksigner verify --verbose build/android/frostmarch.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frostmarch-apk
+          path: build/android/frostmarch.apk

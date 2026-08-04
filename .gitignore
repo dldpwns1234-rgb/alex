@@ -1,0 +1,14 @@
+# Godot 4 임포트 캐시 및 빌드 산출물
+.godot/
+/build/
+/android/
+
+# 익스포트 산출물
+*.apk
+*.aab
+*.pck
+*.zip
+
+# 에디터 로컬 설정
+*.translation
+.DS_Store
