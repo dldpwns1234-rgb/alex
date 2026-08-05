@@ -12,10 +12,15 @@ extends RefCounted
 var _amounts: Dictionary = {}
 
 
+## `_`로 시작하는 키는 데이터 파일의 주석이다. 자원으로 세지 않는다
+## — 세면 화면 자원 바에 "_comment 0"이 뜬다.
 static func from_dict(initial: Dictionary) -> SimResourcePool:
 	var pool := SimResourcePool.new()
 	for id in initial:
-		pool.add(String(id), int(initial[id]))
+		var resource_id := String(id)
+		if resource_id.begins_with("_"):
+			continue
+		pool.add(resource_id, int(initial[id]))
 	return pool
 
 

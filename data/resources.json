@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "자원 정의 (GDD §4.3).",
+    "",
+    "buildings.json과 같은 방식으로 두 계층이 각자 필요한 키만 읽는다:",
+    "  sim  (SimResourceCatalog) — food / capacity",
+    "  game (ResourceDisplay)    — name",
+    "",
+    "여기 적힌 순서가 화면에 표시되는 순서다 (1차 → 2차 → 화폐).",
+    "",
+    "food: 가구 하나가 하루에 먹는 '식량' 단위로 환산한 값. 0이면 못 먹는다.",
+    "  빵이 순무의 5배인 것이 가공 사슬을 짓는 이유다.",
+    "  밀은 날로 먹지 않는다(food 없음) — 밀을 심는다는 것은 곧",
+    "  방앗간과 화덕에 슬롯과 인력을 걸겠다는 결정이다.",
+    "",
+    "capacity: 저장 한도. 넘긴 만큼은 버려진다.",
+    "  창고를 지으면 늘어난다 (buildings.json의 storage 참조).",
+    "  이것이 '무한정 쌓아두기'를 막고 창고에 슬롯을 쓸 이유를 만든다."
+  ],
+
+  "wood":     { "name": "목재",   "capacity": 250 },
+  "stone":    { "name": "석재",   "capacity": 250 },
+  "wheat":    { "name": "밀",     "capacity": 150 },
+  "barley":   { "name": "보리",   "capacity": 150, "food": 2 },
+  "turnip":   { "name": "순무",   "capacity": 150, "food": 1 },
+  "firewood": { "name": "장작",   "capacity": 200 },
+  "flour":    { "name": "밀가루", "capacity": 120 },
+  "bread":    { "name": "빵",     "capacity": 120, "food": 5 }
+}

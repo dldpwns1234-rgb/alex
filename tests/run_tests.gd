@@ -27,6 +27,11 @@ func _initialize() -> void:
 	_run_catalog_tests()
 	_run_village_tests()
 	_run_build_command_tests()
+	_run_labor_tests()
+	_run_production_tests()
+	_run_consumption_tests()
+	_run_population_tests()
+	_run_economy_tests()
 	_run_data_integrity_tests()
 
 	print("")
@@ -297,6 +302,332 @@ func _run_build_command_tests() -> void:
 	_equal(world.execute(SimBuildCommand.new(1, "farm")), SimCommand.OK, "오두막 완공 후 농장 착공")
 
 
+# --- SimLabor -----------------------------------------------------------------
+
+func _run_labor_tests() -> void:
+	_test("가구는 한 곳에만 있을 수 있다 — 제로섬이 구조로 보장된다")
+	var labor := SimLabor.new()
+	for _i in 3:
+		labor.add_family()
+	_equal(labor.total(), 3, "전체 가구")
+	_equal(labor.idle_count(), 3, "처음엔 전부 유휴")
+
+	labor.set_assignment(0, 2, 3)
+	_equal(labor.assigned_to(0), 2, "0번에 2가구")
+	_equal(labor.idle_count(), 1, "유휴 1가구")
+
+	_test("다른 건물에서 자동으로 빼오지 않는다 — 무엇을 포기할지는 플레이어가 정한다")
+	_equal(labor.set_assignment(1, 3, 3), 1, "유휴가 1가구뿐이므로 1가구만 배정된다")
+	_equal(labor.assigned_to(0), 2, "0번 인력은 그대로다")
+	_equal(labor.idle_count(), 0, "유휴 없음")
+
+	_test("건물 정원을 넘겨 배정할 수 없다")
+	labor = SimLabor.new()
+	for _i in 5:
+		labor.add_family()
+	_equal(labor.set_assignment(0, 99, 2), 2, "정원 2에서 멈춘다")
+
+	_test("인력을 빼면 유휴로 돌아온다")
+	_equal(labor.set_assignment(0, 0, 2), 0, "0명으로")
+	_equal(labor.idle_count(), 5, "전부 유휴")
+
+	_test("건물이 사라지면 그곳 인력이 풀린다")
+	labor.set_assignment(3, 2, 2)
+	labor.release_all(3)
+	_equal(labor.assigned_to(3), 0, "배정 해제")
+	_equal(labor.idle_count(), 5, "유휴로 복귀")
+
+	_test("떠나는 가구는 유휴부터 나간다 — 생산 라인이 먼저 무너지면 회복할 수 없다")
+	labor = SimLabor.new()
+	for _i in 3:
+		labor.add_family()
+	labor.set_assignment(0, 2, 2)
+	_check(labor.remove_family(), "한 가구가 떠난다")
+	_equal(labor.assigned_to(0), 2, "일하던 가구는 남는다")
+	_equal(labor.idle_count(), 0, "유휴 가구가 나갔다")
+
+
+# --- 생산 ---------------------------------------------------------------------
+
+func _run_production_tests() -> void:
+	_test("인력이 붙어야 생산한다")
+	var village := _production_village(3)
+	_place(village, 0, "woodcutter")
+	village.produce()
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_NO_WORKERS, "인력 없음으로 멈춤")
+	_equal(village.resources.amount_of("wood"), 0, "아무것도 나오지 않았다")
+
+	_test("가구일을 채우면 산출한다 — 나무꾼 1가구, 1가구일당 목재 4")
+	village.labor.set_assignment(0, 1, 2)
+	village.produce()
+	_equal(village.resources.amount_of("wood"), 4, "하루에 목재 4")
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_NONE, "가동 중")
+
+	# 기대값을 데이터에서 읽는다. 밸런싱으로 수치가 바뀌어도 규칙 자체는 그대로여야 한다.
+	_test("인력이 두 배면 두 배 빨리 만든다")
+	village = _production_village(3)
+	_place(village, 0, "farm")
+	var turnip := village.catalog.get_type("farm").get_recipe("turnip")
+	var yield_per_cycle := int(turnip.outputs["turnip"])
+
+	village.labor.set_assignment(0, 1, 3)
+	for _i in turnip.worker_days - 1:
+		village.produce()
+	_equal(village.resources.amount_of("turnip"), 0, "1가구로는 %d일이 걸린다" % turnip.worker_days)
+	village.produce()
+	_equal(village.resources.amount_of("turnip"), yield_per_cycle, "마지막 날에 산출")
+
+	village = _production_village(3)
+	_place(village, 0, "farm")
+	village.labor.set_assignment(0, turnip.worker_days, 3)
+	village.produce()
+	_equal(village.resources.amount_of("turnip"), yield_per_cycle, "%d가구면 하루 만에 나온다"
+		% turnip.worker_days)
+
+	_test("재료가 없으면 멈추고, 쌓아둔 진행은 잃지 않는다")
+	village = _production_village(3)
+	_place(village, 0, "mill")
+	var grind := village.catalog.get_type("mill").get_recipe("grind")
+	village.labor.set_assignment(0, 2, 2)
+	village.produce()
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_NO_INPUT, "재료 없음")
+	_equal(village.buildings[0].production_progress, 2, "진행은 남아 있다")
+
+	village.resources.add("wheat", int(grind.inputs["wheat"]))
+	village.produce()
+	_equal(village.resources.amount_of("flour"), int(grind.outputs["flour"]),
+		"재료가 들어오자마자 산출")
+
+	_test("창고가 가득 차면 재료를 버리지 않고 멈춘다")
+	village = _production_village(3)
+	_place(village, 0, "mill")
+	village.resources.add("wheat", 30)
+	village.resources.add("flour", village.storage_capacity("flour"))
+	village.labor.set_assignment(0, 2, 2)
+	var wheat_before := village.resources.amount_of("wheat")
+	village.produce()
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_STORAGE_FULL, "창고 가득")
+	_equal(village.resources.amount_of("wheat"), wheat_before, "밀을 헛되이 쓰지 않았다")
+
+	_test("저장 한도를 넘겨 쌓이지 않는다")
+	village = _production_village(3)
+	_place(village, 0, "woodcutter")
+	village.labor.set_assignment(0, 2, 2)
+	for _i in 200:
+		village.produce()
+	_equal(village.resources.amount_of("wood"), village.storage_capacity("wood"), "한도에서 멈춘다")
+
+	_test("창고를 지으면 저장 한도가 늘어난다")
+	village = _production_village(3)
+	var base_capacity := village.storage_capacity("wood")
+	_place(village, 1, "storehouse")
+	_equal(village.storage_capacity("wood"), base_capacity + 200, "창고 하나당 +200")
+
+	_test("레시피를 바꾸면 진행 중이던 작업은 버려진다")
+	village = _production_village(3)
+	_place(village, 0, "farm")
+	village.labor.set_assignment(0, 1, 3)
+	village.produce()
+	_check(village.buildings[0].production_progress > 0, "진행이 쌓였다")
+	village.buildings[0].set_recipe("wheat")
+	_equal(village.buildings[0].production_progress, 0, "작물을 바꾸면 처음부터")
+
+
+# --- 소비 ---------------------------------------------------------------------
+
+func _run_consumption_tests() -> void:
+	_test("장작이 없으면 식량이 넉넉해도 견디지 못한다 — 나무꾼의 선택이 진짜가 되는 지점")
+	var cold := _production_village()
+	cold.labor.add_family()
+	cold.resources.add("turnip", 100)
+	_check(not cold.consume(), "먹었지만 얼었다")
+	_equal(cold.last_shortage, "firewood", "모자란 것은 장작")
+
+	cold.resources.add("firewood", 10)
+	_check(cold.consume(), "장작이 들어오자 견딘다")
+	_equal(cold.last_shortage, "", "부족 없음")
+
+	_test("무엇이 모자랐는지 구분해 알려준다")
+	var empty := _production_village()
+	empty.labor.add_family()
+	_check(not empty.consume(), "둘 다 없다")
+	_equal(empty.last_shortage, "both", "식량도 장작도")
+
+	_test("가구는 매일 먹고 땐다")
+	var village := _production_village()
+	village.labor.add_family()
+	village.labor.add_family()
+	village.resources.add("turnip", 20)
+	village.resources.add("firewood", 20)
+
+	_check(village.consume(), "먹였다")
+	_equal(village.resources.amount_of("turnip"), 16, "2가구 × 2끼니 = 순무 4")
+	_equal(village.resources.amount_of("firewood"), 18, "2가구 × 장작 1")
+
+	_test("식량이 모자라면 false를 반환한다")
+	village = _production_village()
+	village.labor.add_family()
+	_check(not village.consume(), "먹일 것이 없다")
+
+	_test("배급 정책이 먹는 순서를 바꾼다")
+	village = _production_village()
+	village.labor.add_family()
+	village.resources.add("bread", 10)
+	village.resources.add("turnip", 10)
+
+	village.ration_policy = SimVillage.RATION_RICH_FIRST
+	village.consume()
+	_equal(village.resources.amount_of("bread"), 9, "빵부터 먹는다")
+	_equal(village.resources.amount_of("turnip"), 10, "순무는 그대로")
+
+	village = _production_village()
+	village.labor.add_family()
+	village.resources.add("bread", 10)
+	village.resources.add("turnip", 10)
+	village.ration_policy = SimVillage.RATION_CHEAP_FIRST
+	village.consume()
+	_equal(village.resources.amount_of("bread"), 10, "빵을 아낀다")
+	_equal(village.resources.amount_of("turnip"), 8, "순무 2개로 2끼니")
+
+	_test("며칠 버틸 수 있는지 계산한다 — 화면에 띄우는 가장 중요한 숫자")
+	village = _production_village()
+	village.labor.add_family()
+	village.labor.add_family()
+	village.resources.add("bread", 4)
+	_equal(village.food_stock_units(), 20, "빵 4개 = 20끼니")
+	_equal(village.food_days_remaining(), 5, "2가구가 하루 4끼니 → 5일")
+
+
+# --- 인구 ---------------------------------------------------------------------
+
+func _run_population_tests() -> void:
+	_test("빈 집과 식량이 있으면 이주해 온다")
+	var village := _production_village()
+	village.labor.add_family()
+	_place(village, 0, "hut")
+	_place(village, 1, "hut")
+	village.resources.add("bread", 60)
+
+	var arrived := ""
+	for _i in village.rules.immigration_interval_days:
+		arrived = village.update_population(true)
+	_equal(arrived, "family_arrived", "간격을 채우면 한 가구가 온다")
+	_equal(village.labor.total(), 2, "가구 수 증가")
+
+	_test("빈 집이 없으면 오지 않는다")
+	village = _production_village()
+	village.labor.add_family()
+	_place(village, 0, "hut")
+	village.resources.add("bread", 60)
+	for _i in village.rules.immigration_interval_days * 3:
+		village.update_population(true)
+	_equal(village.labor.total(), 1, "주거 한도에서 멈춘다")
+
+	_test("식량이 모자라면 오지 않는다 — 먹여 살릴 수 없는 인구를 부르지 않는다")
+	village = _production_village()
+	village.labor.add_family()
+	_place(village, 0, "hut")
+	_place(village, 1, "hut")
+	village.resources.add("turnip", 2)
+	for _i in village.rules.immigration_interval_days * 3:
+		village.update_population(true)
+	_equal(village.labor.total(), 1, "식량 여유가 없으면 이주 없음")
+
+	_test("굶은 끼니가 쌓여야 떠난다 — 하루 굶었다고 바로는 아니다")
+	village = _production_village()
+	for _i in 2:
+		village.labor.add_family()
+
+	# 2가구가 완전히 굶고 언다: 하루에 끼니 4 + 장작 2 = 고난 6씩.
+	# 한계는 가구당 10 × 2가구 = 20.
+	var event := ""
+	for _i in 3:
+		village.consume()
+		event = village.update_population(false)
+	_equal(village.hardship, 18, "사흘이면 18")
+	_equal(event, "", "아직 한계에 닿지 않았다")
+
+	village.consume()
+	event = village.update_population(false)
+	_equal(event, "family_left", "한계를 넘으면 한 가구가 떠난다")
+	_equal(village.labor.total(), 1, "한 가구가 줄었다")
+
+	# 이 검증이 M2에서 실제로 잡아낸 구멍이다.
+	# '연속으로 며칠 굶었는가'로 세면, 하루 굶고 하루 먹기를 반복하는 마을은
+	# 매번 0으로 초기화되어 필요량의 60%만 먹으면서도 영원히 버틴다.
+	_test("만성 부족도 결국 사람을 떠나게 한다 — 하루 걸러 굶어도")
+	village = _production_village()
+	village.labor.add_family()
+
+	var left := false
+	for day in 40:
+		village.resources.add("firewood", 1)          # 장작은 늘 충분하게
+		if day % 2 == 1:
+			village.resources.add("turnip", 2)        # 이틀에 한 번만 배불리
+		village.consume()
+		if village.update_population(village.last_shortage.is_empty()) == "family_left":
+			left = true
+			break
+	_check(left, "절반만 먹여서는 버틸 수 없다")
+
+	_test("배불리 먹은 날은 고난을 갚지만, 쌓인 것이 없던 일이 되지는 않는다")
+	village = _production_village()
+	village.labor.add_family()
+	village.consume()
+	village.update_population(false)
+	var accumulated := village.hardship
+	_check(accumulated > 0, "굶어서 고난이 쌓였다")
+
+	village.resources.add("turnip", 10)
+	village.resources.add("firewood", 10)
+	village.consume()
+	village.update_population(true)
+	_equal(village.hardship, accumulated - village.rules.hardship_recovery_per_day,
+		"하루치만 갚는다 — 한 번에 0이 되지 않는다")
+
+
+# --- SimEconomy ---------------------------------------------------------------
+
+func _run_economy_tests() -> void:
+	var catalog := SimBuildingCatalog.load_default()
+	var resources := SimResourceCatalog.load_default()
+	var economy := SimEconomy.new(catalog, resources)
+
+	_test("먹을 수 있는 자원은 그 자체가 값어치다")
+	_equal(economy.unit_value("bread").food, 5.0, "빵 한 개 = 5끼니")
+	_equal(economy.unit_value("bread").worker_days, 0.0, "더 가공할 필요 없음")
+
+	_test("밀은 가공 사슬을 따라가 값어치가 매겨진다")
+	var wheat := economy.unit_value("wheat")
+	_check(wheat.food > 0.0, "밀도 결국 값어치가 있다")
+	_check(wheat.worker_days > 0.0, "다만 가공 인력이 든다")
+
+	_test("돌도 아닌 것은 값어치 0이다")
+	_equal(economy.unit_value("stone").food, 0.0, "석재는 먹을 수 없고 가공해도 식량이 아니다")
+
+	# 이 검증이 실패하면 표시 버그가 아니라 밸런스 버그다.
+	# 밀 사슬이 순무보다 못하면 방앗간과 화덕을 지을 이유가 사라진다 (GDD §4.4).
+	_test("밀 사슬이 순무보다 효율이 높다 — 아니면 아무도 방앗간을 짓지 않는다")
+	var farm := catalog.get_type("farm")
+	var turnip_rate := economy.food_per_worker_day(farm.get_recipe("turnip"))
+	var barley_rate := economy.food_per_worker_day(farm.get_recipe("barley"))
+	var wheat_rate := economy.food_per_worker_day(farm.get_recipe("wheat"))
+
+	_check(turnip_rate > 0.0, "순무 효율 %.2f" % turnip_rate)
+	_check(barley_rate > turnip_rate, "보리 %.2f > 순무 %.2f" % [barley_rate, turnip_rate])
+	_check(wheat_rate > barley_rate, "밀 %.2f > 보리 %.2f" % [wheat_rate, barley_rate])
+
+	_test("순환 레시피가 있어도 무한 재귀에 빠지지 않는다")
+	var looped := SimBuildingCatalog.from_json({
+		"a": {"recipes": [{"id": "x", "in": {"foo": 1}, "out": {"bar": 1}, "worker_days": 1}]},
+		"b": {"recipes": [{"id": "y", "in": {"bar": 1}, "out": {"foo": 1}, "worker_days": 1}]},
+	})
+	var loop_economy := SimEconomy.new(looped, SimResourceCatalog.from_json({
+		"foo": {"capacity": 10}, "bar": {"capacity": 10},
+	}))
+	_equal(loop_economy.unit_value("foo").food, 0.0, "순환은 값어치 0으로 끊는다")
+
+
 # --- 데이터 정합성 -------------------------------------------------------------
 
 ## sim과 game이 data/buildings.json을 따로 파싱한다 (ARCHITECTURE §2 규칙 2).
@@ -312,7 +643,7 @@ func _run_data_integrity_tests() -> void:
 	_test("건설 비용에 쓰인 자원이 전부 한글 이름을 갖는다")
 	for type_id in catalog.ids():
 		for resource_id in catalog.get_type(type_id).cost:
-			_check(ResourceDisplay.NAMES.has(resource_id),
+			_check(ResourceDisplay.has(String(resource_id)),
 				"%s의 비용 자원 '%s'" % [type_id, resource_id])
 
 	_test("모든 거절 사유에 안내 문구가 있다")
@@ -321,7 +652,7 @@ func _run_data_integrity_tests() -> void:
 		SimBuildCommand.ERR_SLOT_OCCUPIED, SimBuildCommand.ERR_UNKNOWN_TYPE,
 		SimBuildCommand.ERR_TYPE_LOCKED, SimBuildCommand.ERR_CANNOT_AFFORD,
 	]:
-		_check(BuildingDisplay.BUILD_ERRORS.has(code), "'%s' 문구" % code)
+		_check(BuildingDisplay.COMMAND_ERRORS.has(code), "'%s' 문구" % code)
 
 	_test("선행 건물로 지목된 id가 전부 실제로 존재한다")
 	for type_id in catalog.ids():
@@ -354,7 +685,27 @@ func _test_village() -> SimVillage:
 			{"unlock_year": 1}, {"unlock_year": 1},
 			{"unlock_year": 2}, {"unlock_year": 5},
 		],
-	}, SimBuildingCatalog.load_default())
+	}, SimBuildingCatalog.load_default(), SimResourceCatalog.load_default(), SimRules.load_default())
+
+
+## 자원도 가구도 없는 빈 마을. 생산·소비 시험은 여기서 시작해야
+## 시작 자원이 결과를 흐리지 않는다.
+func _production_village(families: int = 0) -> SimVillage:
+	return SimVillage.from_json({
+		"starting_resources": {},
+		"slots": [{"unlock_year": 1}, {"unlock_year": 1}, {"unlock_year": 1}],
+	}, SimBuildingCatalog.load_default(), SimResourceCatalog.load_default(),
+	SimRules.from_json({"population": {"starting_families": families}}))
+
+
+## 완공된 건물을 슬롯에 바로 꽂는다. 건설 일수를 기다리지 않고
+## 생산·소비만 시험하기 위한 도구다.
+func _place(village: SimVillage, slot_index: int, type_id: String) -> SimBuilding:
+	var building := SimBuilding.start_construction(village.catalog.get_type(type_id), slot_index)
+	building.state = SimBuilding.State.ACTIVE
+	building.days_remaining = 0
+	village.buildings[slot_index] = building
+	return building
 
 
 func _advance(calendar: SimCalendar, days: int) -> void:

@@ -16,6 +16,11 @@ signal season_changed(season: SimCalendar.Season)
 signal year_changed(year: int)
 signal building_completed(building: SimBuilding)
 signal slots_unlocked(total: int)
+## 먹이거나 데우지 못한 날. 계속되면 가구가 떠난다.
+## shortage는 "food" · "firewood" · "both" 중 하나다.
+signal shortage_occurred(shortage: String, hardship: int)
+## "family_arrived" 또는 "family_left" — 한글 문구는 game 계층의 몫이다.
+signal population_changed(event: String, total_families: int)
 ## 마을 상태가 바뀌었다. UI가 다시 그릴 신호다.
 signal village_changed()
 
@@ -42,14 +47,22 @@ func execute(command: SimCommand) -> String:
 ##
 ## 호출자는 실시간 경과를 누적해 하루치가 찼을 때 이 함수를 부른다.
 ## 시뮬레이션 자체는 실시간을 알지 못한다.
+## 하루의 순서. 이 순서 자체가 게임 규칙이다:
+##
+##   건설 → 생산 → 소비 → 인구 → 슬롯 해금
+##
+## 생산이 소비보다 먼저인 이유는 그날 거둔 것을 그날 먹을 수 있어야
+## "지금 인력을 농장으로 돌리면 살 수 있나"라는 판단이 성립하기 때문이다.
 func tick() -> void:
 	var previous_season := calendar.season()
 	var previous_year := calendar.year()
 
 	calendar.advance_day()
 
-	# 앞으로 여기에 생산 · 소비가 순서대로 붙는다.
 	var completed := village.advance_construction()
+	village.produce()
+	var provided_for := village.consume()
+	var population_event := village.update_population(provided_for)
 	var newly_unlocked := village.refresh_slot_unlocks(calendar.year())
 
 	day_advanced.emit(calendar.elapsed_days)
@@ -58,8 +71,13 @@ func tick() -> void:
 		building_completed.emit(building)
 	if newly_unlocked > 0:
 		slots_unlocked.emit(village.unlocked_slot_count)
-	if not completed.is_empty() or newly_unlocked > 0:
-		village_changed.emit()
+	if not provided_for:
+		shortage_occurred.emit(village.last_shortage, village.hardship)
+	if population_event != "":
+		population_changed.emit(population_event, village.labor.total())
+
+	# 자원과 생산 상태는 매일 바뀐다. UI는 항상 다시 그린다.
+	village_changed.emit()
 
 	if calendar.season() != previous_season:
 		season_changed.emit(calendar.season())

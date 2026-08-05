@@ -3,68 +3,134 @@
     "건물 정의 (ARCHITECTURE §5 — 코드에 숫자를 박지 않는다).",
     "",
     "이 파일은 두 계층이 각자 필요한 키만 읽는다:",
-    "  sim  (SimBuildingCatalog) — cost / build_days / workers / requires",
-    "  game (BuildingDisplay)    — name / description",
+    "  sim  (SimBuildingCatalog) — cost / build_days / workers / requires / recipes / housing / storage",
+    "  game (BuildingDisplay)    — name / description / recipe의 name",
     "",
     "sim이 한글 이름을 들고 다니지 않는 이유는 ARCHITECTURE §2 규칙 2다.",
     "헤드리스 밸런싱(§8)에서 이름은 한 번도 필요하지 않다.",
     "두 계층의 id가 어긋나면 테스트가 잡는다 (tests/run_tests.gd).",
     "",
     "requires: 여기 적힌 건물이 '완공'되어야 메뉴에서 해금된다 (GDD §4.5 해금 사슬).",
-    "workers: M2의 노동력 배분에서 쓴다. M1에서는 표시만 한다."
+    "workers: 배정할 수 있는 가구 수의 상한. 인력은 마을 전체에서 제로섬이다 (GDD §4.6).",
+    "housing: 이 건물이 수용하는 가구 수. 오두막이 곧 일자리 수의 상한이다 (GDD §4.1).",
+    "storage: 모든 자원의 저장 한도에 더해지는 값.",
+    "",
+    "recipes: 하나면 그냥 그것을 만든다. 둘 이상이면 플레이어가 고른다.",
+    "  worker_days — 한 번 만드는 데 드는 '가구 × 일'. 2가구를 붙이면 절반의 날에 끝난다.",
+    "  in이 비어 있으면 채취다. 재료가 모자라면 그 건물은 멈추고 홈 화면에 경고가 뜬다."
   ],
 
   "hut": {
     "name": "오두막",
-    "description": "가구 하나가 살 곳. 모든 것의 시작이다",
+    "description": "가구 하나가 살 곳. 인구가 곧 노동력이다",
     "cost": { "wood": 15 },
     "build_days": 3,
     "workers": 0,
+    "housing": 1,
     "requires": []
   },
 
   "woodcutter": {
     "name": "나무꾼 오두막",
-    "description": "목재를 벤다",
+    "description": "나무를 베거나, 장작을 팬다. 둘 다는 못 한다",
     "cost": { "wood": 10 },
     "build_days": 3,
-    "workers": 1,
-    "requires": ["hut"]
+    "workers": 2,
+    "requires": ["hut"],
+    "recipes": [
+      {
+        "id": "timber",
+        "name": "목재 채취",
+        "description": "건물을 지을 자재",
+        "out": { "wood": 4 },
+        "worker_days": 1
+      },
+      {
+        "id": "split_firewood",
+        "name": "장작 패기",
+        "description": "겨울을 나는 연료",
+        "in": { "wood": 2 },
+        "out": { "firewood": 5 },
+        "worker_days": 1
+      }
+    ]
   },
 
   "farm": {
     "name": "농장",
-    "description": "곡물을 기른다. 겨울을 넘기는 힘",
+    "description": "무엇을 심을지가 곧 몇 달 뒤의 식탁이다",
     "cost": { "wood": 20 },
     "build_days": 5,
-    "workers": 1,
-    "requires": ["hut"]
+    "workers": 3,
+    "requires": ["hut"],
+    "recipes": [
+      {
+        "id": "turnip",
+        "name": "순무",
+        "description": "빨리 자란다. 그뿐이다",
+        "out": { "turnip": 9 },
+        "worker_days": 2
+      },
+      {
+        "id": "barley",
+        "name": "보리",
+        "description": "무난하다. 바로 먹을 수 있다",
+        "out": { "barley": 10 },
+        "worker_days": 4
+      },
+      {
+        "id": "wheat",
+        "name": "밀",
+        "description": "날로는 못 먹는다. 방앗간과 화덕이 있어야 값을 한다",
+        "out": { "wheat": 6 },
+        "worker_days": 3
+      }
+    ]
   },
 
   "storehouse": {
     "name": "창고",
-    "description": "자원을 쌓아둔다. 배급 정책을 정하는 곳",
+    "description": "쌓아둘 자리. 넘치는 것은 버려진다",
     "cost": { "wood": 25, "stone": 10 },
     "build_days": 5,
     "workers": 0,
+    "storage": 200,
     "requires": ["hut"]
   },
 
   "mill": {
     "name": "방앗간",
-    "description": "곡물을 밀가루로 빻는다",
+    "description": "밀을 밀가루로 빻는다",
     "cost": { "wood": 30, "stone": 15 },
     "build_days": 7,
-    "workers": 1,
-    "requires": ["farm"]
+    "workers": 2,
+    "requires": ["farm"],
+    "recipes": [
+      {
+        "id": "grind",
+        "name": "제분",
+        "in": { "wheat": 3 },
+        "out": { "flour": 4 },
+        "worker_days": 1
+      }
+    ]
   },
 
   "bakery": {
     "name": "화덕",
-    "description": "밀가루로 빵을 굽는다",
+    "description": "빵은 순무 다섯 개 몫을 한다",
     "cost": { "wood": 20, "stone": 20 },
     "build_days": 6,
-    "workers": 1,
-    "requires": ["mill"]
+    "workers": 2,
+    "requires": ["mill"],
+    "recipes": [
+      {
+        "id": "bake",
+        "name": "빵 굽기",
+        "in": { "flour": 2 },
+        "out": { "bread": 3 },
+        "worker_days": 1
+      }
+    ]
   }
 }

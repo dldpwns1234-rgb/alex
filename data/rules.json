@@ -1,0 +1,48 @@
+{
+  "_comment": [
+    "시뮬레이션 상수 (ARCHITECTURE §5 — 코드에 숫자를 박지 않는다).",
+    "",
+    "밸런싱은 전부 이 파일에서 한다. 헤드리스 하네스(§8)가 값을 바꿔가며",
+    "돌려볼 대상도 여기다.",
+    "",
+    "TODO(M3): 겨울 배율 — 식량 소비 증가, 장작 소비 급증, 농장 정지."
+  ],
+
+  "consumption": {
+    "_comment": "가구 하나가 하루에 쓰는 양. 겨울 배율은 M3에서 붙는다.",
+    "food_per_family": 2,
+    "firewood_per_family": 1,
+    "firewood_resource": "firewood"
+  },
+
+  "population": {
+    "_comment": [
+      "이주는 남부에서 온다 (GDD §4.1). 빈 집이 있고 식량에 여유가 있어야 온다.",
+      "食糧 여유의 기준을 '며칠치'로 잡는 이유: 절대량으로 잡으면 인구가 늘수록",
+      "기준이 헐거워져서, 먹여 살릴 수 없는 인구까지 불러들인다.",
+      "",
+      "굶은 끼니는 '고난'으로 쌓인다. 하루 굶었다고 바로 떠나지는 않지만, 쌓이면 떠난다.",
+      "",
+      "'연속으로 며칠 굶었는가'로 세지 않는 이유:",
+      "  하루 굶고 하루 먹기를 반복하는 마을은 연속 일수가 매번 0으로 초기화되어",
+      "  필요량의 60%만 먹으면서도 영원히 버틴다. 만성 부족이 아무 결과도 낳지 않는다.",
+      "  그래서 '못 먹은 끼니 수'를 누적하고, 배불리 먹은 날에만 조금씩 갚게 한다.",
+      "",
+      "장작도 같은 저울에 올린다. 그래야 나무꾼의 목재/장작 선택이 진짜 선택이 된다.",
+      "",
+      "hardship_per_family_before_leaving: 가구당 이만큼 쌓이면 한 가구가 떠난다.",
+      "  완전히 굶으면 2가구 기준 하루 4끼니가 밀리므로 5일이면 한계에 닿는다.",
+      "hardship_recovery_per_day: 부족함 없이 지낸 하루에 갚는 양. 쌓이는 속도보다 느리다."
+    ],
+    "starting_families": 2,
+    "immigration_interval_days": 8,
+    "immigration_food_days_required": 8,
+    "hardship_per_family_before_leaving": 10,
+    "hardship_recovery_per_day": 1
+  },
+
+  "storage": {
+    "_comment": "창고가 없어도 최소한은 쌓아둔다. resources.json의 capacity가 기본값이다.",
+    "base_multiplier": 1.0
+  }
+}

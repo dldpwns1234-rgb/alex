@@ -22,6 +22,8 @@ const COLOR_LOCKED := Color(0.10, 0.11, 0.13, 0.55)
 const COLOR_EMPTY := Color(0.16, 0.18, 0.20, 0.85)
 const COLOR_BUILDING := Color(0.42, 0.34, 0.18, 0.95)
 const COLOR_ACTIVE := Color(0.30, 0.36, 0.28, 1.0)
+## 멈춘 건물. 파노라마를 훑기만 해도 눈에 띄어야 한다.
+const COLOR_HALTED := Color(0.45, 0.26, 0.20, 1.0)
 const COLOR_GROUND := Color(0, 0, 0, 0.22)
 
 var _canvas: Control
@@ -100,13 +102,28 @@ func _refresh_slot(button: Button, village: SimVillage, slot_index: int) -> void
 		return
 
 	var building_name := BuildingDisplay.name_of(building.type_id)
-	if building.is_complete():
-		_style_slot(button, COLOR_ACTIVE)
-		button.text = building_name
-	else:
+
+	if not building.is_complete():
 		_style_slot(button, COLOR_BUILDING)
 		# 남은 일수를 그대로 보여준다. 진행 바보다 "며칠 남았나"가 판단에 쓰인다.
 		button.text = "%s\n건설 중 · %d일 남음" % [building_name, building.days_remaining]
+		return
+
+	# 멈춰 있는 건물은 색까지 바꾼다. 파노라마를 훑기만 해도
+	# 문제가 있는 건물이 눈에 띄어야 한다 (ARCHITECTURE §6.3).
+	if building.is_halted():
+		_style_slot(button, COLOR_HALTED)
+		button.text = "%s\n⚠ %s" % [building_name, BuildingDisplay.halt_badge(building.halt_reason)]
+		return
+
+	_style_slot(button, COLOR_ACTIVE)
+
+	var capacity := village.worker_capacity(slot_index)
+	if capacity <= 0:
+		button.text = building_name
+	else:
+		button.text = "%s\n%d / %d" % [
+			building_name, village.labor.assigned_to(slot_index), capacity]
 
 
 func _style_slot(button: Button, color: Color) -> void:
