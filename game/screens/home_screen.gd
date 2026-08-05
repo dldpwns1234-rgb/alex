@@ -91,18 +91,18 @@ func _build_top_bar() -> Control:
 	bar.add_theme_constant_override("separation", 2)
 
 	_date_label = Label.new()
-	_date_label.add_theme_font_size_override("font_size", 40)
+	_date_label.add_theme_font_size_override("font_size", 34)
 	bar.add_child(_date_label)
 
 	_vitals_label = Label.new()
-	_vitals_label.add_theme_font_size_override("font_size", 25)
+	_vitals_label.add_theme_font_size_override("font_size", 22)
 	_vitals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bar.add_child(_vitals_label)
 
 	# 자원이 늘어나면 한 줄을 넘긴다. 잘라내지 않고 접는다
 	# — 화면에서 사라진 자원은 없는 자원처럼 보인다.
 	_resource_label = Label.new()
-	_resource_label.add_theme_font_size_override("font_size", 20)
+	_resource_label.add_theme_font_size_override("font_size", 18)
 	_resource_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_resource_label.modulate = Color(1, 1, 1, 0.62)
 	bar.add_child(_resource_label)
@@ -129,7 +129,7 @@ func _build_bottom_bar() -> Control:
 	# 건설 실패 사유와 인구 변동이 뜨는 자리. 평소에는 비어 있다.
 	# 파노라마 바로 아래, 속도 버튼 바로 위 — 시선과 손이 모두 지나는 곳이다.
 	_toast_label = Label.new()
-	_toast_label.add_theme_font_size_override("font_size", 24)
+	_toast_label.add_theme_font_size_override("font_size", 22)
 	_toast_label.custom_minimum_size = Vector2(0, 30)
 	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bar.add_child(_toast_label)

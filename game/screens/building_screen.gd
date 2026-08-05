@@ -251,8 +251,14 @@ func _build_footer() -> Control:
 
 
 ## 서브클래스도 쓰는 패널 상자.
+##
+## 패널이 입력을 받지 않는 이유는 드래그 스크롤이다.
+## 패널이 터치를 소비하면 그 위에서 손가락을 끌었을 때 화면이 스크롤되지 않는다.
+## 패널 안의 버튼은 그대로 눌린다 — mouse_filter는 그 컨트롤에만 적용되고
+## 자식에게 상속되지 않는다.
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0.05)
