@@ -3,8 +3,13 @@ extends Control
 
 ## 홈 화면 — 마을 전경 (GDD §4.6).
 ##
-## M0에서는 시계가 돌아가는 것만 보여준다.
-## M1에서 마을 파노라마 · 건물 슬롯 · 자원 바가 여기에 붙는다.
+## 구성:
+##   상단 — 자원 바 · 날짜/계절
+##   중앙 — 가로 스크롤 파노라마 (건물 슬롯)
+##   하단 — 안내 문구 · 게임 속도
+##
+## 이 화면은 sim 상태를 **읽기만** 한다. 건설은 커맨드로 나간다
+## (ARCHITECTURE §2 규칙 4, §6.1 규칙 2).
 
 ## 터치 타겟 최소 크기.
 ##
@@ -13,9 +18,16 @@ extends Control
 ## (ARCHITECTURE §12.2).
 const MIN_TOUCH_PX := 96
 
+## 건설 실패 안내가 화면에 머무는 시간(초).
+const TOAST_SECONDS := 2.5
+
 var _background: ColorRect
+var _resource_label: Label
 var _date_label: Label
+var _toast_label: Label
+var _panorama: VillagePanorama
 var _speed_buttons: Array[Button] = []
+var _toast_timer: SceneTreeTimer
 
 
 func _ready() -> void:
@@ -24,10 +36,12 @@ func _ready() -> void:
 
 	Game.world.day_advanced.connect(_on_day_advanced)
 	Game.world.season_changed.connect(_on_season_changed)
+	Game.world.village_changed.connect(_refresh_village)
 	Game.speed_changed.connect(_on_speed_changed)
 
 	_refresh_date()
 	_refresh_season()
+	_refresh_village()
 	_on_speed_changed(Game.speed_index)
 
 
@@ -42,81 +56,54 @@ func _build_ui() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 32)
+		margin.add_theme_constant_override("margin_" + side, 28)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 20)
+	column.add_theme_constant_override("separation", 14)
 	margin.add_child(column)
 
 	column.add_child(_build_top_bar())
-	column.add_child(_build_village_view())
-	column.add_child(_build_speed_bar())
+	column.add_child(_build_panorama())
+	column.add_child(_build_bottom_bar())
 
 
 func _build_top_bar() -> Control:
 	var bar := HBoxContainer.new()
 
-	var resources := Label.new()
-	resources.text = "자원 — M1에서 구현"
-	resources.modulate = Color(1, 1, 1, 0.5)
-	bar.add_child(resources)
+	_resource_label = Label.new()
+	_resource_label.add_theme_font_size_override("font_size", 30)
+	bar.add_child(_resource_label)
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(spacer)
 
 	_date_label = Label.new()
-	_date_label.add_theme_font_size_override("font_size", 40)
+	_date_label.add_theme_font_size_override("font_size", 38)
 	bar.add_child(_date_label)
 
 	return bar
 
 
-func _build_village_view() -> Control:
-	var panel := PanelContainer.new()
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.25)
-	style.set_corner_radius_all(12)
-	panel.add_theme_stylebox_override("panel", style)
-
-	var center := CenterContainer.new()
-	panel.add_child(center)
-
-	var column := VBoxContainer.new()
-	column.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_theme_constant_override("separation", 16)
-	center.add_child(column)
-
-	var title := Label.new()
-	title.text = "마을 전경"
-	title.add_theme_font_size_override("font_size", 48)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(title)
-
-	var note := Label.new()
-	note.text = "건물 슬롯과 파노라마는 M1에서 구현됩니다"
-	note.modulate = Color(1, 1, 1, 0.5)
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(note)
-
-	# 화면 스택과 안드로이드 뒤로가기를 실제로 검증하기 위한 임시 버튼.
-	# M1에서 실제 건물 탭으로 대체된다.
-	var open_building := Button.new()
-	open_building.text = "건물 화면 열기 (스택 테스트)"
-	open_building.custom_minimum_size = Vector2(0, MIN_TOUCH_PX)
-	open_building.pressed.connect(_on_open_building_pressed)
-	column.add_child(open_building)
-
-	return panel
+func _build_panorama() -> Control:
+	_panorama = VillagePanorama.new()
+	_panorama.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_panorama.build(SimJson.read_dict(SimVillage.LAYOUT_PATH), Game.world.village.slot_count())
+	_panorama.slot_pressed.connect(_on_slot_pressed)
+	return _panorama
 
 
-func _build_speed_bar() -> Control:
+func _build_bottom_bar() -> Control:
 	var bar := HBoxContainer.new()
-	bar.alignment = BoxContainer.ALIGNMENT_CENTER
 	bar.add_theme_constant_override("separation", 16)
+
+	# 건설 실패 사유가 뜨는 자리. 평소에는 비어 있다.
+	_toast_label = Label.new()
+	_toast_label.add_theme_font_size_override("font_size", 26)
+	_toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_toast_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.add_child(_toast_label)
 
 	var group := ButtonGroup.new()
 	for index in Game.SPEEDS.size():
@@ -124,7 +111,7 @@ func _build_speed_bar() -> Control:
 		button.text = Game.SPEED_LABELS[index]
 		button.toggle_mode = true
 		button.button_group = group
-		button.custom_minimum_size = Vector2(MIN_TOUCH_PX * 1.5, MIN_TOUCH_PX)
+		button.custom_minimum_size = Vector2(MIN_TOUCH_PX * 1.2, MIN_TOUCH_PX)
 		button.pressed.connect(Game.set_speed.bind(index))
 		bar.add_child(button)
 		_speed_buttons.append(button)
@@ -132,10 +119,58 @@ func _build_speed_bar() -> Control:
 	return bar
 
 
+# --- 슬롯 조작 ---------------------------------------------------------------
+
+func _on_slot_pressed(slot_index: int) -> void:
+	var stack := get_parent() as ScreenStack
+	if stack == null:
+		return
+
+	var building := Game.world.village.building_at(slot_index)
+	if building == null:
+		var menu := BuildMenuScreen.new(slot_index, Game.world.village)
+		menu.building_chosen.connect(_on_building_chosen)
+		stack.push_screen(menu)
+		return
+
+	# 건설 중인 건물도 들어갈 수 있다. 얼마나 남았는지 보는 것도 정보다.
+	stack.push_screen(BuildingScreen.new(slot_index, building.type_id))
+
+
+func _on_building_chosen(slot_index: int, type_id: String) -> void:
+	# 상태 변경은 반드시 커맨드를 거친다 (ARCHITECTURE §2 규칙 4).
+	var error := Game.world.execute(SimBuildCommand.new(slot_index, type_id))
+
+	var stack := get_parent() as ScreenStack
+	if stack != null:
+		stack.pop_screen()
+
+	if error != SimCommand.OK:
+		_show_toast(BuildingDisplay.build_error_message(error))
+
+
+## 잠깐 떴다 사라지는 안내. 실패했는데 아무 반응이 없으면
+## 플레이어는 탭이 씹혔다고 생각한다.
+func _show_toast(message: String) -> void:
+	_toast_label.text = message
+	_toast_label.modulate = Color(1, 0.7, 0.7)
+
+	var timer := get_tree().create_timer(TOAST_SECONDS)
+	_toast_timer = timer
+	await timer.timeout
+
+	# 그 사이 새 안내가 떴다면 이 타이머의 결과는 버린다.
+	if _toast_timer == timer and is_instance_valid(_toast_label):
+		_toast_label.text = ""
+
+
 # --- 상태 반영 ---------------------------------------------------------------
 
 func _on_day_advanced(_elapsed_days: int) -> void:
 	_refresh_date()
+	# 건설 중인 슬롯의 "N일 남음"이 매일 줄어야 한다.
+	# village_changed는 완공·해금 때만 오므로 그것만으로는 부족하다.
+	_panorama.refresh(Game.world.village)
 
 
 func _on_season_changed(_season: SimCalendar.Season) -> void:
@@ -155,8 +190,7 @@ func _refresh_season() -> void:
 	_background.color = SeasonDisplay.color_of(Game.world.calendar.season())
 
 
-func _on_open_building_pressed() -> void:
-	var stack := get_parent() as ScreenStack
-	if stack == null:
-		return
-	stack.push_screen(StubBuildingScreen.new())
+func _refresh_village() -> void:
+	var village := Game.world.village
+	_panorama.refresh(village)
+	_resource_label.text = ResourceDisplay.format_stock(village.resources)

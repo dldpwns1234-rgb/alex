@@ -1,0 +1,70 @@
+{
+  "_comment": [
+    "건물 정의 (ARCHITECTURE §5 — 코드에 숫자를 박지 않는다).",
+    "",
+    "이 파일은 두 계층이 각자 필요한 키만 읽는다:",
+    "  sim  (SimBuildingCatalog) — cost / build_days / workers / requires",
+    "  game (BuildingDisplay)    — name / description",
+    "",
+    "sim이 한글 이름을 들고 다니지 않는 이유는 ARCHITECTURE §2 규칙 2다.",
+    "헤드리스 밸런싱(§8)에서 이름은 한 번도 필요하지 않다.",
+    "두 계층의 id가 어긋나면 테스트가 잡는다 (tests/run_tests.gd).",
+    "",
+    "requires: 여기 적힌 건물이 '완공'되어야 메뉴에서 해금된다 (GDD §4.5 해금 사슬).",
+    "workers: M2의 노동력 배분에서 쓴다. M1에서는 표시만 한다."
+  ],
+
+  "hut": {
+    "name": "오두막",
+    "description": "가구 하나가 살 곳. 모든 것의 시작이다",
+    "cost": { "wood": 15 },
+    "build_days": 3,
+    "workers": 0,
+    "requires": []
+  },
+
+  "woodcutter": {
+    "name": "나무꾼 오두막",
+    "description": "목재를 벤다",
+    "cost": { "wood": 10 },
+    "build_days": 3,
+    "workers": 1,
+    "requires": ["hut"]
+  },
+
+  "farm": {
+    "name": "농장",
+    "description": "곡물을 기른다. 겨울을 넘기는 힘",
+    "cost": { "wood": 20 },
+    "build_days": 5,
+    "workers": 1,
+    "requires": ["hut"]
+  },
+
+  "storehouse": {
+    "name": "창고",
+    "description": "자원을 쌓아둔다. 배급 정책을 정하는 곳",
+    "cost": { "wood": 25, "stone": 10 },
+    "build_days": 5,
+    "workers": 0,
+    "requires": ["hut"]
+  },
+
+  "mill": {
+    "name": "방앗간",
+    "description": "곡물을 밀가루로 빻는다",
+    "cost": { "wood": 30, "stone": 15 },
+    "build_days": 7,
+    "workers": 1,
+    "requires": ["farm"]
+  },
+
+  "bakery": {
+    "name": "화덕",
+    "description": "밀가루로 빵을 굽는다",
+    "cost": { "wood": 20, "stone": 20 },
+    "build_days": 6,
+    "workers": 1,
+    "requires": ["mill"]
+  }
+}

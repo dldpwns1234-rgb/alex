@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "마을 슬롯 배치 (ARCHITECTURE §6.3).",
+    "",
+    "타일맵이 아니라 고정 좌표 슬롯이다 (GDD D13, §4.5).",
+    "공간 퍼즐 대신 '슬롯 경제' — 무엇을 짓고 무엇을 포기할 것인가.",
+    "",
+    "buildings.json과 같은 방식으로 두 계층이 각자 필요한 키만 읽는다:",
+    "  sim  (SimVillage)      — unlock_year / starting_resources",
+    "  game (VillagePanorama) — x / y",
+    "",
+    "unlock_year만으로 해금을 판정하는 것은 M1의 한계다.",
+    "GDD §4.5는 인구·명성도 조건으로 쓴다고 정했지만 둘 다 아직 없다.",
+    "TODO(M2/M4): unlock_population, unlock_renown 조건 추가.",
+    "",
+    "panorama_size: 파노라마 전체 크기. 뷰포트(1280x720)보다 넓어서 가로 스크롤된다."
+  ],
+
+  "panorama_size": { "width": 2400, "height": 380 },
+
+  "starting_resources": { "wood": 140, "stone": 60 },
+
+  "slots": [
+    { "x": 120,  "y": 200, "unlock_year": 1 },
+    { "x": 400,  "y": 150, "unlock_year": 1 },
+    { "x": 680,  "y": 230, "unlock_year": 1 },
+    { "x": 960,  "y": 160, "unlock_year": 1 },
+    { "x": 1300, "y": 220, "unlock_year": 2 },
+    { "x": 1600, "y": 150, "unlock_year": 2 },
+    { "x": 1900, "y": 230, "unlock_year": 3 },
+    { "x": 2180, "y": 170, "unlock_year": 3 }
+  ]
+}

@@ -19,7 +19,7 @@ const SPEED_LABELS: Array[String] = ["II", "1x", "2x", "4x"]
 ## 1년 = 120일 = 4분. 밸런싱 과정에서 조정된다.
 const REAL_SECONDS_PER_DAY := 2.0
 
-var world := SimWorld.new()
+var world := SimWorld.create_default()
 var speed_index: int = 1
 
 var _day_accumulator := 0.0
