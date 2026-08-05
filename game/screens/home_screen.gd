@@ -3,17 +3,21 @@ extends Control
 
 ## 홈 화면 — 마을 전경 (GDD §4.6).
 ##
-## 구성:
-##   상단 — 자원 바 · 날짜/계절
-##   중앙 — 가로 스크롤 파노라마 (건물 슬롯)
+## 세로 화면 구성:
+##   상단 — 날짜 · 생명 신호 · 자원
+##   중앙 — 세로 스크롤 파노라마 (건물 슬롯)
 ##   하단 — 안내 문구 · 게임 속도
+##
+## 속도 버튼을 맨 아래에 두는 이유는 한 손 조작이다 (ARCHITECTURE §12.2).
+## 세로로 든 폰에서 엄지가 편하게 닿는 곳은 화면 아래쪽뿐이다.
+## 반대로 정보(날짜·식량)는 위에 둔다 — 읽기만 하고 누르지 않기 때문이다.
 ##
 ## 이 화면은 sim 상태를 **읽기만** 한다. 건설은 커맨드로 나간다
 ## (ARCHITECTURE §2 규칙 4, §6.1 규칙 2).
 
 ## 터치 타겟 최소 크기.
 ##
-## 뷰포트 세로 720px가 폰 세로 약 360dp에 대응하므로 1dp ≈ 2px이다.
+## 뷰포트 가로 720px가 폰 가로 약 360dp에 대응하므로 1dp ≈ 2px이다.
 ## 안드로이드 접근성 가이드라인의 48dp는 여기서 96px이 된다
 ## (ARCHITECTURE §12.2).
 const MIN_TOUCH_PX := 96
@@ -57,12 +61,17 @@ func _build_ui() -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 28)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	# 하단 여백을 넉넉히 두는 이유: 요즘 안드로이드 폰의 제스처 바가
+	# 화면 맨 아래를 차지한다. 버튼을 끝까지 붙이면 눌러야 할 때 홈으로 나가버린다.
+	# TODO: 실기에서 DisplayServer.get_display_safe_area()로 정확히 맞춘다.
+	margin.add_theme_constant_override("margin_bottom", 56)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
+	column.add_theme_constant_override("separation", 12)
 	margin.add_child(column)
 
 	column.add_child(_build_top_bar())
@@ -70,32 +79,33 @@ func _build_ui() -> void:
 	column.add_child(_build_bottom_bar())
 
 
-## 상단은 두 줄이다.
+## 상단은 세 줄이다. 세로 화면에서는 가로로 늘어놓을 자리가 없다.
 ##
-## 윗줄은 **생명 신호** — 가구 · 유휴 인력 · 식량 며칠치.
-## 자원 목록보다 이쪽이 먼저다. 목재가 몇인지보다 "며칠 뒤에 굶는가"가
-## 판단을 바꾸는 숫자이기 때문이다.
+##   날짜        — 가장 크게. 계절이 곧 압박이다
+##   생명 신호   — 가구 · 유휴 인력 · 식량/장작 며칠치
+##   자원        — 가장 작게
+##
+## 이 순서인 이유: 목재가 몇인지보다 **"며칠 뒤에 굶는가"** 가 판단을 바꾼다.
 func _build_top_bar() -> Control:
-	var bar := HBoxContainer.new()
-
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 2)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.add_child(left)
-
-	_vitals_label = Label.new()
-	_vitals_label.add_theme_font_size_override("font_size", 28)
-	left.add_child(_vitals_label)
-
-	_resource_label = Label.new()
-	_resource_label.add_theme_font_size_override("font_size", 20)
-	_resource_label.modulate = Color(1, 1, 1, 0.65)
-	left.add_child(_resource_label)
+	var bar := VBoxContainer.new()
+	bar.add_theme_constant_override("separation", 2)
 
 	_date_label = Label.new()
-	_date_label.add_theme_font_size_override("font_size", 38)
-	_date_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_date_label.add_theme_font_size_override("font_size", 40)
 	bar.add_child(_date_label)
+
+	_vitals_label = Label.new()
+	_vitals_label.add_theme_font_size_override("font_size", 25)
+	_vitals_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bar.add_child(_vitals_label)
+
+	# 자원이 늘어나면 한 줄을 넘긴다. 잘라내지 않고 접는다
+	# — 화면에서 사라진 자원은 없는 자원처럼 보인다.
+	_resource_label = Label.new()
+	_resource_label.add_theme_font_size_override("font_size", 20)
+	_resource_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_resource_label.modulate = Color(1, 1, 1, 0.62)
+	bar.add_child(_resource_label)
 
 	return bar
 
@@ -108,16 +118,25 @@ func _build_panorama() -> Control:
 	return _panorama
 
 
+## 하단 — 안내 문구 한 줄과 속도 버튼 네 개.
+##
+## 속도 버튼은 가로를 4등분해 꽉 채운다. 세로 화면 폭 720에서 하나당 약 170px이니
+## 최소 터치 타겟(96px)의 두 배 가까이 되고, 엄지로 눌러도 옆 버튼을 건드리지 않는다.
 func _build_bottom_bar() -> Control:
-	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 16)
+	var bar := VBoxContainer.new()
+	bar.add_theme_constant_override("separation", 8)
 
-	# 건설 실패 사유가 뜨는 자리. 평소에는 비어 있다.
+	# 건설 실패 사유와 인구 변동이 뜨는 자리. 평소에는 비어 있다.
+	# 파노라마 바로 아래, 속도 버튼 바로 위 — 시선과 손이 모두 지나는 곳이다.
 	_toast_label = Label.new()
-	_toast_label.add_theme_font_size_override("font_size", 26)
-	_toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_toast_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_toast_label.add_theme_font_size_override("font_size", 24)
+	_toast_label.custom_minimum_size = Vector2(0, 30)
+	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bar.add_child(_toast_label)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	bar.add_child(row)
 
 	var group := ButtonGroup.new()
 	for index in Game.SPEEDS.size():
@@ -125,9 +144,10 @@ func _build_bottom_bar() -> Control:
 		button.text = Game.SPEED_LABELS[index]
 		button.toggle_mode = true
 		button.button_group = group
-		button.custom_minimum_size = Vector2(MIN_TOUCH_PX * 1.2, MIN_TOUCH_PX)
+		button.custom_minimum_size = Vector2(0, MIN_TOUCH_PX)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(Game.set_speed.bind(index))
-		bar.add_child(button)
+		row.add_child(button)
 		_speed_buttons.append(button)
 
 	return bar

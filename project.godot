@@ -1,7 +1,7 @@
 ; Engine configuration file.
 ; Frostmarch — 서리 변경
 ;
-; 모바일 전용 / 안드로이드 폰 / 가로 고정 (GDD D12)
+; 모바일 전용 / 안드로이드 폰 / 세로 고정 (GDD D12)
 
 config_version=5
 
@@ -23,10 +23,12 @@ Game="*res://game/game.gd"
 
 [display]
 
-window/size/viewport_width=1280
-window/size/viewport_height=720
-; 0 = Landscape (GDD D12 — 가로 고정)
-window/handheld/orientation=0
+; 세로 9:16. 요즘 폰은 더 길지만(9:19.5~20), stretch/aspect=expand가
+; 남는 세로를 그대로 내주므로 기준을 9:16으로 잡아도 잘린 화면이 나오지 않는다.
+window/size/viewport_width=720
+window/size/viewport_height=1280
+; 1 = Portrait (GDD D12 — 세로 고정)
+window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

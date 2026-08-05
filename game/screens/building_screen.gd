@@ -68,30 +68,43 @@ func _build_ui() -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 24)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	# 하단 여백을 넉넉히 두는 이유: 요즘 안드로이드 폰의 제스처 바가
+	# 화면 맨 아래를 차지한다. 버튼을 끝까지 붙이면 눌러야 할 때 홈으로 나가버린다.
+	# TODO: 실기에서 DisplayServer.get_display_safe_area()로 정확히 맞춘다.
+	margin.add_theme_constant_override("margin_bottom", 56)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
+	column.add_theme_constant_override("separation", 12)
 	margin.add_child(column)
 
 	column.add_child(_build_header())
 
-	# 가로 화면이므로 좌우로 나눈다. 공통 컨트롤은 왼쪽, 건물 고유는 오른쪽.
-	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 16)
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(body)
+	# 세로 화면이므로 위에서 아래로 쌓는다.
+	#
+	# 순서가 곧 중요도다: 인력 → 생산 → 건물 고유.
+	# 인력 배정이 맨 위인 이유는 모든 건물에 있는 유일한 컨트롤이고,
+	# 화면을 열자마자 손이 가는 곳이기 때문이다 (GDD §4.6 설계 규칙).
+	#
+	# 스크롤로 감싸는 이유: 고유 영역의 길이는 건물마다 다르고,
+	# 폰 세로 길이도 기기마다 다르다. 잘려서 안 보이는 것보다 밀어서 보는 편이 낫다.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(scroll)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 12)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(left)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(body)
 
-	left.add_child(_build_labor_panel())
+	body.add_child(_build_labor_panel())
 	if building_type().produces():
-		left.add_child(_build_production_panel())
+		body.add_child(_build_production_panel())
 
 	var unique := _build_unique_area()
 	if unique != null:
@@ -112,7 +125,8 @@ func _build_header() -> Control:
 
 	var description := Label.new()
 	description.text = BuildingDisplay.description_of(type_id)
-	description.add_theme_font_size_override("font_size", 22)
+	description.add_theme_font_size_override("font_size", 21)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.modulate = Color(1, 1, 1, 0.5)
 	header.add_child(description)
 
@@ -168,7 +182,8 @@ func _build_labor_panel() -> Control:
 func _stepper_button(label: String, delta: int) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(MIN_TOUCH_PX, MIN_TOUCH_PX)
+	button.add_theme_font_size_override("font_size", 42)
+	button.custom_minimum_size = Vector2(MIN_TOUCH_PX * 1.3, MIN_TOUCH_PX)
 	button.pressed.connect(_on_worker_delta.bind(delta))
 	return button
 
@@ -223,11 +238,14 @@ func _build_unique_area() -> Control:
 	return null
 
 
+## 뒤로 버튼은 화면 맨 아래 전폭이다.
+## 세로로 든 폰에서 엄지가 확실히 닿는 곳은 여기뿐이고, 가장 자주 누르는 버튼이다.
+## 안드로이드 뒤로가기 버튼으로도 같은 동작을 한다 (ScreenStack).
 func _build_footer() -> Control:
 	# TODO(M8): 업그레이드 · 철거 버튼 (ARCHITECTURE §6.2).
 	var back := Button.new()
 	back.text = "뒤로"
-	back.custom_minimum_size = Vector2(0, MIN_TOUCH_PX * 0.8)
+	back.custom_minimum_size = Vector2(0, MIN_TOUCH_PX)
 	back.pressed.connect(_on_back_pressed)
 	return back
 

@@ -11,12 +11,16 @@
     "",
     "unlock_year만으로 해금을 판정하는 것은 M1의 한계다.",
     "GDD §4.5는 인구·명성도 조건으로 쓴다고 정했지만 둘 다 아직 없다.",
-    "TODO(M2/M4): unlock_population, unlock_renown 조건 추가.",
+    "TODO(M4): unlock_population, unlock_renown 조건 추가.",
     "",
-    "panorama_size: 파노라마 전체 크기. 뷰포트(1280x720)보다 넓어서 가로 스크롤된다."
+    "세로 화면(720x1280)이므로 마을은 **위아래로** 흐른다.",
+    "좌우로 엇갈리게 놓아 굽이진 마을길처럼 보이게 하고, 가로 스크롤은 두지 않는다",
+    "— 세로 화면에서 가로로도 밀어야 하면 슬롯 절반이 늘 화면 밖에 있다.",
+    "",
+    "panorama_size: 파노라마 전체 크기. 폭은 뷰포트에 맞추고 높이만 넘긴다."
   ],
 
-  "panorama_size": { "width": 2400, "height": 380 },
+  "panorama_size": { "width": 720, "height": 1240 },
 
   "starting_resources": {
     "_comment": "겨우 버틸 만큼만 준다. 순무 60 = 2가구 15일치이고, 오두막(3일)과 농장(5일)을 세우면 8일이 지난다.",
@@ -24,13 +28,13 @@
   },
 
   "slots": [
-    { "x": 120,  "y": 200, "unlock_year": 1 },
-    { "x": 400,  "y": 150, "unlock_year": 1 },
-    { "x": 680,  "y": 230, "unlock_year": 1 },
-    { "x": 960,  "y": 160, "unlock_year": 1 },
-    { "x": 1300, "y": 220, "unlock_year": 1 },
-    { "x": 1600, "y": 150, "unlock_year": 2 },
-    { "x": 1900, "y": 230, "unlock_year": 3 },
-    { "x": 2180, "y": 170, "unlock_year": 3 }
+    { "x":  40, "y":   30, "unlock_year": 1 },
+    { "x": 380, "y":  180, "unlock_year": 1 },
+    { "x":  40, "y":  330, "unlock_year": 1 },
+    { "x": 380, "y":  480, "unlock_year": 1 },
+    { "x":  40, "y":  630, "unlock_year": 1 },
+    { "x": 380, "y":  780, "unlock_year": 2 },
+    { "x":  40, "y":  930, "unlock_year": 3 },
+    { "x": 380, "y": 1080, "unlock_year": 3 }
   ]
 }

@@ -35,8 +35,13 @@ func _build_ui() -> void:
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 32)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	# 하단 여백을 넉넉히 두는 이유: 요즘 안드로이드 폰의 제스처 바가
+	# 화면 맨 아래를 차지한다. 버튼을 끝까지 붙이면 눌러야 할 때 홈으로 나가버린다.
+	# TODO: 실기에서 DisplayServer.get_display_safe_area()로 정확히 맞춘다.
+	margin.add_theme_constant_override("margin_bottom", 56)
 	add_child(margin)
 
 	var column := VBoxContainer.new()
@@ -48,17 +53,15 @@ func _build_ui() -> void:
 	column.add_child(_build_close_button())
 
 
+## 세로 화면에서는 제목과 자원을 한 줄에 나란히 둘 수 없다. 위아래로 쌓는다.
 func _build_header() -> Control:
-	var header := HBoxContainer.new()
+	var header := VBoxContainer.new()
+	header.add_theme_constant_override("separation", 2)
 
 	var title := Label.new()
 	title.text = "%d번 자리에 무엇을 지을까" % (_slot_index + 1)
-	title.add_theme_font_size_override("font_size", 40)
+	title.add_theme_font_size_override("font_size", 34)
 	header.add_child(title)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(spacer)
 
 	header.add_child(_build_resource_summary())
 	return header
@@ -67,7 +70,9 @@ func _build_header() -> Control:
 func _build_resource_summary() -> Control:
 	var label := Label.new()
 	label.text = ResourceDisplay.format_stock(_village.resources, " · ")
-	label.modulate = Color(1, 1, 1, 0.75)
+	label.add_theme_font_size_override("font_size", 20)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.modulate = Color(1, 1, 1, 0.7)
 	return label
 
 
@@ -95,40 +100,48 @@ func _build_entry(type_id: String, completed: Dictionary) -> Control:
 	var can_afford := _village.resources.can_afford(type.cost)
 
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(0, MIN_TOUCH_PX + 24)
+	button.custom_minimum_size = Vector2(0, MIN_TOUCH_PX + 48)
 	button.disabled = is_locked or not can_afford
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(func() -> void: building_chosen.emit(_slot_index, type_id))
 
-	# Button 위에 라벨을 얹어 2단 구성을 만든다. 텍스트 한 줄로는
-	# 이름 · 비용 · 거절 사유를 동시에 보여줄 수 없다.
+	# Button 위에 라벨을 얹어 여러 줄을 만든다. 텍스트 한 줄로는
+	# 이름 · 설명 · 비용 · 거절 사유를 동시에 보여줄 수 없다.
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 20)
+	row.add_theme_constant_override("separation", 14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side in ["left", "right"]:
-		row.add_theme_constant_override("margin_" + side, 20)
 	button.add_child(row)
 
 	var name_column := VBoxContainer.new()
 	name_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	name_column.add_theme_constant_override("separation", 2)
 	name_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(name_column)
 
 	var name_label := Label.new()
 	name_label.text = "  %s" % BuildingDisplay.name_of(type_id)
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 28)
 	name_column.add_child(name_label)
+
+	# 짓기 전에 무엇을 위한 건물인지 알아야 한다.
+	# 세로 화면에서는 목록이 짧아 이 한 줄을 넣을 자리가 생긴다.
+	var description := Label.new()
+	description.text = "  %s" % BuildingDisplay.description_of(type_id)
+	description.add_theme_font_size_override("font_size", 19)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description.modulate = Color(1, 1, 1, 0.45)
+	name_column.add_child(description)
 
 	var detail := Label.new()
 	detail.text = "  %s · %d일" % [BuildingDisplay.format_cost(type.cost), type.build_days]
-	detail.add_theme_font_size_override("font_size", 22)
-	detail.modulate = Color(1, 1, 1, 0.6)
+	detail.add_theme_font_size_override("font_size", 21)
+	detail.modulate = Color(1, 1, 1, 0.65)
 	name_column.add_child(detail)
 
 	var status := Label.new()
-	status.add_theme_font_size_override("font_size", 24)
+	status.add_theme_font_size_override("font_size", 23)
 	status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if is_locked:
