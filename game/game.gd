@@ -10,6 +10,8 @@ extends Node
 ##   앱이 백그라운드로 가면 자동으로 멈춘다. 오프라인 진행은 없다.
 
 signal speed_changed(index: int)
+## 새 게임이 시작됐다. 화면 스택을 처음부터 다시 세워야 한다는 뜻이다.
+signal world_restarted()
 
 ## 0번은 일시정지. 나머지는 실시간 배속.
 const SPEEDS: Array[float] = [0.0, 1.0, 2.0, 4.0]
@@ -34,6 +36,11 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# 승패가 정해지면 시계를 멈춘다. sim의 tick()도 스스로 거절하지만,
+	# 여기서 멈춰야 결과 화면 뒤에서 날짜가 계속 올라가지 않는다.
+	if world.is_over():
+		return
+
 	var multiplier := SPEEDS[speed_index]
 	if multiplier <= 0.0:
 		return
@@ -57,6 +64,20 @@ func set_speed(index: int) -> void:
 
 func is_paused() -> bool:
 	return SPEEDS[speed_index] <= 0.0
+
+
+## 처음부터 다시 시작한다.
+##
+## 세이브가 없으므로(M8) 이어하기가 아니라 새 게임이다.
+## 월드 객체 자체를 갈아끼우므로 예전 월드의 신호에 붙어 있던 화면들은
+## 전부 버려야 한다 — main.gd가 스택을 다시 세운다.
+func restart() -> void:
+	world = SimWorld.create_default()
+	speed_index = 1
+	_day_accumulator = 0.0
+	_speed_before_suspend = -1
+	world_restarted.emit()
+	speed_changed.emit(speed_index)
 
 
 # --- 세션 기반 진행 (GDD D16) -------------------------------------------------

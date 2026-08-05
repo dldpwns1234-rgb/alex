@@ -32,6 +32,8 @@ func _initialize() -> void:
 	_run_consumption_tests()
 	_run_population_tests()
 	_run_economy_tests()
+	_run_season_tests()
+	_run_outcome_tests()
 	_run_data_integrity_tests()
 
 	print("")
@@ -111,7 +113,7 @@ func _run_world_tests() -> void:
 	# 그래서 카운터 대신 배열(참조 타입)에 수집한다.
 
 	_test("season_changed는 계절 경계에서만, 올바른 순서로 발생한다")
-	world = SimWorld.create_default()
+	world = _endless_world()
 	var seasons_seen: Array = []
 	world.season_changed.connect(func(s: SimCalendar.Season) -> void: seasons_seen.append(s))
 	for _i in SimCalendar.DAYS_PER_YEAR:
@@ -124,7 +126,7 @@ func _run_world_tests() -> void:
 	], "1년간 계절 전환 내역")
 
 	_test("year_changed는 해가 바뀔 때만 발생한다")
-	world = SimWorld.create_default()
+	world = _endless_world()
 	var years_seen: Array = []
 	world.year_changed.connect(func(y: int) -> void: years_seen.append(y))
 	for _i in SimCalendar.DAYS_PER_YEAR * 3:
@@ -132,8 +134,8 @@ func _run_world_tests() -> void:
 	_equal(years_seen, [2, 3, 4], "3년간 연차 전환 내역")
 
 	_test("시뮬레이션은 결정론적이다 — 같은 틱 수는 같은 상태를 만든다")
-	var a := SimWorld.create_default()
-	var b := SimWorld.create_default()
+	var a := _endless_world()
+	var b := _endless_world()
 	for _i in 250:
 		a.tick()
 		b.tick()
@@ -628,6 +630,120 @@ func _run_economy_tests() -> void:
 	_equal(loop_economy.unit_value("foo").food, 0.0, "순환은 값어치 0으로 끊는다")
 
 
+# --- 계절 (M3) ----------------------------------------------------------------
+
+func _run_season_tests() -> void:
+	var winter := SimCalendar.Season.WINTER
+	var summer := SimCalendar.Season.SUMMER
+
+	_test("겨울에는 생산이 5분의 1로 떨어진다")
+	var village := _production_village(3)
+	_place(village, 0, "woodcutter")
+	village.labor.set_assignment(0, 2, 2)
+
+	village.season = SimCalendar.Season.SPRING
+	village.produce()
+	var spring_wood := village.resources.amount_of("wood")
+
+	village = _production_village(3)
+	_place(village, 0, "woodcutter")
+	village.labor.set_assignment(0, 2, 2)
+	village.season = winter
+	for _i in 5:
+		village.produce()
+	_equal(village.resources.amount_of("wood"), spring_wood,
+		"겨울 닷새가 봄 하루와 같다 (배율 0.2)")
+
+	_test("농장은 겨울에 아예 멈춘다 — 인력을 더 넣어도 소용없다")
+	village = _production_village(3)
+	_place(village, 0, "farm")
+	village.labor.set_assignment(0, 3, 3)
+	village.season = winter
+	for _i in 30:
+		village.produce()
+	_equal(village.resources.amount_of("turnip"), 0, "겨울 내내 한 톨도 나지 않는다")
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_WINTER, "'겨울'로 멈춤")
+
+	_test("겨울이 끝나면 농장이 다시 돈다")
+	village.season = SimCalendar.Season.SPRING
+	village.produce()
+	village.produce()
+	_check(village.resources.amount_of("turnip") > 0, "봄이 오면 수확이 있다")
+
+	_test("장작 소비는 겨울에 두 배, 여름에 절반이다")
+	village = _production_village()
+	for _i in 2:
+		village.labor.add_family()
+	_equal(village.daily_firewood(2), 2, "봄 · 2가구")
+	village.season = summer
+	_equal(village.daily_firewood(2), 1, "여름은 절반")
+	village.season = winter
+	_equal(village.daily_firewood(2), 4, "겨울은 두 배")
+
+	_test("소비량은 올림한다 — 여름에 장작이 공짜가 되지 않게")
+	village.season = summer
+	_equal(village.daily_firewood(1), 1, "1가구 × 0.5 = 0.5 → 1")
+
+	_test("같은 비축량이 겨울에는 절반의 날수로 보인다")
+	village = _production_village()
+	village.labor.add_family()
+	village.resources.add("firewood", 20)
+	village.season = SimCalendar.Season.AUTUMN
+	_equal(village.firewood_days_remaining(), 20, "가을에는 20일치")
+	village.season = winter
+	_equal(village.firewood_days_remaining(), 10, "겨울에는 같은 장작이 10일치")
+
+	_test("월드가 틱마다 마을에 계절을 알려준다")
+	var world := _endless_world()
+	for _i in SimCalendar.DAYS_PER_SEASON * 3:
+		world.tick()
+	_equal(world.village.season, winter, "91일차는 겨울")
+
+
+# --- 승패 (M3) ----------------------------------------------------------------
+
+func _run_outcome_tests() -> void:
+	_test("마지막 가구가 떠나면 패배다")
+	var world := SimWorld.create_default()
+	var outcomes: Array = []
+	world.game_ended.connect(func(outcome: String) -> void: outcomes.append(outcome))
+
+	# 아무것도 짓지 않으면 시작 자원이 떨어지고 결국 모두 떠난다.
+	for _i in SimCalendar.DAYS_PER_YEAR:
+		world.tick()
+	_equal(world.outcome, "defeat", "빈손으로는 한 해를 넘기지 못한다")
+	_equal(outcomes, ["defeat"], "game_ended는 한 번만")
+	_equal(world.village.labor.total(), 0, "가구 0")
+
+	_test("게임이 끝나면 시계가 멈춘다")
+	var days_at_end := world.calendar.elapsed_days
+	for _i in 50:
+		world.tick()
+	_equal(world.calendar.elapsed_days, days_at_end, "더 이상 하루도 지나지 않는다")
+
+	_test("정해진 해를 넘기면 승리다")
+	world = _survivable_world()
+	outcomes = []
+	world.game_ended.connect(func(outcome: String) -> void: outcomes.append(outcome))
+	# 120틱이면 이미 2년차 첫날이다. 1년차 마지막 날은 119틱.
+	for _i in SimCalendar.DAYS_PER_YEAR - 1:
+		world.tick()
+	_equal(world.calendar.year(), 1, "119틱은 아직 1년차")
+	_equal(world.outcome, "", "1년차 마지막 날에는 아직 아니다")
+	world.tick()
+	_equal(world.outcome, "victory", "2년차가 시작되면 이긴 것이다")
+	_equal(outcomes, ["victory"], "game_ended는 한 번만")
+
+	_test("패배가 승리보다 먼저 판정된다")
+	# 마지막 가구가 떠난 날이 마침 승리 연차 첫날이어도 이긴 것이 아니다.
+	world = _survivable_world()
+	for _i in SimCalendar.DAYS_PER_YEAR - 1:
+		world.tick()
+	world.village.labor.families.clear()
+	world.tick()
+	_equal(world.outcome, "defeat", "사람이 없으면 마을이 아니다")
+
+
 # --- 데이터 정합성 -------------------------------------------------------------
 
 ## sim과 game이 data/buildings.json을 따로 파싱한다 (ARCHITECTURE §2 규칙 2).
@@ -676,6 +792,40 @@ func _run_data_integrity_tests() -> void:
 
 
 # --- 러너 ---------------------------------------------------------------------
+
+## 승패 판정에 걸리지 않는 월드.
+##
+## 달력 신호처럼 "오래 돌려야 보이는" 것을 시험할 때 쓴다.
+## 소비를 0으로 두어 굶어 죽지 않게 하고, 승리 연차를 멀리 밀어둔다.
+func _endless_world() -> SimWorld:
+	var world := SimWorld.new()
+	world.village = SimVillage.from_json(
+		SimJson.read_dict(SimVillage.LAYOUT_PATH),
+		SimBuildingCatalog.load_default(),
+		SimResourceCatalog.load_default(),
+		SimRules.from_json({
+			"consumption": {"food_per_family": 0, "firewood_per_family": 0},
+			"population": {"starting_families": 1},
+			"victory": {"years_to_survive": 999},
+		}))
+	return world
+
+
+## 굶지 않고 한 해를 넘기는 월드. 승리 판정을 시험하기 위한 것이다.
+## 소비를 0으로 두어 "생존은 이미 해결된" 상태에서 승패 규칙만 본다.
+func _survivable_world() -> SimWorld:
+	var world := SimWorld.new()
+	world.village = SimVillage.from_json(
+		SimJson.read_dict(SimVillage.LAYOUT_PATH),
+		SimBuildingCatalog.load_default(),
+		SimResourceCatalog.load_default(),
+		SimRules.from_json({
+			"consumption": {"food_per_family": 0, "firewood_per_family": 0},
+			"population": {"starting_families": 2},
+			"victory": {"years_to_survive": 1},
+		}))
+	return world
+
 
 ## 데이터 파일과 무관하게 슬롯 해금 규칙만 시험하기 위한 작은 마을.
 func _test_village() -> SimVillage:

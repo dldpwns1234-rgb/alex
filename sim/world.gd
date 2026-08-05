@@ -23,9 +23,14 @@ signal shortage_occurred(shortage: String, hardship: int)
 signal population_changed(event: String, total_families: int)
 ## 마을 상태가 바뀌었다. UI가 다시 그릴 신호다.
 signal village_changed()
+## 게임이 끝났다. "victory" 또는 "defeat" — 한글 문구는 game 계층의 몫이다.
+signal game_ended(outcome: String)
 
 var calendar := SimCalendar.new()
 var village: SimVillage
+
+## "" · "victory" · "defeat". 한 번 정해지면 바뀌지 않는다.
+var outcome: String = ""
 
 
 static func create_default() -> SimWorld:
@@ -57,7 +62,11 @@ func tick() -> void:
 	var previous_season := calendar.season()
 	var previous_year := calendar.year()
 
+	if is_over():
+		return
+
 	calendar.advance_day()
+	village.season = calendar.season()
 
 	var completed := village.advance_construction()
 	village.produce()
@@ -83,3 +92,27 @@ func tick() -> void:
 		season_changed.emit(calendar.season())
 	if calendar.year() != previous_year:
 		year_changed.emit(calendar.year())
+
+	_check_outcome()
+
+
+func is_over() -> bool:
+	return outcome != ""
+
+
+## 승패 판정 (ROADMAP M3).
+##
+## 패배가 먼저다. 마지막 가구가 떠난 날이 마침 승리 연차의 첫날이라면
+## 그것은 이긴 것이 아니다.
+func _check_outcome() -> void:
+	if is_over():
+		return
+
+	if village.labor.total() <= 0:
+		outcome = "defeat"
+	elif calendar.year() > village.rules.years_to_survive:
+		outcome = "victory"
+	else:
+		return
+
+	game_ended.emit(outcome)

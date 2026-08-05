@@ -34,6 +34,10 @@ var buildings: Dictionary = {}
 ## 현재 연차 기준으로 해금된 슬롯 수. world가 틱마다 갱신한다.
 var unlocked_slot_count: int = 0
 
+## 지금 계절. world가 틱마다 갱신한다.
+## 생산·소비 배율이 여기 걸리므로, 마을은 "지금이 겨울인가"를 알아야 한다.
+var season: SimCalendar.Season = SimCalendar.Season.SPRING
+
 var ration_policy: String = RATION_RICH_FIRST
 
 ## 쌓인 고난 — 못 먹은 끼니와 못 땐 장작의 합.
@@ -191,6 +195,12 @@ func produce() -> void:
 
 
 func _produce_one(building: SimBuilding, type: SimBuildingType, workers: int) -> void:
+	# 농경은 겨울에 아예 멈춘다 (GDD §3.2). 인력을 더 넣어도 소용없으므로
+	# "인력 없음"이 아니라 별도의 상태로 보여준다.
+	if type.seasonal and season == SimCalendar.Season.WINTER:
+		building.halt_reason = SimBuilding.HALT_WINTER
+		return
+
 	if workers <= 0:
 		building.halt_reason = SimBuilding.HALT_NO_WORKERS
 		return
@@ -204,7 +214,7 @@ func _produce_one(building: SimBuilding, type: SimBuildingType, workers: int) ->
 			return
 
 	building.halt_reason = SimBuilding.HALT_NONE
-	building.production_progress += workers
+	building.production_progress += workers * rules.production_multiplier(season)
 
 	while building.production_progress >= recipe.worker_days:
 		if not resources.can_afford(recipe.inputs):
@@ -265,7 +275,7 @@ func consume() -> bool:
 
 ## 못 땐 장작 수를 반환한다.
 func _burn(families: int) -> int:
-	var needed := rules.firewood_per_family * families
+	var needed := daily_firewood(families)
 	if needed <= 0:
 		return 0
 
@@ -276,7 +286,7 @@ func _burn(families: int) -> int:
 
 ## 못 먹은 끼니 수를 반환한다.
 func _feed(families: int) -> int:
-	var needed := rules.food_per_family * families
+	var needed := daily_food(families)
 	for resource_id in _ration_order():
 		if needed <= 0:
 			break
@@ -319,9 +329,25 @@ func food_stock_units() -> int:
 	return total
 
 
+## 오늘 하루에 필요한 양. 계절 배율이 걸린다.
+##
+## 올림하는 이유: 여름 장작 0.5배에 2가구면 1.0이지만, 1가구면 0.5다.
+## 내림하면 소비가 0이 되어 "여름에는 장작이 공짜"가 된다.
+func daily_food(families: int) -> int:
+	return ceili(rules.food_per_family * families * rules.food_multiplier(season))
+
+
+func daily_firewood(families: int) -> int:
+	return ceili(rules.firewood_per_family * families * rules.firewood_multiplier(season))
+
+
 ## 지금 인구로 며칠을 버틸 수 있는가. 화면에 띄우는 가장 중요한 숫자다.
+##
+## **지금 계절 기준이다.** 겨울에 접어들면 같은 비축량이 절반의 날수로 보인다.
+## 그것이 정확한 정보다 — 가을에 보이던 "30일치"가 겨울에 "15일치"가 되는 것이
+## 이 게임이 주려는 초조함이다 (GDD §1.4).
 func food_days_remaining() -> int:
-	var daily := rules.food_per_family * labor.total()
+	var daily := daily_food(labor.total())
 	if daily <= 0:
 		return 0
 	@warning_ignore("integer_division")
@@ -330,7 +356,7 @@ func food_days_remaining() -> int:
 
 ## 장작으로 며칠을 버틸 수 있는가. 겨울이 오면 이 숫자가 식량만큼 중요해진다.
 func firewood_days_remaining() -> int:
-	var daily := rules.firewood_per_family * labor.total()
+	var daily := daily_firewood(labor.total())
 	if daily <= 0:
 		return 0
 	@warning_ignore("integer_division")

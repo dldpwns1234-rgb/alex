@@ -22,6 +22,10 @@ extends Control
 ## (ARCHITECTURE §12.2).
 const MIN_TOUCH_PX := 96
 
+## 속도 버튼 높이. 최소 터치 타겟(96px)보다 낮지만 가로가 170px이라
+## 누르기 어렵지 않다. 96px로 두면 화면 아래를 너무 많이 차지한다.
+const SPEED_BUTTON_HEIGHT := 84
+
 ## 건설 실패 안내가 화면에 머무는 시간(초).
 const TOAST_SECONDS := 2.5
 
@@ -121,7 +125,11 @@ func _build_panorama() -> Control:
 ## 하단 — 안내 문구 한 줄과 속도 버튼 네 개.
 ##
 ## 속도 버튼은 가로를 4등분해 꽉 채운다. 세로 화면 폭 720에서 하나당 약 170px이니
-## 최소 터치 타겟(96px)의 두 배 가까이 되고, 엄지로 눌러도 옆 버튼을 건드리지 않는다.
+## 엄지로 눌러도 옆 버튼을 건드리지 않는다.
+##
+## 높이는 최소 터치 타겟(96px)보다 낮은 84px다. 가로가 170px이라
+## 실제로 누르기 어렵지 않고, 96px로 두면 화면 아래를 너무 많이 차지한다.
+## 정사각형에 가까운 버튼이었다면 96px를 지켰을 것이다.
 func _build_bottom_bar() -> Control:
 	var bar := VBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
@@ -144,7 +152,8 @@ func _build_bottom_bar() -> Control:
 		button.text = Game.SPEED_LABELS[index]
 		button.toggle_mode = true
 		button.button_group = group
-		button.custom_minimum_size = Vector2(0, MIN_TOUCH_PX)
+		button.add_theme_font_size_override("font_size", 22)
+		button.custom_minimum_size = Vector2(0, SPEED_BUTTON_HEIGHT)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(Game.set_speed.bind(index))
 		row.add_child(button)

@@ -33,6 +33,7 @@ const HALT_MESSAGES := {
 	SimBuilding.HALT_NO_WORKERS: "인력 없음",
 	SimBuilding.HALT_NO_INPUT: "재료 없음",
 	SimBuilding.HALT_STORAGE_FULL: "창고 가득",
+	SimBuilding.HALT_WINTER: "겨울 · 밭이 얼었다",
 }
 
 ## 홈 화면 슬롯 위에 띄우는 짧은 배지.
@@ -40,6 +41,7 @@ const HALT_BADGES := {
 	SimBuilding.HALT_NO_WORKERS: "인력",
 	SimBuilding.HALT_NO_INPUT: "재료",
 	SimBuilding.HALT_STORAGE_FULL: "가득",
+	SimBuilding.HALT_WINTER: "겨울",
 }
 
 const POPULATION_EVENTS := {
@@ -53,6 +55,19 @@ const SHORTAGE_MESSAGES := {
 	"firewood": "땔 것이 없다",
 	"both": "먹을 것도 땔 것도 없다",
 }
+
+## 승패 문구. sim은 "victory" · "defeat" 코드만 안다.
+const OUTCOMES := {
+	"victory": {
+		"title": "겨울을 넘겼다",
+		"body": "첫 겨울을 살아남았다. 마을은 아직 여기 있다.",
+	},
+	"defeat": {
+		"title": "마을이 사라졌다",
+		"body": "마지막 가구가 떠났다. 남은 것은 빈 오두막뿐이다.",
+	},
+}
+
 
 const RATION_NAMES := {
 	SimVillage.RATION_RICH_FIRST: "빵부터",
@@ -109,6 +124,14 @@ static func population_event_message(event: String) -> String:
 
 static func shortage_message(shortage: String) -> String:
 	return SHORTAGE_MESSAGES.get(shortage, "")
+
+
+static func outcome_title(outcome: String) -> String:
+	return OUTCOMES.get(outcome, {}).get("title", "")
+
+
+static func outcome_body(outcome: String) -> String:
+	return OUTCOMES.get(outcome, {}).get("body", "")
 
 
 static func ration_name(policy: String) -> String:

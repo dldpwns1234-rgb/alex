@@ -6,8 +6,8 @@
 **플랫폼:** **안드로이드 폰** (세로 고정, 모바일 전용)
 **그래픽:** 2D 픽셀아트 — 마을 파노라마 + 건물별 화면
 **엔진:** Godot 4.7.1 / GDScript
-**현재 상태:** **M2 완료** — 생산 사슬 · 노동력 제로섬 배분 · 인구 유입/유출
-(M0: 뼈대 · 배포 / M1: 마을 파노라마 · 건물 슬롯 · 해금 사슬)
+**현재 상태:** **M3 완료** — 계절 압박 · 겨울 · 승패 판정. 이제 지고 이길 수 있다
+(M0: 뼈대 · 배포 / M1: 슬롯과 해금 / M2: 생산과 노동력)
 
 ## 구조
 
@@ -15,7 +15,8 @@
 sim/    순수 로직. Node를 상속하지 않고 실시간을 모른다. 엔진 없이 테스트된다
 game/   Godot 노드. sim을 읽어서 그린다. 상태 변경은 커맨드 객체로만
 data/   건물·자원·슬롯·밸런싱 상수. 코드에 숫자를 박지 않는다
-tests/  헤드리스 테스트 러너
+tests/  헤드리스 테스트 러너 + 밸런스 탐침
+tools/  밸런싱 스윕 (ARCHITECTURE §8)
 ```
 
 자세한 이유는 `docs/ARCHITECTURE.md` §2에 있다.
@@ -29,9 +30,11 @@ godot --headless --import
 # 테스트 (sim 계층은 엔진 없이 헤드리스로 돈다)
 godot --headless --script res://tests/run_tests.gd
 
-# 밸런스 탐침 — 100일을 자동으로 플레이하고 마을이 어떻게 되는지 본다.
-# 테스트가 "규칙이 맞는가"를 묻는다면, 이쪽은 "살 만한가"를 묻는다.
+# 밸런스 탐침 — 전략 하나를 하루씩 추적한다. "무슨 일이 일어났나"
 godot --headless --script res://tests/balance_probe.gd
+
+# 밸런싱 스윕 — 전략 32개를 쓸어보고 생존율을 낸다. "몇 %가 살아남나"
+godot --headless --script res://tools/headless_balance.gd
 
 # 웹 익스포트 — build/ 를 Godot이 스캔하지 않도록 .gdignore를 먼저 만든다
 mkdir -p build/web && touch build/.gdignore

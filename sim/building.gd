@@ -18,6 +18,8 @@ const HALT_NONE := ""
 const HALT_NO_WORKERS := "no_workers"
 const HALT_NO_INPUT := "no_input"
 const HALT_STORAGE_FULL := "storage_full"
+## 겨울이라 밭이 얼었다. 인력을 더 넣어도 소용없다.
+const HALT_WINTER := "winter"
 
 var type_id: String = ""
 var slot_index: int = -1
@@ -30,7 +32,8 @@ var total_build_days: int = 0
 ## 지금 만들고 있는 것. 여러 레시피를 가진 건물에서 플레이어가 고른다.
 var recipe_id: String = ""
 ## 쌓인 '가구 × 일'. worker_days를 채우면 한 번 산출한다.
-var production_progress: int = 0
+## 계절 배율이 곱해지므로 정수가 아니다 (겨울에는 하루에 0.2씩 쌓인다).
+var production_progress: float = 0.0
 var halt_reason: String = HALT_NONE
 
 
@@ -80,7 +83,7 @@ func set_recipe(new_recipe_id: String) -> void:
 	if new_recipe_id == recipe_id:
 		return
 	recipe_id = new_recipe_id
-	production_progress = 0
+	production_progress = 0.0
 	halt_reason = HALT_NONE
 
 
@@ -88,4 +91,4 @@ func set_recipe(new_recipe_id: String) -> void:
 func production_ratio(recipe: SimRecipe) -> float:
 	if recipe == null or recipe.worker_days <= 0:
 		return 0.0
-	return clampf(float(production_progress) / float(recipe.worker_days), 0.0, 1.0)
+	return clampf(production_progress / float(recipe.worker_days), 0.0, 1.0)

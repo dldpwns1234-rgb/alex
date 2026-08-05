@@ -8,11 +8,14 @@ extends SceneTree
 ## **"그 규칙으로 만든 게임이 살 만한가"** 를 묻는다.
 ## 둘은 다른 질문이고, 후자는 단위 테스트로 잡히지 않는다.
 ##
-## M2에서 이 탐침이 실제로 잡아낸 것:
-##   1. 만성 식량 부족이 아무 결과도 낳지 않았다 (연속 일수 초기화 문제)
-##   2. 농부 하나가 두 가구를 정확히 break-even으로 먹여서, 잉여가 0이라
-##      마을이 영원히 성장할 수 없었다
-## 둘 다 단위 테스트 192개가 전부 통과하는 상태에서 숨어 있었다.
+## 이 탐침이 실제로 잡아낸 것:
+##   M2 — 만성 식량 부족이 아무 결과도 낳지 않았다 (연속 일수 초기화 문제)
+##   M2 — 농부 하나가 두 가구를 정확히 break-even으로 먹여, 마을이 성장할 수 없었다
+##   M3 — 겨울에 식량은 남는데 장작이 0이었다. 장작을 패려면 목재가 필요한데
+##        목재를 채취하면 장작이 안 나온다는 것을 전략이 다루지 않았다
+## 전부 단위 테스트가 초록불인 상태에서 숨어 있었다.
+##
+## 여러 전략을 한 번에 쓸어보려면 tools/headless_balance.gd를 쓴다.
 ##
 ## ARCHITECTURE §8의 헤드리스 밸런싱 하네스의 초기 형태다.
 ## M6에서 여러 전략 × 여러 파라미터를 자동으로 쓸어보는 형태로 확장한다.
@@ -38,8 +41,8 @@ const STRATEGY := {
 	75: [["recipe", 2, "timber"]],
 }
 
-const REPORT_DAYS := [8, 20, 30, 40, 50, 60, 80, 100]
-const TOTAL_DAYS := 100
+const REPORT_DAYS := [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
+const TOTAL_DAYS := 120
 
 
 func _initialize() -> void:
@@ -64,9 +67,9 @@ func _initialize() -> void:
 			_report(village, day)
 
 	print("")
-	print("결과: %d가구 생존 (주거 %d)" % [village.labor.total(), village.housing_capacity()])
-	if village.labor.total() <= 0:
-		print("마을이 사라졌다. 이 전략으로는 살아남지 못한다.")
+	print("결과: %s · %d가구 생존 (주거 %d)" % [
+		{"victory": "승리", "defeat": "패배"}.get(world.outcome, "진행 중"),
+		village.labor.total(), village.housing_capacity()])
 	print("")
 	quit(0)
 
@@ -88,14 +91,13 @@ func _apply_strategy(world: SimWorld, day: int) -> void:
 
 
 func _report(village: SimVillage, day: int) -> void:
-	print("%3d일 | %d가구(유휴 %d) | 식량 %2d일 · 장작 %2d일 | 고난 %2d/%2d | 순무 %d 목재 %d" % [
+	print("%3d일 %s | %d가구(유휴 %d) | 식량 %2d일 · 장작 %2d일 | 순무 %3d 장작 %3d" % [
 		day,
+		["봄", "여름", "가을", "겨울"][int(village.season)],
 		village.labor.total(),
 		village.labor.idle_count(),
 		village.food_days_remaining(),
 		village.firewood_days_remaining(),
-		village.hardship,
-		village.hardship_limit(),
 		village.resources.amount_of("turnip"),
-		village.resources.amount_of("wood"),
+		village.resources.amount_of("firewood"),
 	])

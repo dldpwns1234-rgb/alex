@@ -17,6 +17,9 @@ var workers: int = 0
 var housing: int = 0
 ## 모든 자원의 저장 한도에 더해지는 값.
 var storage: int = 0
+## 겨울에 아예 멈추는가. 농경이 그렇다 (GDD §3.2).
+## 배율을 0으로 두는 것과 다르다 — "얼어서 못 한다"는 별도의 상태로 보여야 한다.
+var seasonal: bool = false
 ## 이 건물들이 완공되어 있어야 메뉴에서 해금된다 (GDD §4.5).
 var requires: Array[String] = []
 ## 둘 이상이면 플레이어가 고른다. 비어 있으면 생산하지 않는 건물이다.
@@ -30,6 +33,7 @@ static func from_dict(type_id: String, raw: Dictionary) -> SimBuildingType:
 	type.workers = int(raw.get("workers", 0))
 	type.housing = int(raw.get("housing", 0))
 	type.storage = int(raw.get("storage", 0))
+	type.seasonal = bool(raw.get("seasonal", false))
 
 	for resource_id in raw.get("cost", {}):
 		type.cost[String(resource_id)] = int(raw["cost"][resource_id])

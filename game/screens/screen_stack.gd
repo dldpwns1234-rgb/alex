@@ -37,6 +37,17 @@ func pop_screen() -> bool:
 	return true
 
 
+## 스택을 비우고 화면 하나만 남긴다. 새 게임을 시작할 때 쓴다.
+##
+## 예전 화면들은 이전 월드의 신호에 붙어 있으므로 반드시 버려야 한다
+## (Game.restart()는 월드 객체 자체를 갈아끼운다).
+func reset(screen: Control) -> void:
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	push_screen(screen)
+
+
 func depth() -> int:
 	return get_child_count()
 
