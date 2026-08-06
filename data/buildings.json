@@ -15,6 +15,8 @@
     "housing: 이 건물이 수용하는 가구 수. 오두막이 곧 일자리 수의 상한이다 (GDD §4.1).",
     "storage: 모든 자원의 저장 한도에 더해지는 값.",
     "seasonal: 겨울에 아예 멈춘다. 농경이 그렇다 (GDD §3.2 — 밭이 얼면 인력을 더 넣어도 소용없다).",
+    "winter_production: 겨울 생산 배율을 이 건물만 따로 정한다.",
+    "  비워두면 rules.json의 계절 배율(0.2)을 쓴다. 사냥은 겨울에도 되므로 예외다.",
     "",
     "recipes: 하나면 그냥 그것을 만든다. 둘 이상이면 플레이어가 고른다.",
     "  worker_days — 한 번 만드는 데 드는 '가구 × 일'. 2가구를 붙이면 절반의 날에 끝난다.",
@@ -86,6 +88,43 @@
         "description": "날로는 못 먹는다. 방앗간과 화덕이 있어야 값을 한다",
         "out": { "wheat": 6 },
         "worker_days": 3
+      }
+    ]
+  },
+
+  "hunter": {
+    "name": "사냥꾼 오두막",
+    "_comment": "TODO(M6): 지금은 중립적인 선택지다. 겨울이 주로 추위로 죽이기 때문에 식량원을 하나 더 두는 값이 잘 드러나지 않는다. 몬스터 가죽·뿔이 붙는 M6에서 다시 본다.",
+    "description": "겨울에도 고기는 걸어다닌다. 밭이 얼어도 여기는 돈다",
+    "cost": { "wood": 15 },
+    "build_days": 4,
+    "workers": 2,
+    "winter_production": 1.0,
+    "requires": ["hut"],
+    "recipes": [
+      {
+        "id": "hunt",
+        "name": "사냥",
+        "description": "농사보다 못하지만 계절을 타지 않는다",
+        "out": { "game_meat": 4 },
+        "worker_days": 2
+      }
+    ]
+  },
+
+  "quarry": {
+    "name": "채석장",
+    "description": "석재가 나오는 유일한 곳. 없으면 마을은 나무로만 지어진다",
+    "cost": { "wood": 25 },
+    "build_days": 5,
+    "workers": 2,
+    "requires": ["woodcutter"],
+    "recipes": [
+      {
+        "id": "cut_stone",
+        "name": "석재 채취",
+        "out": { "stone": 3 },
+        "worker_days": 1
       }
     ]
   },

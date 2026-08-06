@@ -214,7 +214,8 @@ func _produce_one(building: SimBuilding, type: SimBuildingType, workers: int) ->
 			return
 
 	building.halt_reason = SimBuilding.HALT_NONE
-	building.production_progress += workers * rules.production_multiplier(season)
+	var multiplier := type.season_multiplier(season, rules.production_multiplier(season))
+	building.production_progress += workers * multiplier
 
 	while building.production_progress >= recipe.worker_days:
 		if not resources.can_afford(recipe.inputs):

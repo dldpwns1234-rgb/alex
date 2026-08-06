@@ -179,7 +179,7 @@ func _run_catalog_tests() -> void:
 	var catalog := SimBuildingCatalog.load_default()
 
 	_test("카탈로그는 데이터 파일을 읽는다")
-	_equal(catalog.ids().size(), 6, "MVP 건물 6종 (GDD §4.5)")
+	_equal(catalog.ids().size(), 8, "건물 8종 — MVP 6종 + 채석장 · 사냥꾼 오두막")
 	_check(not catalog.has("_comment"), "주석 키는 건물이 아니다")
 	_check(catalog.has("bakery"), "화덕이 있다")
 
@@ -213,7 +213,7 @@ func _run_catalog_tests() -> void:
 func _run_village_tests() -> void:
 	_test("마을은 데이터 파일이 정한 자원과 슬롯으로 시작한다")
 	var village := SimVillage.load_default()
-	_equal(village.slot_count(), 8, "전체 슬롯 수")
+	_equal(village.slot_count(), 10, "전체 슬롯 수")
 	_equal(village.resources.amount_of("wood"), 140, "시작 목재")
 	_check(village.is_slot_unlocked(0), "0번 슬롯은 열려 있다")
 	_check(not village.is_slot_unlocked(village.slot_count() - 1), "마지막 슬롯은 잠겨 있다")
@@ -692,6 +692,34 @@ func _run_season_tests() -> void:
 	_equal(village.firewood_days_remaining(), 20, "가을에는 20일치")
 	village.season = winter
 	_equal(village.firewood_days_remaining(), 10, "겨울에는 같은 장작이 10일치")
+
+	_test("사냥은 겨울에도 된다 — 밭은 얼어도 짐승은 걸어다닌다")
+	village = _production_village(2)
+	_place(village, 0, "hunter")
+	village.labor.set_assignment(0, 2, 2)
+	village.season = winter
+	for _i in 5:
+		village.produce()
+	_check(village.resources.amount_of("game_meat") > 0, "겨울 사냥에도 수확이 있다")
+	_equal(village.buildings[0].halt_reason, SimBuilding.HALT_NONE, "멈추지 않는다")
+
+	_test("겨울 배율은 건물마다 다를 수 있다")
+	var catalog := SimBuildingCatalog.load_default()
+	var winter_default := 0.2
+	_equal(catalog.get_type("hunter").season_multiplier(winter, winter_default), 1.0,
+		"사냥꾼은 겨울에도 온전히 돈다")
+	_equal(catalog.get_type("woodcutter").season_multiplier(winter, winter_default), winter_default,
+		"나무꾼은 계절 기본값을 쓴다")
+	_equal(catalog.get_type("hunter").season_multiplier(summer, 1.0), 1.0,
+		"겨울이 아니면 오버라이드가 걸리지 않는다")
+
+	_test("석재를 얻을 방법이 있다 — 없으면 확장 자체가 막힌다")
+	var stone_makers: Array[String] = []
+	for type_id in catalog.ids():
+		for recipe in catalog.get_type(type_id).recipes:
+			if recipe.outputs.has("stone") and not stone_makers.has(type_id):
+				stone_makers.append(type_id)
+	_check(not stone_makers.is_empty(), "석재를 만드는 건물이 있다: %s" % str(stone_makers))
 
 	_test("월드가 틱마다 마을에 계절을 알려준다")
 	var world := _endless_world()

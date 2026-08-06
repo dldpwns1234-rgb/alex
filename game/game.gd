@@ -18,8 +18,12 @@ const SPEEDS: Array[float] = [0.0, 1.0, 2.0, 4.0]
 const SPEED_LABELS: Array[String] = ["II", "1x", "2x", "4x"]
 
 ## 1배속에서 게임 내 하루에 해당하는 실제 시간(초).
-## 1년 = 120일 = 4분. 밸런싱 과정에서 조정된다.
-const REAL_SECONDS_PER_DAY := 2.0
+##
+## data/rules.json의 `pace`에서 읽는다. **sim은 이 값을 모른다**
+## (ARCHITECTURE §2 규칙 2 — 시뮬레이션은 실시간을 모른다).
+## 그래도 데이터 파일에 두는 이유는 이것이 밸런싱 값이기 때문이다:
+## "1년이 몇 분인가"는 "결정 하나에 몇 초를 주는가"와 같은 말이다.
+var real_seconds_per_day := 3.0
 
 var world := SimWorld.create_default()
 var speed_index: int = 1
@@ -32,6 +36,7 @@ var _speed_before_suspend: int = -1
 func _ready() -> void:
 	# 화면 스택이 어떻게 바뀌든 시계는 계속 돈다 (ARCHITECTURE §6.1 규칙 3).
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_load_pace()
 	_install_theme()
 
 
@@ -49,8 +54,8 @@ func _process(delta: float) -> void:
 
 	# while 루프인 이유: 4배속이나 프레임 드랍 시 한 프레임에 여러 날이
 	# 지날 수 있다. 이산 틱이므로 건너뛰지 않고 하루씩 전부 처리한다.
-	while _day_accumulator >= REAL_SECONDS_PER_DAY:
-		_day_accumulator -= REAL_SECONDS_PER_DAY
+	while _day_accumulator >= real_seconds_per_day:
+		_day_accumulator -= real_seconds_per_day
 		world.tick()
 
 
@@ -104,6 +109,13 @@ func _resume() -> void:
 		return
 	set_speed(_speed_before_suspend)
 	_speed_before_suspend = -1
+
+
+## 하루가 몇 초인가. 데이터가 없으면 기본값을 쓴다.
+func _load_pace() -> void:
+	var pace: Dictionary = SimJson.read_dict(SimRules.DATA_PATH).get("pace", {})
+	real_seconds_per_day = maxf(0.1, float(
+		pace.get("real_seconds_per_day", real_seconds_per_day)))
 
 
 # --- 테마 --------------------------------------------------------------------

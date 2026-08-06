@@ -45,18 +45,19 @@ func _initialize() -> void:
 func _strategies() -> Array[Dictionary]:
 	var strategies: Array[Dictionary] = []
 	for crop in ["turnip", "barley"]:
-		for farmers in [1, 2]:
-			# 언제 농장에서 사람을 빼 장작으로 돌릴 것인가.
-			# 너무 이르면 굶고, 너무 늦으면 언다.
-			for woodcutter_day in [14, 24, 34, 44]:
-				# 다섯 번째 슬롯을 무엇에 쓸 것인가.
-				# 오두막이면 인구가 늘어 일손이 생기고, 창고면 겨울 비축을 더 쌓는다.
-				for fifth_slot in ["hut", "storehouse"]:
+		# 언제 농장에서 사람을 빼 나무꾼으로 돌릴 것인가.
+		# 너무 이르면 굶고, 너무 늦으면 언다.
+		for woodcutter_day in [14, 24, 34, 44]:
+			# 남는 슬롯을 무엇에 쓸 것인가.
+			# 오두막은 일손을 늘리고, 사냥꾼은 겨울에도 도는 식량원이며,
+			# 창고는 겨울 비축의 한도를 늘린다.
+			for hunter in [false, true]:
+				for storehouse in [false, true]:
 					strategies.append({
 						"crop": crop,
-						"farmers": farmers,
 						"woodcutter_day": woodcutter_day,
-						"fifth_slot": fifth_slot,
+						"hunter": hunter,
+						"storehouse": storehouse,
 					})
 	return strategies
 
@@ -94,17 +95,21 @@ func _act(world: SimWorld, strategy: Dictionary, day: int) -> void:
 		4:
 			world.execute(SimBuildCommand.new(1, "farm"))
 		10:
-			world.execute(SimAssignWorkersCommand.new(1, strategy["farmers"]))
+			world.execute(SimAssignWorkersCommand.new(1, 2))
 			world.execute(SimSetRecipeCommand.new(1, strategy["crop"]))
 			world.execute(SimBuildCommand.new(2, "woodcutter"))
 		20:
 			world.execute(SimBuildCommand.new(3, "hut"))
 		30:
-			world.execute(SimBuildCommand.new(4, strategy["fifth_slot"]))
+			world.execute(SimBuildCommand.new(4, "hunter" if strategy["hunter"] else "hut"))
+		45:
+			world.execute(SimBuildCommand.new(5, "storehouse" if strategy["storehouse"] else "hut"))
+		60:
+			world.execute(SimBuildCommand.new(6, "hut"))
 
 	if day == strategy["woodcutter_day"]:
 		# 농장에서 한 명 빼서 나무꾼으로 돌린다.
-		world.execute(SimAssignWorkersCommand.new(1, maxi(1, strategy["farmers"] - 1)))
+		world.execute(SimAssignWorkersCommand.new(1, 1))
 		world.execute(SimAssignWorkersCommand.new(2, 1))
 
 	_tend_woodcutter(world)
@@ -141,7 +146,8 @@ func _employ_idle(world: SimWorld) -> void:
 	if village.labor.idle_count() <= 0:
 		return
 
-	for slot in [1, 2]:
+	# 앞 슬롯부터 채운다. 농장(1) → 나무꾼(2) → 그 뒤에 지은 생산 건물들.
+	for slot in range(village.slot_count()):
 		var capacity := village.worker_capacity(slot)
 		if capacity <= 0:
 			continue
@@ -161,13 +167,12 @@ func _report(results: Array[Dictionary]) -> void:
 	print("")
 
 	_report_by("작물", results, func(r: Dictionary) -> String: return r["strategy"]["crop"])
-	_report_by("농부 수", results,
-		func(r: Dictionary) -> String: return "%d명" % r["strategy"]["farmers"])
+	_report_by("사냥꾼", results,
+		func(r: Dictionary) -> String: return "지음" if r["strategy"]["hunter"] else "안 지음")
 	_report_by("나무꾼 투입일", results,
 		func(r: Dictionary) -> String: return "%d일" % r["strategy"]["woodcutter_day"])
-	_report_by("5번 슬롯", results,
-		func(r: Dictionary) -> String: return "오두막" if r["strategy"]["fifth_slot"] == "hut" \
-			else "창고")
+	_report_by("창고", results,
+		func(r: Dictionary) -> String: return "지음" if r["strategy"]["storehouse"] else "안 지음")
 
 	var deaths := results.filter(func(r: Dictionary) -> bool: return not r["survived"])
 	if not deaths.is_empty():

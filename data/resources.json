@@ -28,6 +28,7 @@
   "wheat":    { "name": "밀",     "capacity": 150 },
   "barley":   { "name": "보리",   "capacity": 150, "food": 2 },
   "turnip":   { "name": "순무",   "capacity": 150, "food": 1 },
+  "game_meat":{ "name": "수렵육", "capacity": 120, "food": 2 },
   "firewood": { "name": "장작",   "capacity": 90 },
   "flour":    { "name": "밀가루", "capacity": 120 },
   "bread":    { "name": "빵",     "capacity": 120, "food": 5 }

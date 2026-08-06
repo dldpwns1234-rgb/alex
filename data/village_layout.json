@@ -20,7 +20,7 @@
     "panorama_size: 파노라마 전체 크기. 폭은 뷰포트에 맞추고 높이만 넘긴다."
   ],
 
-  "panorama_size": { "width": 720, "height": 1076 },
+  "panorama_size": { "width": 720, "height": 1340 },
 
   "starting_resources": {
     "_comment": [
@@ -34,13 +34,15 @@
   },
 
   "slots": [
-    { "x":  30, "y":  20, "unlock_year": 1 },
-    { "x": 396, "y": 152, "unlock_year": 1 },
-    { "x":  30, "y": 284, "unlock_year": 1 },
-    { "x": 396, "y": 416, "unlock_year": 1 },
-    { "x":  30, "y": 548, "unlock_year": 1 },
-    { "x": 396, "y": 680, "unlock_year": 2 },
-    { "x":  30, "y": 812, "unlock_year": 3 },
-    { "x": 396, "y": 944, "unlock_year": 3 }
+    { "x":  30, "y":   20, "unlock_year": 1 },
+    { "x": 396, "y":  152, "unlock_year": 1 },
+    { "x":  30, "y":  284, "unlock_year": 1 },
+    { "x": 396, "y":  416, "unlock_year": 1 },
+    { "x":  30, "y":  548, "unlock_year": 1 },
+    { "x": 396, "y":  680, "unlock_year": 1 },
+    { "x":  30, "y":  812, "unlock_year": 1 },
+    { "x": 396, "y":  944, "unlock_year": 2 },
+    { "x":  30, "y": 1076, "unlock_year": 2 },
+    { "x": 396, "y": 1208, "unlock_year": 3 }
   ]
 }
