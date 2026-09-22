@@ -35,7 +35,8 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 ```
 res://
   autoload/
-    balance.gd   (Balance) 모든 수치와 공식
+    balance.gd   (Balance) 모든 수치와 공식. 200줄 규칙 때문에 balance/ 아래 부분 스크립트를 상속으로 이어 붙인다
+    balance/     leveling(용사·레벨업) → companions(동료) → balance.gd(몬스터·보스·오프라인). 바깥에서는 Balance.만 쓴다
     game.gd      (Game) 골드, 스테이지, 몬스터, 보스. 상태 변경은 Game과 Party에서만
     party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
