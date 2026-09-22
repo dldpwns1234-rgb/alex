@@ -8,8 +8,8 @@ enum Effect {
 	ARCHER_CRIT_CHANCE, ARCHER_CRIT_MULT, BOSS_TIME, SKILL_COOLDOWN, MAGE_BOSS_MULT, STORM_CLICKS,
 	CLERIC_BUFF, BOSS_GOLD, OFFLINE_RATE, GOLDEN_TOUCH,
 }
-const TRAINING_COST_FACTOR: float = 5.0    # 해금 레벨의 레벨업 비용 × 5
-const TRAINING_COST_GROWTH: float = 1.3    # 단련 레벨마다 ×1.3
+const TRAINING_COST_FACTOR: float = 15.0
+const TRAINING_COST_GROWTH: float = 1.5
 const CLICK_CRIT_MULTIPLIER: float = 3.0   # 클릭 치명타 피해 배율
 const TRAININGS: Array[Dictionary] = [
 	{"owner": -1, "unlock": 10, "name": "연격", "effect": Effect.CLICK_DAMAGE, "per_level": 0.1, "max_level": 10},
