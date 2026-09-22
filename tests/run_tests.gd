@@ -7,6 +7,9 @@ extends Node
 ## --script 모드는 오토로드를 띄우지 않아 Game이 컴파일되지 않으므로 쓰지 않는다.
 ## 실패하면 종료 코드 1을 돌려준다. 테스트 안의 SCRIPT ERROR는 종료 코드에 잡히지 않으므로 CI가 로그를 grep한다.
 
+## 테스트 중 저장은 전부 이 파일로 간다. 실제 저장 파일을 건드리면 다음 실행의 시작 상태가 오염된다
+const TEST_SAVE_PATH: String = "user://test_run.json"
+
 const SUITES: Array[GDScript] = [
 	preload("res://tests/test_formulas.gd"),
 	preload("res://tests/test_game.gd"),
@@ -21,6 +24,8 @@ const SUITES: Array[GDScript] = [
 func _ready() -> void:
 	print("")
 	print("=== 회귀 용사 키우기 테스트 ===")
+	Save.save_path = TEST_SAVE_PATH
+	await get_tree().process_frame  # 시작할 때 불러온 저장이 남긴 지연 시그널을 흘려보낸다
 	var passed := 0
 	var failed := 0
 	for suite_script in SUITES:
@@ -29,6 +34,8 @@ func _ready() -> void:
 		await suite.run()  # 프레임을 기다리는 스위트가 있다
 		passed += suite.passed
 		failed += suite.failed
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
+	Save.save_path = Save.DEFAULT_SAVE_PATH
 	print("")
 	print("통과 %d · 실패 %d" % [passed, failed])
 	print("")

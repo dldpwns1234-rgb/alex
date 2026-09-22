@@ -5,6 +5,7 @@ const TEST_SAVE_PATH: String = "user://test_save.json"
 
 
 func run() -> void:
+	var previous_path := Save.save_path
 	Save.save_path = TEST_SAVE_PATH
 	_test_roundtrip()
 	_test_defaults()
@@ -12,7 +13,7 @@ func run() -> void:
 	_test_export_import()
 	_test_reset()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
-	Save.save_path = Save.DEFAULT_SAVE_PATH
+	Save.save_path = previous_path
 
 
 func _play_a_bit() -> void:
@@ -108,6 +109,7 @@ func _test_export_import() -> void:
 
 	_equal(Save.import_string(""), false, "빈 문자열은 거부")
 	_equal(Save.import_string("아무거나!!"), false, "base64가 아니면 거부")
+	_equal(Save.import_string(exported.substr(1)), false, "글자가 빠진 문자열은 거부")
 	_equal(Save.import_string(Marshalls.utf8_to_base64("[1]")), false, "저장 데이터가 아니면 거부")
 	_equal(Game.stage, 7, "거부하면 상태는 그대로")
 

@@ -7,6 +7,7 @@ var _received: Array = []
 
 
 func run() -> void:
+	var previous_path := Save.save_path
 	Save.save_path = TEST_SAVE_PATH
 	Save.offline_reward.connect(_on_offline_reward)
 	_test_formulas()
@@ -15,7 +16,7 @@ func run() -> void:
 	_test_duration()
 	Save.offline_reward.disconnect(_on_offline_reward)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
-	Save.save_path = Save.DEFAULT_SAVE_PATH
+	Save.save_path = previous_path
 
 
 func _on_offline_reward(seconds: float, gold: float) -> void:

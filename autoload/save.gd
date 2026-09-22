@@ -141,8 +141,8 @@ func import_string(text: String) -> bool:
 	var compact := ""
 	for part in text.split(" ", false):
 		compact += part.strip_edges()
-	# base64가 아닌 문자열을 풀려고 하면 엔진이 오류를 찍으므로 먼저 거른다
-	if compact.is_empty() or _base64_regex.search(compact) == null:
+	# base64가 아닌 문자열을 풀려고 하면 엔진이 오류를 찍으므로 먼저 거른다 (글자 종류와 4의 배수 길이)
+	if compact.is_empty() or compact.length() % 4 != 0 or _base64_regex.search(compact) == null:
 		return false
 	var json := Marshalls.base64_to_utf8(compact)
 	if json.is_empty() or not apply_json(json):

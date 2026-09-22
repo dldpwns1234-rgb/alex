@@ -33,9 +33,10 @@ func _advance(seconds: float) -> void:
 		left -= Balance.MAX_DELTA
 
 
-## 아무것도 없는 상태에서 시작한다 (회귀 데이터까지 지운다)
+## 아무것도 없는 상태에서 시작한다 (회귀 데이터와 구매 배수까지 되돌린다)
 func _fresh_run() -> void:
 	Prestige.reset()
 	Party.reset()
+	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()
 	Game.reset()
