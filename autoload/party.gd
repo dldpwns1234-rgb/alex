@@ -67,15 +67,15 @@ func click_damage() -> float:
 	return Balance.hero_click_damage(hero_level)
 
 
-## 동료 DPS 합계. boss는 현재 적이 보스인지
+## 동료 DPS 합계 × 전투의 함성. boss는 현재 적이 보스인지
 func party_dps(boss: bool) -> float:
-	return Balance.party_dps(companion_levels, boss)
+	return Balance.party_dps(companion_levels, boss) * Skills.party_multiplier()
 
 
-## 동료 한 명이 실제로 내는 DPS (성직자 버프 포함). 공격 연출의 피해 숫자에 쓴다
+## 동료 한 명이 실제로 내는 DPS (성직자 버프와 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
 func companion_dps(index: int, boss: bool) -> float:
 	var cleric := Balance.cleric_multiplier(companion_levels[Balance.Companion.CLERIC])
-	return Balance.companion_dps(index, companion_levels[index], boss) * cleric
+	return Balance.companion_dps(index, companion_levels[index], boss) * cleric * Skills.party_multiplier()
 
 
 func is_companion_hired(index: int) -> bool:

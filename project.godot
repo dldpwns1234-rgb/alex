@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 Balance="*res://autoload/balance.gd"
 Num="*res://autoload/num.gd"
 Party="*res://autoload/party.gd"
+Skills="*res://autoload/skills.gd"
 Game="*res://autoload/game.gd"
 Save="*res://autoload/save.gd"
 

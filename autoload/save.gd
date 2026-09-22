@@ -81,14 +81,17 @@ func to_dict() -> Dictionary:
 		"saved_at": Time.get_unix_time_from_system(),
 		"game": Game.to_dict(),
 		"party": Party.to_dict(),
+		"skills": Skills.to_dict(),
 	}
 
 
 ## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다
 func from_dict(data: Dictionary) -> void:
 	var party_data: Variant = data.get("party", {})
+	var skills_data: Variant = data.get("skills", {})
 	var game_data: Variant = data.get("game", {})
 	Party.from_dict(party_data if party_data is Dictionary else {})
+	Skills.from_dict(skills_data if skills_data is Dictionary else {})
 	Game.from_dict(game_data if game_data is Dictionary else {})
 
 
@@ -146,6 +149,7 @@ func import_string(text: String) -> bool:
 ## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
 func reset_data() -> void:
 	Party.reset()
+	Skills.reset()
 	Game.reset()
 	save_game()
 

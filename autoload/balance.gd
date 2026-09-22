@@ -1,6 +1,6 @@
-extends "res://autoload/balance/companions.gd"
+extends "res://autoload/balance/skills.gd"
 ## 모든 수치와 공식. 다른 파일에 게임 수치를 하드코딩하지 않는다.
-## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업과 동료는
+## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬은
 ## autoload/balance/ 아래 부분 스크립트에 있다 (상속으로 이어져 있어 Balance.로 모두 부른다).
 ## s = 스테이지
 
@@ -49,7 +49,7 @@ func boss_time_limit() -> float:
 	return BOSS_TIME_LIMIT
 
 
-## 처치 골드: 체력 ÷ 15 (보스 포함). 황금의 기억과 황금 손길은 M4·M5에서 붙는다
+## 처치 골드: 체력 ÷ 15 (보스 포함). 황금 손길(×2)은 Skills가, 황금의 기억은 M5가 곱한다
 func kill_gold(max_hp: float) -> float:
 	return max_hp * GOLD_PER_HP
 

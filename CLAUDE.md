@@ -36,13 +36,15 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 res://
   autoload/
     balance.gd   (Balance) 모든 수치와 공식. 200줄 규칙 때문에 balance/ 아래 부분 스크립트를 상속으로 이어 붙인다
-    balance/     leveling(용사·레벨업) → companions(동료) → balance.gd(몬스터·보스·오프라인). 바깥에서는 Balance.만 쓴다
-    game.gd      (Game) 골드, 스테이지, 몬스터, 보스. 상태 변경은 Game과 Party에서만
+    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → balance.gd(몬스터·보스·오프라인). 바깥에서는 Balance.만 쓴다
+    game.gd      (Game) 골드, 스테이지, 몬스터, 보스. 상태 변경은 Game·Party·Skills에서만
     party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
+    skills.gd    (Skills) 스킬 발동·지속·쿨타임(유닉스 초 기준)과 효과 배율
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
     num.gd       (Num) 한국식 숫자 표기
   scenes/
-    main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 탭 패널)
+    main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 패널)
+    top_bar.gd, skill_bar.gd, tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(동료 4명)
     tabs/        hero, party, prestige, settings
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다). 이미지, 사운드는 M6부터

@@ -140,7 +140,7 @@ func _damage_monster(amount: float) -> void:
 
 
 func _kill_monster() -> void:
-	var reward := Balance.kill_gold(monster_max_hp)
+	var reward := Balance.kill_gold(monster_max_hp) * Skills.gold_multiplier()
 	gold += reward
 	kills += 1
 	boss_time_left = 0.0

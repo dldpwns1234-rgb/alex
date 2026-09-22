@@ -75,3 +75,11 @@ func format_duration(seconds: float) -> String:
 	if secs > 0 or parts.is_empty():
 		parts.append("%d초" % secs)
 	return " ".join(parts)
+
+
+## 초를 "4:32"처럼. 스킬 바의 쿨타임 표시에 쓴다
+func format_clock(seconds: float) -> String:
+	var total := ceili(maxf(seconds, 0.0))
+	@warning_ignore("integer_division")
+	var minutes := total / 60
+	return "%d:%02d" % [minutes, total % 60]

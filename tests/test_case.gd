@@ -36,4 +36,5 @@ func _advance(seconds: float) -> void:
 ## 새 판 상태에서 시작한다
 func _fresh_run() -> void:
 	Party.reset()
+	Skills.reset()
 	Game.reset()
