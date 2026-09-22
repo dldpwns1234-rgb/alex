@@ -3,7 +3,8 @@ extends Node
 ##
 ##   godot --headless --path . res://tools/balance_sim.tscn
 ##
-## 가정: 초당 4클릭, 스킬 없음, 골드 대비 DPS 상승이 가장 큰 것부터 산다, 보스에 실패하면
+## 가정: 초당 4클릭, 스킬 없음, 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다
+## (용사·동료 레벨과 단련 모두. 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때 산다), 보스에 실패하면
 ## 예상 처치 시간이 제한 시간의 90% 안에 들 때(늦어도 5분마다) 재도전, 3분 동안 최고 스테이지가
 ## 오르지 않으면 회귀, 결정은 검술·황금 중 싼 것에 쓴다.
 
@@ -74,38 +75,60 @@ func _boss_looks_beatable() -> bool:
 	return Balance.boss_hp(boss_stage) / dps <= limit * BOSS_RETRY_MARGIN
 
 
-## 골드 대비 DPS 상승이 가장 큰 것부터 살 수 있는 만큼 산다
+## 진행 속도: (동료 DPS + 클릭 DPS) × 처치 골드 배율. 골드 대비 이 값의 상승이 큰 것부터 산다
+func _progress_rate() -> float:
+	var boss := Game.is_boss_stage()
+	var dps := Party.party_dps(boss) + Party.click_damage() * CLICKS_PER_SECOND
+	return dps * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
+
+
 func _buy_everything() -> void:
 	while true:
+		var current := _progress_rate()
 		var best_ratio := 0.0
-		var best_index := -2  # -1 = 용사, 0~ = 동료
-		var boss := Game.is_boss_stage()
+		var best_kind := ""  # "hero", "companion", "training"
+		var best_index := -1
 		var hero := Party.hero_purchase()
 		if hero.affordable:
-			var gain := (Balance.hero_click_damage(Party.hero_level + 1) - Balance.hero_click_damage(Party.hero_level))
-			gain *= Prestige.sword_multiplier() * CLICKS_PER_SECOND
-			best_ratio = gain / hero.cost
-			best_index = -1
-		var current := Balance.party_dps(Party.companion_levels, boss)
+			Party.hero_level += 1
+			best_ratio = (_progress_rate() - current) / hero.cost
+			best_kind = "hero"
+			Party.hero_level -= 1
 		for i in Party.companion_levels.size():
 			if not Party.is_companion_unlocked(i):
 				continue
 			var purchase := Party.companion_purchase(i)
 			if not purchase.affordable:
 				continue
-			var levels: Array[int] = Party.companion_levels.duplicate()
-			levels[i] += 1
-			var gain := (Balance.party_dps(levels, boss) - current) * Prestige.sword_multiplier()
-			var ratio := gain / purchase.cost
+			Party.companion_levels[i] += 1
+			var ratio := (_progress_rate() - current) / purchase.cost
+			Party.companion_levels[i] -= 1
 			if ratio > best_ratio:
 				best_ratio = ratio
+				best_kind = "companion"
 				best_index = i
-		if best_index == -2:
-			return
-		if best_index == -1:
-			Party.buy_hero()
-		else:
-			Party.buy_companion(best_index)
+		for i in Training.levels.size():
+			if not Training.can_buy(i):
+				continue
+			var purchase := Training.purchase(i)
+			Training.levels[i] += 1
+			var gain := _progress_rate() - current
+			Training.levels[i] -= 1
+			# 진행 속도에 안 잡히는 효과(보스 시간, 스킬, 재등장 등)는 싸면 산다
+			var ratio := gain / purchase.cost if gain > 0.0 else (1e9 if purchase.cost <= Game.gold * 0.02 else 0.0)
+			if ratio > best_ratio:
+				best_ratio = ratio
+				best_kind = "training"
+				best_index = i
+		match best_kind:
+			"hero":
+				Party.buy_hero()
+			"companion":
+				Party.buy_companion(best_index)
+			"training":
+				Training.buy(best_index)
+			_:
+				return
 
 
 func _prestige() -> void:
