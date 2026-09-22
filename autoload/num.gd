@@ -57,3 +57,21 @@ func _scientific(value: float) -> String:
 		exponent -= 1
 		mantissa *= 10.0
 	return "%.2fe%d" % [floor(mantissa * 100.0 + EPSILON) / 100.0, exponent]
+
+
+## 초를 "1시간 2분 5초"로. 0인 단위는 빼고, 1초 미만이면 "0초"
+func format_duration(seconds: float) -> String:
+	var total := floori(maxf(seconds, 0.0))
+	var parts: PackedStringArray = []
+	@warning_ignore("integer_division")
+	var hours := total / 3600
+	@warning_ignore("integer_division")
+	var minutes := (total % 3600) / 60
+	var secs := total % 60
+	if hours > 0:
+		parts.append("%d시간" % hours)
+	if minutes > 0:
+		parts.append("%d분" % minutes)
+	if secs > 0 or parts.is_empty():
+		parts.append("%d초" % secs)
+	return " ".join(parts)

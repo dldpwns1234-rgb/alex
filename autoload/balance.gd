@@ -29,6 +29,12 @@ const BOSS_TIME_LIMIT: float = 30.0     # 초. 시간의 모래(M5)가 더한다
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
 
+# 오프라인 보상 (GDD 8절)
+const OFFLINE_MIN_GAP: float = 10.0               # 초. 이보다 짧은 공백은 그냥 넘어간다
+const OFFLINE_MAX_SECONDS: float = 12.0 * 60.0 * 60.0  # 최대 12시간까지 인정
+const OFFLINE_BASE_RATE: float = 0.5
+const OFFLINE_RATE_PER_NAP_LEVEL: float = 0.1     # 단잠(M5) 레벨당 +10%p
+
 
 ## 마일스톤 수 m(L): 10레벨에 1, 이후 25레벨마다 +1
 func milestones(level: int) -> int:
@@ -168,3 +174,22 @@ func companion_note(index: int) -> String:
 		Companion.CLERIC:
 			return "동료 전체 공격력 +%d%%/레벨" % roundi(CLERIC_BUFF_PER_LEVEL * 100.0)
 	return "꾸준한 기본 피해"
+
+
+## 오프라인 기준 스테이지: 현재 스테이지, 보스 스테이지면 직전 스테이지
+func offline_stage(stage: int) -> int:
+	return stage - 1 if is_boss_stage(stage) else stage
+
+
+## 오프라인 초당 골드: 처치 골드 ÷ (체력 ÷ 동료 DPS 합계 + 0.3). 동료가 없으면 0
+func offline_gold_per_second(stage: int, party_dps: float) -> float:
+	if party_dps <= 0.0:
+		return 0.0
+	var hp := monster_hp(offline_stage(stage))
+	return kill_gold(hp) / (hp / party_dps + RESPAWN_DELAY)
+
+
+## 오프라인 보상: 초당 골드 × 경과 초(최대 12시간) × (0.5 + 단잠 레벨 × 0.1)
+func offline_reward(gold_per_second: float, seconds: float, nap_level: int) -> float:
+	var counted := minf(seconds, OFFLINE_MAX_SECONDS)
+	return gold_per_second * counted * (OFFLINE_BASE_RATE + OFFLINE_RATE_PER_NAP_LEVEL * nap_level)

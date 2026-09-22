@@ -1,26 +1,54 @@
 extends Node
-## 저장과 불러오기 (CLAUDE.md 저장 규칙). 오프라인 보상은 M3 세 번째 기능에서 붙는다.
+## 저장, 불러오기, 오프라인 보상 (CLAUDE.md 저장 규칙과 시간 규칙, GDD 8절).
 ## user://save.json에 JSON으로 저장한다. 30초마다, 그리고 창이나 탭의 포커스를 잃을 때 저장한다.
+## 매 프레임 유닉스 시각을 기록해서 10초 이상 비면 그 시간을 오프라인 보상으로 바꾼다.
 
 signal saved()
+signal offline_reward(seconds: float, gold: float)  # 인정된 시간과 받은 골드. 팝업용
 
 const SAVE_VERSION: int = 1
 const DEFAULT_SAVE_PATH: String = "user://save.json"
 const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 주기
+const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
 var _autosave_left: float = AUTOSAVE_INTERVAL
+var _last_unix: float = Time.get_unix_time_from_system()
+var _base64_regex := RegEx.create_from_string(BASE64_PATTERN)
 
 
 func _ready() -> void:
+	_last_unix = Time.get_unix_time_from_system()
 	load_game()
 
 
 func _process(delta: float) -> void:
+	var now := Time.get_unix_time_from_system()
+	var gap := now - _last_unix
+	_last_unix = now
+	if gap >= Balance.OFFLINE_MIN_GAP:
+		grant_offline(gap)
 	_autosave_left -= delta
 	if _autosave_left <= 0.0:
 		_autosave_left = AUTOSAVE_INTERVAL
 		save_game()
+
+
+## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다. 단잠(M5)은 아직 0레벨
+func grant_offline(seconds: float) -> void:
+	if seconds < Balance.OFFLINE_MIN_GAP:
+		return
+	var per_second := Balance.offline_gold_per_second(Game.stage, Party.party_dps(false))
+	var gold := Balance.offline_reward(per_second, seconds, 0)
+	if gold > 0.0:
+		Game.add_gold(gold)
+	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다
+	_emit_offline_reward.call_deferred(minf(seconds, Balance.OFFLINE_MAX_SECONDS), gold)
+	save_game()
+
+
+func _emit_offline_reward(seconds: float, gold: float) -> void:
+	offline_reward.emit(seconds, gold)
 
 
 ## 창이나 탭의 포커스를 잃을 때, 창을 닫을 때, 모바일에서 앱이 뒤로 갈 때 저장한다
@@ -58,7 +86,8 @@ func save_game() -> void:
 	saved.emit()
 
 
-## 저장 파일이 있으면 불러온다. 없거나 깨졌으면 false를 주고 상태는 그대로 둔다
+## 저장 파일이 있으면 불러오고, 마지막 저장 이후 비운 시간을 오프라인 보상으로 준다.
+## 없거나 깨졌으면 false를 주고 상태는 그대로 둔다
 func load_game() -> bool:
 	if not FileAccess.file_exists(save_path):
 		return false
@@ -67,7 +96,14 @@ func load_game() -> bool:
 		return false
 	var text := file.get_as_text()
 	file.close()
-	return apply_json(text)
+	var data := _parse(text)
+	if data.is_empty():
+		return false
+	from_dict(data)
+	var saved_at := float(data.get("saved_at", 0.0))
+	if saved_at > 0.0:
+		grant_offline(Time.get_unix_time_from_system() - saved_at)
+	return true
 
 
 ## 내보내기 문자열: 저장 JSON을 base64로 인코딩한 것
@@ -75,9 +111,16 @@ func export_string() -> String:
 	return Marshalls.utf8_to_base64(JSON.stringify(to_dict()))
 
 
-## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false를 주고 상태는 그대로 둔다
+## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false를 주고 상태는 그대로 둔다.
+## 같은 문자열을 되풀이해 넣어 오프라인 보상을 여러 번 받지 못하도록, 가져오기는 보상을 주지 않는다
 func import_string(text: String) -> bool:
-	var json := Marshalls.base64_to_utf8(text.strip_edges())
+	var compact := ""
+	for part in text.split(" ", false):
+		compact += part.strip_edges()
+	# base64가 아닌 문자열을 풀려고 하면 엔진이 오류를 찍으므로 먼저 거른다
+	if compact.is_empty() or _base64_regex.search(compact) == null:
+		return false
+	var json := Marshalls.base64_to_utf8(compact)
 	if json.is_empty() or not apply_json(json):
 		return false
 	save_game()
@@ -92,13 +135,21 @@ func reset_data() -> void:
 
 
 ## JSON 문자열을 검사해서 적용한다. 딕셔너리가 아니거나 save_version이 없으면 false
-## JSON.parse_string()은 실패할 때 엔진 오류를 찍으므로, 조용히 거부하려고 인스턴스의 parse()를 쓴다
 func apply_json(text: String) -> bool:
-	var json := JSON.new()
-	if json.parse(text) != OK or not json.data is Dictionary:
-		return false
-	var data: Dictionary = json.data
-	if not data.has("save_version"):
+	var data := _parse(text)
+	if data.is_empty():
 		return false
 	from_dict(data)
 	return true
+
+
+## 저장 JSON을 딕셔너리로. 딕셔너리가 아니거나 save_version이 없으면 빈 딕셔너리
+## JSON.parse_string()은 실패할 때 엔진 오류를 찍으므로, 조용히 거부하려고 인스턴스의 parse()를 쓴다
+func _parse(text: String) -> Dictionary:
+	var json := JSON.new()
+	if json.parse(text) != OK or not json.data is Dictionary:
+		return {}
+	var data: Dictionary = json.data
+	if not data.has("save_version"):
+		return {}
+	return data

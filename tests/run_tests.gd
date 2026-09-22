@@ -12,6 +12,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_game.gd"),
 	preload("res://tests/test_boss.gd"),
 	preload("res://tests/test_save.gd"),
+	preload("res://tests/test_offline.gd"),
 ]
 
 
@@ -23,7 +24,7 @@ func _ready() -> void:
 	for suite_script in SUITES:
 		var suite: Node = suite_script.new()
 		add_child(suite)
-		suite.run()
+		await suite.run()  # 프레임을 기다리는 스위트가 있다
 		passed += suite.passed
 		failed += suite.failed
 	print("")
