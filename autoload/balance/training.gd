@@ -99,10 +99,10 @@ func training_cost(index: int, level: int) -> float:
 	return training_base_cost(index) * pow(TRAINING_COST_GROWTH, level)
 
 
-## 레벨당 효과 설명. 숫자는 표에서 가져온다
-func training_note(index: int) -> String:
+## 효과 설명. level이 1이면 레벨당, 그 이상이면 그 레벨까지의 누적. 숫자는 표에서 가져온다
+func training_note(index: int, level: int = 1) -> String:
 	var effect := training_effect(index)
-	var per_level := training_per_level(index)
+	var per_level := training_per_level(index) * level
 	var shown := per_level * 100.0 if effect in PERCENT_EFFECTS else per_level
 	# 10 → "10", 0.2 → "0.2", −0.02 → "-0.02"
 	var number := ("%.2f" % shown).rstrip("0").rstrip(".")

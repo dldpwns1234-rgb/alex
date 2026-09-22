@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scenes/tabs/settings_tab.gd" id="7_settings_tab"]
 [ext_resource type="Script" path="res://scenes/skill_bar.gd" id="8_skill_bar"]
 [ext_resource type="Script" path="res://scenes/tabs/prestige_tab.gd" id="9_prestige_tab"]
+[ext_resource type="Script" path="res://scenes/tabs/training_tab.gd" id="10_training_tab"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -60,6 +61,10 @@ script = ExtResource("4_hero_tab")
 [node name="PartyTab" type="MarginContainer" parent="Layout/Tabs"]
 layout_mode = 2
 script = ExtResource("5_party_tab")
+
+[node name="TrainingTab" type="MarginContainer" parent="Layout/Tabs"]
+layout_mode = 2
+script = ExtResource("10_training_tab")
 
 [node name="PrestigeTab" type="MarginContainer" parent="Layout/Tabs"]
 layout_mode = 2

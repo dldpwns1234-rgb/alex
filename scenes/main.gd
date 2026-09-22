@@ -1,7 +1,9 @@
 extends Control
 ## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 패널을 위에서부터 쌓는다.
 
-const TAB_TITLES: PackedStringArray = ["용사", "동료", "회귀", "설정"]
+const TAB_TITLES: PackedStringArray = ["용사", "동료", "단련", "회귀", "설정"]
+const TRAINING_TAB: int = 2
+const BADGE: String = " •"  # 살 수 있는 단련이 있을 때 탭 이름에 붙인다
 
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
 
@@ -18,6 +20,17 @@ func _ready() -> void:
 	_offline_dialog.ok_button_text = "확인"
 	add_child(_offline_dialog)
 	Save.offline_reward.connect(_on_offline_reward)
+	Game.gold_changed.connect(_refresh_training_badge.unbind(1))
+	Training.training_changed.connect(_refresh_training_badge.unbind(2))
+	Party.hero_changed.connect(_refresh_training_badge.unbind(1))
+	Party.companion_changed.connect(_refresh_training_badge.unbind(2))
+	_refresh_training_badge()
+
+
+func _refresh_training_badge() -> void:
+	var title := TAB_TITLES[TRAINING_TAB] + (BADGE if Training.any_affordable() else "")
+	if _tabs.get_tab_title(TRAINING_TAB) != title:
+		_tabs.set_tab_title(TRAINING_TAB, title)
 
 
 ## 돌아오면 비운 시간과 받은 골드를 먼저 보여준다 (GDD 8·9절). 동료가 없어 받을 게 없으면 띄우지 않는다
