@@ -35,6 +35,7 @@ func _ready() -> void:
 	Game.kills_changed.connect(_refresh_progress.unbind(1))
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
 	Game.farming_changed.connect(_on_farming_changed)
+	Game.boss_queued_changed.connect(_refresh_challenge_button.unbind(1))
 	Party.companion_changed.connect(_on_companion_changed)
 	_layout()
 	# 오토로드가 먼저 준비돼 있으므로 현재 상태를 직접 읽어 채운다
@@ -92,7 +93,6 @@ func _build() -> void:
 
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
 	_challenge_button = Button.new()
-	_challenge_button.text = "보스 도전"
 	_challenge_button.size = CHALLENGE_BUTTON_SIZE
 	_challenge_button.pressed.connect(Game.challenge_boss)
 	add_child(_challenge_button)
@@ -138,7 +138,12 @@ func _refresh_progress() -> void:
 
 func _on_farming_changed(farming: bool) -> void:
 	_challenge_button.visible = farming
+	_refresh_challenge_button()
 	_refresh_progress()
+
+
+func _refresh_challenge_button() -> void:
+	_challenge_button.text = "보스 대기 중 (취소)" if Game.boss_queued else "보스 도전"
 
 
 func _on_companion_changed(index: int, level: int) -> void:

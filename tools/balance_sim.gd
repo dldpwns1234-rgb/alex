@@ -59,7 +59,7 @@ func _second() -> void:
 		Game._process(FRAME)
 		_t += FRAME
 	_buy_everything()
-	if Game.farming and (_boss_looks_beatable() or _t - _last_retry >= BOSS_RETRY_SECONDS):
+	if Game.farming and not Game.boss_queued and (_boss_looks_beatable() or _t - _last_retry >= BOSS_RETRY_SECONDS):
 		_last_retry = _t
 		Game.challenge_boss()
 	if Prestige.can_prestige() and _t - _last_progress >= STALL_SECONDS:

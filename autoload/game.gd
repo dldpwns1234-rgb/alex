@@ -1,6 +1,5 @@
 extends Node
-## 게임 진행: 골드, 스테이지, 몬스터, 보스. 용사와 동료의 레벨은 Party가 맡는다.
-## 상태 변경은 Game과 Party의 함수로만 하고, UI는 시그널을 받아 표시만 한다.
+## 게임 진행: 골드, 스테이지, 몬스터, 보스. 상태 변경은 오토로드의 함수로만 하고 UI는 표시만 한다.
 
 signal gold_changed(gold: float)
 signal stage_changed(stage: int)
@@ -12,12 +11,14 @@ signal monster_killed(reward: float)
 signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
 signal farming_changed(farming: bool)
+signal boss_queued_changed(queued: bool)  # 지금 몬스터를 잡으면 보스가 나오도록 예약됨
 
 var gold: float = 0.0
 var stage: int = 1
 var highest_stage: int = 1          # 이번 판에서 도달한 최고 스테이지. 동료 합류와 회귀(M5)에 쓴다
 var kills: int = 0                  # 이번 스테이지에서 처치한 수
 var farming: bool = false           # 보스에 실패해 직전 스테이지를 무한 파밍하는 중
+var boss_queued: bool = false       # 파밍 중 보스 도전을 눌러 둔 상태. 지금 몬스터를 잡으면 보스가 나온다
 var boss_time_left: float = 0.0     # 보스전 남은 시간 (초). 보스전이 아니면 0
 var monster_hp: float = 0.0
 var monster_max_hp: float = 0.0
@@ -56,10 +57,12 @@ func reset() -> void:
 	highest_stage = 1
 	kills = 0
 	farming = false
+	boss_queued = false
 	gold_changed.emit(gold)
 	stage_changed.emit(stage)
 	kills_changed.emit(kills)
 	farming_changed.emit(farming)
+	boss_queued_changed.emit(boss_queued)
 	_spawn_monster()
 
 
@@ -105,7 +108,6 @@ func tap_attack() -> void:
 	_damage_monster(amount)
 
 
-## 골드를 받는다 (오프라인 보상 등)
 func add_gold(amount: float) -> void:
 	gold += amount
 	gold_changed.emit(gold)
@@ -120,16 +122,25 @@ func spend(cost: float) -> bool:
 	return true
 
 
-## 파밍 중에 보스 스테이지로 다시 올라간다. 지금 몬스터는 버리고 보스가 바로 나온다
+## 파밍 중 보스 도전: 지금 몬스터를 잡은 뒤 보스가 나온다 (다시 누르면 취소). 재등장 대기 중이면 바로 간다
 func challenge_boss() -> void:
 	if not farming:
 		return
+	if is_monster_alive():
+		boss_queued = not boss_queued
+		boss_queued_changed.emit(boss_queued)
+		return
+	_start_boss_challenge()
+	kills_changed.emit(kills)
+
+
+func _start_boss_challenge() -> void:
 	farming = false
+	boss_queued = false
 	kills = 0
 	farming_changed.emit(farming)
-	_advance_stage()
-	kills_changed.emit(kills)
-	_spawn_monster()
+	boss_queued_changed.emit(boss_queued)
+	_advance_stage()  # 재등장 대기가 끝나면 이 스테이지의 보스가 나온다
 
 
 func _damage_monster(amount: float) -> void:
@@ -147,8 +158,10 @@ func _kill_monster() -> void:
 	respawn_left = Balance.RESPAWN_DELAY
 	gold_changed.emit(gold)
 	monster_killed.emit(reward)
-	# 보스는 1마리, 일반 스테이지는 10마리. 파밍 중에는 처치 수만 돌고 진행하지 않는다
-	if is_boss_stage() or kills >= Balance.MONSTERS_PER_STAGE:
+	# 보스는 1마리, 일반 스테이지는 10마리. 파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로 간다
+	if farming and boss_queued:
+		_start_boss_challenge()
+	elif is_boss_stage() or kills >= Balance.MONSTERS_PER_STAGE:
 		kills = 0
 		if not farming:
 			_advance_stage()
