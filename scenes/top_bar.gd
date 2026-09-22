@@ -1,12 +1,14 @@
 extends PanelContainer
-## 상단 바: 골드, 현재 스테이지, 보스전이면 남은 시간 (GDD 9절). 기억의 결정은 M5에서 붙는다.
-## Game의 시그널을 받아 표시만 한다.
+## 상단 바: 골드, 기억의 결정, 현재 스테이지, 보스전이면 남은 시간 (GDD 9절).
+## Game·Prestige의 시그널을 받아 표시만 한다.
 
 const MARGIN: int = 24
 const GAP: int = 24
 const TIMER_COLOR := Color("ff8c42")
+const CRYSTAL_COLOR := Color("7fd1f0")
 
 var _gold_label: Label
+var _crystal_label: Label
 var _timer_label: Label
 var _stage_label: Label
 
@@ -22,8 +24,12 @@ func _ready() -> void:
 	margin.add_child(row)
 
 	_gold_label = Label.new()
-	_gold_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_gold_label)
+
+	_crystal_label = Label.new()
+	_crystal_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_crystal_label.add_theme_color_override("font_color", CRYSTAL_COLOR)
+	row.add_child(_crystal_label)
 
 	_timer_label = Label.new()
 	_timer_label.add_theme_color_override("font_color", TIMER_COLOR)
@@ -34,6 +40,7 @@ func _ready() -> void:
 	row.add_child(_stage_label)
 
 	Game.gold_changed.connect(_on_gold_changed)
+	Prestige.crystals_changed.connect(_on_crystals_changed)
 	Game.stage_changed.connect(_on_stage_changed)
 	Game.boss_timer_changed.connect(_on_boss_timer_changed)
 	Game.monster_spawned.connect(_refresh_timer.unbind(2))
@@ -41,12 +48,17 @@ func _ready() -> void:
 	Game.boss_failed.connect(_refresh_timer)
 	# Game은 오토로드라 이미 준비돼 있으므로 현재 값을 직접 읽어 채운다
 	_on_gold_changed(Game.gold)
+	_on_crystals_changed(Prestige.crystals)
 	_on_stage_changed(Game.stage)
 	_refresh_timer()
 
 
 func _on_gold_changed(gold: float) -> void:
 	_gold_label.text = "골드 %s" % Num.format(gold)
+
+
+func _on_crystals_changed(crystals: float) -> void:
+	_crystal_label.text = "결정 %s" % Num.format(crystals)
 
 
 func _on_stage_changed(stage: int) -> void:
