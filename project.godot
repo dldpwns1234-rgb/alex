@@ -18,6 +18,7 @@ Balance="*res://autoload/balance.gd"
 Num="*res://autoload/num.gd"
 Party="*res://autoload/party.gd"
 Game="*res://autoload/game.gd"
+Save="*res://autoload/save.gd"
 
 [display]
 

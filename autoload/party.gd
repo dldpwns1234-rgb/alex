@@ -37,6 +37,32 @@ func reset() -> void:
 		companion_changed.emit(i, 0)
 
 
+## 저장할 상태 (Save가 부른다)
+func to_dict() -> Dictionary:
+	return {
+		"hero_level": hero_level,
+		"companion_levels": companion_levels.duplicate(),
+		"buy_mode": buy_mode,
+	}
+
+
+## 저장 데이터를 적용한다. 없는 필드는 기본값으로, 동료가 늘어나면 새 동료는 미고용으로
+func from_dict(data: Dictionary) -> void:
+	hero_level = maxi(int(data.get("hero_level", Balance.HERO_START_LEVEL)), Balance.HERO_START_LEVEL)
+	companion_levels.clear()
+	companion_levels.resize(Balance.COMPANIONS.size())
+	companion_levels.fill(0)
+	var saved: Variant = data.get("companion_levels", [])
+	if saved is Array:
+		for i in mini(saved.size(), companion_levels.size()):
+			companion_levels[i] = maxi(int(saved[i]), 0)
+	buy_mode = clampi(int(data.get("buy_mode", BuyMode.ONE)), BuyMode.ONE, BuyMode.MAX) as BuyMode
+	hero_changed.emit(hero_level)
+	for i in companion_levels.size():
+		companion_changed.emit(i, companion_levels[i])
+	buy_mode_changed.emit(buy_mode)
+
+
 func click_damage() -> float:
 	return Balance.hero_click_damage(hero_level)
 

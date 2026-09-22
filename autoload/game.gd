@@ -63,6 +63,31 @@ func reset() -> void:
 	_spawn_monster()
 
 
+## 저장할 상태 (Save가 부른다). 몬스터는 저장하지 않고 불러올 때 새로 낸다
+func to_dict() -> Dictionary:
+	return {
+		"gold": gold,
+		"stage": stage,
+		"highest_stage": highest_stage,
+		"kills": kills,
+		"farming": farming,
+	}
+
+
+## 저장 데이터를 적용한다. 없는 필드는 기본값으로 채운다 (옛 저장 호환)
+func from_dict(data: Dictionary) -> void:
+	gold = maxf(float(data.get("gold", 0.0)), 0.0)
+	stage = maxi(int(data.get("stage", 1)), 1)
+	highest_stage = maxi(int(data.get("highest_stage", stage)), stage)
+	kills = clampi(int(data.get("kills", 0)), 0, Balance.MONSTERS_PER_STAGE - 1)
+	farming = bool(data.get("farming", false))
+	gold_changed.emit(gold)
+	stage_changed.emit(stage)
+	kills_changed.emit(kills)
+	farming_changed.emit(farming)
+	_spawn_monster()
+
+
 func is_monster_alive() -> bool:
 	return respawn_left <= 0.0 and monster_hp > 0.0
 
@@ -78,6 +103,12 @@ func tap_attack() -> void:
 	var amount := Party.click_damage()
 	tap_hit.emit(amount)
 	_damage_monster(amount)
+
+
+## 골드를 받는다 (오프라인 보상 등)
+func add_gold(amount: float) -> void:
+	gold += amount
+	gold_changed.emit(gold)
 
 
 ## 골드를 치른다. 모자라면 false
