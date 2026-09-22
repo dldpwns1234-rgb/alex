@@ -2,6 +2,8 @@ extends MarginContainer
 ## 단련 탭 (GDD 6.5절): 주인별로 묶은 단련 25종의 해금·강화. 줄은 코드로 생성한다.
 ## Training의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
+const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+
 const MARGIN: int = 16
 const GAP: int = 8
 const ROW_PADDING: int = 10
@@ -19,8 +21,7 @@ var _buttons: Array[Button] = []
 func _ready() -> void:
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
 	add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -34,6 +35,7 @@ func _ready() -> void:
 			last_owner = owner
 			column.add_child(_make_header(Balance.owner_name(owner)))
 		column.add_child(_make_row(i))
+	scroll.release_buttons()
 
 	Game.gold_changed.connect(_refresh.unbind(1))
 	Training.training_changed.connect(_refresh.unbind(2))

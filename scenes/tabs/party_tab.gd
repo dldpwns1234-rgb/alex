@@ -2,6 +2,8 @@ extends MarginContainer
 ## 동료 탭: 동료 4명의 고용과 레벨업 (GDD 6절). 줄은 코드로 생성한다.
 ## Game·Party의 시그널을 받아 표시만 하고, 구매는 Party.buy_companion()을 부른다.
 
+const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+
 const MARGIN: int = 16
 const ROW_GAP: int = 8
 const ROW_PADDING: int = 12
@@ -18,8 +20,7 @@ func _ready() -> void:
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
 	add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -27,6 +28,7 @@ func _ready() -> void:
 	scroll.add_child(column)
 	for i in Balance.COMPANIONS.size():
 		column.add_child(_make_row(i))
+	scroll.release_buttons()
 
 	Game.gold_changed.connect(_refresh.unbind(1))
 	Game.stage_changed.connect(_refresh.unbind(1))

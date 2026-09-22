@@ -2,6 +2,8 @@ extends MarginContainer
 ## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 기억의 상점 6종. 줄은 코드로 생성한다.
 ## Prestige의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
+const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+
 const MARGIN: int = 16
 const GAP: int = 10
 const ROW_PADDING: int = 10
@@ -35,8 +37,7 @@ func _ready() -> void:
 	_prestige_button.pressed.connect(_on_prestige_pressed)
 	column.add_child(_prestige_button)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(scroll)
 	var shop := VBoxContainer.new()
@@ -45,6 +46,7 @@ func _ready() -> void:
 	scroll.add_child(shop)
 	for i in Balance.MEMORIES.size():
 		shop.add_child(_make_row(i))
+	scroll.release_buttons()
 
 	# 회귀 전에 받을 결정 수를 보여주는 확인 창 (GDD 7절)
 	_confirm = ConfirmationDialog.new()
