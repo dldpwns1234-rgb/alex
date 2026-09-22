@@ -29,11 +29,14 @@ func _ready() -> void:
 	add_child(column)
 
 	_summary = Label.new()
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_summary.add_theme_color_override("font_color", CRYSTAL_COLOR)
 	column.add_child(_summary)
 
 	_prestige_button = Button.new()
 	_prestige_button.custom_minimum_size = Vector2(0.0, BUTTON_HEIGHT)
+	_prestige_button.clip_text = true
+	_prestige_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_prestige_button.pressed.connect(_on_prestige_pressed)
 	column.add_child(_prestige_button)
 
@@ -77,15 +80,19 @@ func _make_row(index: int) -> PanelContainer:
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(text)
 	var title := Label.new()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(title)
 	var note := Label.new()
 	note.text = Balance.memory_note(index)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
 	note.add_theme_color_override("font_color", NOTE_COLOR)
 	text.add_child(note)
 
 	var button := Button.new()
 	button.custom_minimum_size = SHOP_BUTTON_SIZE
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.pressed.connect(Prestige.buy.bind(index))
 	row.add_child(button)

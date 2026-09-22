@@ -65,15 +65,20 @@ func _make_row(index: int) -> PanelContainer:
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(text)
+	# 글자가 길어져도 줄이 화면보다 넓어지지 않도록 라벨은 줄바꿈하고 버튼은 폭을 고정한다
 	var title := Label.new()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(title)
 	var note := Label.new()
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
 	note.add_theme_color_override("font_color", NOTE_COLOR)
 	text.add_child(note)
 
 	var button := Button.new()
 	button.custom_minimum_size = BUTTON_SIZE
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.pressed.connect(Training.buy.bind(index))
 	row.add_child(button)
@@ -89,9 +94,9 @@ func _refresh() -> void:
 		var level := Training.levels[i]
 		var cap := Balance.training_max_level(i)
 		_titles[i].text = "%s  Lv %d / %d" % [Balance.training_name(i), level, cap]
-		var note := "레벨당 %s" % Balance.training_note(i)
+		var note := "%s/레벨" % Balance.training_note(i)
 		if level > 0:
-			note += "  ·  지금 %s" % Balance.training_note(i, level)
+			note += "  ·  지금 %s" % Balance.training_amount(i, level)
 		_notes[i].text = note
 		if not Training.is_unlocked(i):
 			var owner := Balance.owner_name(Balance.training_owner(i))

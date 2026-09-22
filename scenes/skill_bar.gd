@@ -17,6 +17,7 @@ func _ready() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", FONT_SIZE)
+		button.clip_text = true
 		button.tooltip_text = Balance.skill_note(i)
 		button.pressed.connect(Skills.activate.bind(i))
 		add_child(button)

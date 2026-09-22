@@ -23,11 +23,17 @@ func _ready() -> void:
 	row.add_theme_constant_override("separation", GAP)
 	margin.add_child(row)
 
+	# 숫자가 아무리 길어져도 상단 바가 화면보다 넓어지지 않도록 두 라벨은 잘라 보인다
 	_gold_label = Label.new()
+	_gold_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_gold_label.clip_text = true
+	_gold_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(_gold_label)
 
 	_crystal_label = Label.new()
 	_crystal_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_crystal_label.clip_text = true
+	_crystal_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_crystal_label.add_theme_color_override("font_color", CRYSTAL_COLOR)
 	row.add_child(_crystal_label)
 

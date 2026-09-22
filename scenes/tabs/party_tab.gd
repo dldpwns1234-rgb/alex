@@ -51,14 +51,18 @@ func _make_row(index: int) -> PanelContainer:
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(text)
 	var title := Label.new()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(title)
 	var note := Label.new()
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
 	note.add_theme_color_override("font_color", NOTE_COLOR)
 	text.add_child(note)
 
 	var button := Button.new()
 	button.custom_minimum_size = BUTTON_SIZE
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.pressed.connect(_on_buy_pressed.bind(index))
 	row.add_child(button)

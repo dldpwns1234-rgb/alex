@@ -24,7 +24,14 @@ func _test_table() -> void:
 	_equal(Balance.training_note(0), "클릭 피해 +10%", "연격 설명")
 	_equal(Balance.training_note(5), "전사 DPS +20%", "굳건함 설명")
 	_equal(Balance.training_note(6), "재등장 대기 -0.02초", "도발 설명")
-	_equal(Balance.training_note(20), "성직자 버프 +0.2%p/레벨", "축복 설명")
+	_equal(Balance.training_note(20), "성직자 버프/레벨 +0.2%p", "축복 설명")
+	_equal(Balance.training_note(16), "스킬 쿨타임 −4%", "마나 순환 설명")
+	_equal(Balance.training_amount(0, 7), "+70%", "연격 7레벨 누적")
+	_equal(Balance.training_amount(1, 5), "+10%p", "급소 찌르기 5레벨 누적")
+	_equal(Balance.training_amount(6, 5), "-0.1초", "도발 5레벨 누적")
+	_equal(Balance.training_amount(19, 2), "+2회", "시간 왜곡 2레벨 누적")
+	_equal(Balance.training_amount(8, 1), "+0.2", "함성 공명 레벨당")
+	_equal(Balance.training_label(5), "전사 DPS", "굳건함 이름")
 
 
 func _test_cost() -> void:

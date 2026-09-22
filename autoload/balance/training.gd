@@ -38,18 +38,27 @@ const TRAININGS: Array[Dictionary] = [
 	{"owner": 3, "unlock": 75, "name": "신성한 빛", "effect": Effect.COMPANION_DAMAGE, "per_level": 0.2, "max_level": 10},
 	{"owner": 3, "unlock": 100, "name": "기적", "effect": Effect.GOLDEN_TOUCH, "per_level": 0.2, "max_level": 5},
 ]
-## 효과 종류별 레벨당 설명. %s 자리에 숫자가 들어간다
-const EFFECT_NOTES: Dictionary = {
-	Effect.CLICK_DAMAGE: "클릭 피해 +%s%%", Effect.CLICK_CRIT: "클릭 치명타 확률 +%s%%p",
-	Effect.KILL_GOLD: "처치 골드 +%s%%", Effect.PARTY_DAMAGE: "동료 전체 DPS +%s%%",
-	Effect.SKILL_DURATION: "스킬 지속 시간 +%s초", Effect.COMPANION_DAMAGE: "%s DPS +%s%%",
-	Effect.RESPAWN_DELAY: "재등장 대기 %s초", Effect.BOSS_DAMAGE: "보스에게 주는 피해 +%s%%",
-	Effect.BATTLE_CRY: "전투의 함성 배율 +%s", Effect.ARCHER_CRIT_CHANCE: "궁수 치명타 확률 +%s%%p",
-	Effect.ARCHER_CRIT_MULT: "궁수 치명타 배율 +%s", Effect.BOSS_TIME: "보스 제한 시간 +%s초",
-	Effect.SKILL_COOLDOWN: "스킬 쿨타임 −%s%%", Effect.MAGE_BOSS_MULT: "마법사 보스 피해 배율 +%s",
-	Effect.STORM_CLICKS: "폭풍 베기 초당 클릭 +%s", Effect.CLERIC_BUFF: "성직자 버프 +%s%%p/레벨",
-	Effect.BOSS_GOLD: "보스 처치 골드 +%s%%", Effect.OFFLINE_RATE: "오프라인 보상 +%s%%p",
-	Effect.GOLDEN_TOUCH: "황금 손길 배율 +%s",
+## 효과 종류별 이름. 동료 DPS는 %s 자리에 동료 이름이 들어간다
+const EFFECT_LABELS: Dictionary = {
+	Effect.CLICK_DAMAGE: "클릭 피해", Effect.CLICK_CRIT: "클릭 치명타 확률",
+	Effect.KILL_GOLD: "처치 골드", Effect.PARTY_DAMAGE: "동료 전체 DPS",
+	Effect.SKILL_DURATION: "스킬 지속 시간", Effect.COMPANION_DAMAGE: "%s DPS",
+	Effect.RESPAWN_DELAY: "재등장 대기", Effect.BOSS_DAMAGE: "보스에게 주는 피해",
+	Effect.BATTLE_CRY: "전투의 함성 배율", Effect.ARCHER_CRIT_CHANCE: "궁수 치명타 확률",
+	Effect.ARCHER_CRIT_MULT: "궁수 치명타 배율", Effect.BOSS_TIME: "보스 제한 시간",
+	Effect.SKILL_COOLDOWN: "스킬 쿨타임", Effect.MAGE_BOSS_MULT: "마법사 보스 피해 배율",
+	Effect.STORM_CLICKS: "폭풍 베기 초당 클릭", Effect.CLERIC_BUFF: "성직자 버프/레벨",
+	Effect.BOSS_GOLD: "보스 처치 골드", Effect.OFFLINE_RATE: "오프라인 보상",
+	Effect.GOLDEN_TOUCH: "황금 손길 배율",
+}
+## 효과 크기 뒤에 붙는 단위
+const EFFECT_UNITS: Dictionary = {
+	Effect.CLICK_DAMAGE: "%", Effect.CLICK_CRIT: "%p", Effect.KILL_GOLD: "%", Effect.PARTY_DAMAGE: "%",
+	Effect.SKILL_DURATION: "초", Effect.COMPANION_DAMAGE: "%", Effect.RESPAWN_DELAY: "초",
+	Effect.BOSS_DAMAGE: "%", Effect.BATTLE_CRY: "", Effect.ARCHER_CRIT_CHANCE: "%p",
+	Effect.ARCHER_CRIT_MULT: "", Effect.BOSS_TIME: "초", Effect.SKILL_COOLDOWN: "%",
+	Effect.MAGE_BOSS_MULT: "", Effect.STORM_CLICKS: "회", Effect.CLERIC_BUFF: "%p",
+	Effect.BOSS_GOLD: "%", Effect.OFFLINE_RATE: "%p", Effect.GOLDEN_TOUCH: "",
 }
 ## 백분율로 보여주는 효과
 const PERCENT_EFFECTS: Array[Effect] = [
@@ -99,13 +108,24 @@ func training_cost(index: int, level: int) -> float:
 	return training_base_cost(index) * pow(TRAINING_COST_GROWTH, level)
 
 
-## 효과 설명. level이 1이면 레벨당, 그 이상이면 그 레벨까지의 누적. 숫자는 표에서 가져온다
-func training_note(index: int, level: int = 1) -> String:
+## 효과 이름. 예: "클릭 피해", "전사 DPS"
+func training_label(index: int) -> String:
 	var effect := training_effect(index)
-	var per_level := training_per_level(index) * level
-	var shown := per_level * 100.0 if effect in PERCENT_EFFECTS else per_level
-	# 10 → "10", 0.2 → "0.2", −0.02 → "-0.02"
-	var number := ("%.2f" % shown).rstrip("0").rstrip(".")
 	if effect == Effect.COMPANION_DAMAGE:
-		return EFFECT_NOTES[effect] % [owner_name(training_owner(index)), number]
-	return EFFECT_NOTES[effect] % number
+		return EFFECT_LABELS[effect] % owner_name(training_owner(index))
+	return EFFECT_LABELS[effect]
+
+
+## 효과 크기. level이 1이면 레벨당, 그 이상이면 그 레벨까지의 누적. 예: "+10%", "+70%", "-0.02초", "−4%"
+func training_amount(index: int, level: int = 1) -> String:
+	var effect := training_effect(index)
+	var value := training_per_level(index) * level
+	var shown := value * 100.0 if effect in PERCENT_EFFECTS else value
+	var number := ("%.2f" % shown).rstrip("0").rstrip(".")  # 10 → "10", 0.2 → "0.2", −0.02 → "-0.02"
+	var sign := "−" if effect == Effect.SKILL_COOLDOWN else ("+" if shown >= 0.0 else "")
+	return sign + number + EFFECT_UNITS[effect]
+
+
+## 이름과 크기를 붙인 설명. 예: "클릭 피해 +10%"
+func training_note(index: int, level: int = 1) -> String:
+	return "%s %s" % [training_label(index), training_amount(index, level)]
