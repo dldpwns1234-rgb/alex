@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scenes/tabs/hero_tab.gd" id="4_hero_tab"]
 [ext_resource type="Script" path="res://scenes/tabs/party_tab.gd" id="5_party_tab"]
 [ext_resource type="Script" path="res://scenes/tabs/buy_bar.gd" id="6_buy_bar"]
+[ext_resource type="Script" path="res://scenes/tabs/settings_tab.gd" id="7_settings_tab"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -58,3 +59,4 @@ layout_mode = 2
 
 [node name="SettingsTab" type="MarginContainer" parent="Layout/Tabs"]
 layout_mode = 2
+script = ExtResource("7_settings_tab")

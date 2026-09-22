@@ -70,6 +70,27 @@ func load_game() -> bool:
 	return apply_json(text)
 
 
+## 내보내기 문자열: 저장 JSON을 base64로 인코딩한 것
+func export_string() -> String:
+	return Marshalls.utf8_to_base64(JSON.stringify(to_dict()))
+
+
+## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false를 주고 상태는 그대로 둔다
+func import_string(text: String) -> bool:
+	var json := Marshalls.base64_to_utf8(text.strip_edges())
+	if json.is_empty() or not apply_json(json):
+		return false
+	save_game()
+	return true
+
+
+## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
+func reset_data() -> void:
+	Party.reset()
+	Game.reset()
+	save_game()
+
+
 ## JSON 문자열을 검사해서 적용한다. 딕셔너리가 아니거나 save_version이 없으면 false
 ## JSON.parse_string()은 실패할 때 엔진 오류를 찍으므로, 조용히 거부하려고 인스턴스의 parse()를 쓴다
 func apply_json(text: String) -> bool:

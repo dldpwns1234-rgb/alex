@@ -9,6 +9,8 @@ func run() -> void:
 	_test_roundtrip()
 	_test_defaults()
 	_test_file()
+	_test_export_import()
+	_test_reset()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
 	Save.save_path = Save.DEFAULT_SAVE_PATH
 
@@ -90,3 +92,34 @@ func _test_file() -> void:
 	Save.save_path = "user://없는_폴더/없는_파일.json"
 	_equal(Save.load_game(), false, "파일이 없으면 false")
 	Save.save_path = TEST_SAVE_PATH
+
+
+func _test_export_import() -> void:
+	_play_a_bit()
+	var exported := Save.export_string()
+	_equal(exported.is_empty(), false, "내보내기 문자열이 나온다")
+	_equal(Marshalls.base64_to_utf8(exported).begins_with("{"), true, "base64를 풀면 JSON이다")
+
+	_fresh_run()
+	_equal(Save.import_string(" " + exported + "\n"), true, "앞뒤 공백이 있어도 가져온다")
+	_equal(Game.stage, 7, "가져온 스테이지")
+	_equal(Party.companion_levels, [5, 2, 0, 0], "가져온 동료 레벨")
+	_equal(FileAccess.file_exists(TEST_SAVE_PATH), true, "가져오면 바로 저장한다")
+
+	_equal(Save.import_string(""), false, "빈 문자열은 거부")
+	_equal(Save.import_string("아무거나!!"), false, "base64가 아니면 거부")
+	_equal(Save.import_string(Marshalls.utf8_to_base64("[1]")), false, "저장 데이터가 아니면 거부")
+	_equal(Game.stage, 7, "거부하면 상태는 그대로")
+
+
+func _test_reset() -> void:
+	_play_a_bit()
+	Save.reset_data()
+	_equal(Game.stage, 1, "초기화하면 1스테이지")
+	_close(Game.gold, 0.0, "초기화하면 골드 0")
+	_equal(Party.hero_level, 1, "초기화하면 용사 1레벨")
+	_equal(Party.companion_levels, [0, 0, 0, 0], "초기화하면 동료 미고용")
+	_fresh_run()
+	Game.stage = 3
+	_equal(Save.load_game(), true, "초기화 상태가 저장돼 있다")
+	_equal(Game.stage, 1, "불러오면 1스테이지")
