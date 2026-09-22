@@ -16,7 +16,6 @@ const STALL_SECONDS: float = 180.0  # 이만큼 최고 스테이지가 안 오�
 const MAX_PRESTIGES: int = 12
 const MAX_HOURS: float = 10.0
 const REPORT_STAGES: PackedStringArray = ["10", "20", "40", "60", "80", "100", "120", "150", "200"]
-const SIM_SAVE_PATH: String = "user://balance_sim.json"
 
 var _t: float = 0.0                 # 시뮬레이션 시간 (초)
 var _run_start: float = 0.0
@@ -29,10 +28,12 @@ var _lines: PackedStringArray = []
 
 
 func _ready() -> void:
-	Save.save_path = SIM_SAVE_PATH
+	Save.blocked = true  # 시뮬레이션은 저장하지 않는다. 시작할 때 읽힌 저장이 있어도 전부 새로 시작한다
 	Prestige.reset()
 	Party.reset()
+	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()
+	Training.reset()
 	Game.reset()
 	Game.stage_changed.connect(_on_stage_changed)
 	Party.companion_changed.connect(_on_companion_changed)
@@ -43,8 +44,6 @@ func _ready() -> void:
 		_second()
 	_report("종료: %s, 스테이지 %d, 회귀 %d회" % [_clock(_t), Game.stage, Prestige.prestige_count])
 	print("")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SIM_SAVE_PATH))
-	Save.save_path = Save.DEFAULT_SAVE_PATH
 	get_tree().quit(0)
 
 
@@ -165,8 +164,11 @@ func _on_stage_changed(stage: int) -> void:
 	var key := str(stage)
 	if key in REPORT_STAGES and not _reported.has(key):
 		_reported[key] = true
-		_report("%s  스테이지 %3d  용사 Lv %d  동료 %s  골드 %s" % [
-			_clock(_t), stage, Party.hero_level, str(Party.companion_levels), Num.format(Game.gold)])
+		var trained := 0
+		for level in Training.levels:
+			trained += level
+		_report("%s  스테이지 %3d  용사 Lv %d  동료 %s  단련 %d  골드 %s" % [
+			_clock(_t), stage, Party.hero_level, str(Party.companion_levels), trained, Num.format(Game.gold)])
 
 
 func _on_companion_changed(index: int, level: int) -> void:

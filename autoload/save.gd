@@ -12,6 +12,9 @@ const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 
 const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
+## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막아 실제 저장 파일을 건드리지 않는다.
+## (시뮬레이션은 _ready 한 번에 수십 초를 쓰므로, 끄지 않으면 그 시간이 오프라인 공백으로 잡혀 저장된다)
+var blocked: bool = false
 var _autosave_left: float = AUTOSAVE_INTERVAL
 var _last_unix: float = Time.get_unix_time_from_system()
 var _base64_regex := RegEx.create_from_string(BASE64_PATTERN)
@@ -39,6 +42,8 @@ func _on_browser_event(_args: Array) -> void:
 
 
 func _process(delta: float) -> void:
+	if blocked:
+		return
 	var now := Time.get_unix_time_from_system()
 	var gap := now - _last_unix
 	_last_unix = now
@@ -106,6 +111,8 @@ func from_dict(data: Dictionary) -> void:
 
 
 func save_game() -> void:
+	if blocked:
+		return
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		push_warning("저장 실패: %s" % error_string(FileAccess.get_open_error()))

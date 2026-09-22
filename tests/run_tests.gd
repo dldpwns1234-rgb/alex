@@ -36,8 +36,8 @@ func _ready() -> void:
 		await suite.run()  # 프레임을 기다리는 스위트가 있다
 		passed += suite.passed
 		failed += suite.failed
+	Save.blocked = true  # 종료 직전의 자동 저장이나 오프라인 보상 저장이 파일을 다시 만들지 않도록
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
-	Save.save_path = Save.DEFAULT_SAVE_PATH
 	print("")
 	print("통과 %d · 실패 %d" % [passed, failed])
 	print("")
