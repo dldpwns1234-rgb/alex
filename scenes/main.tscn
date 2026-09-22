@@ -1,0 +1,51 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
+[ext_resource type="Script" path="res://scenes/battle/battle.gd" id="3_battle"]
+[ext_resource type="Script" path="res://scenes/tabs/hero_tab.gd" id="4_hero_tab"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="PanelContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+script = ExtResource("2_top_bar")
+
+[node name="Battle" type="Control" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("3_battle")
+
+[node name="Tabs" type="TabContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 520)
+layout_mode = 2
+
+[node name="HeroTab" type="MarginContainer" parent="Layout/Tabs"]
+layout_mode = 2
+script = ExtResource("4_hero_tab")
+
+[node name="PartyTab" type="MarginContainer" parent="Layout/Tabs"]
+layout_mode = 2
+
+[node name="PrestigeTab" type="MarginContainer" parent="Layout/Tabs"]
+layout_mode = 2
+
+[node name="SettingsTab" type="MarginContainer" parent="Layout/Tabs"]
+layout_mode = 2
