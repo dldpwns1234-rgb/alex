@@ -6,7 +6,7 @@ extends "res://autoload/balance/training.gd"
 
 # 몬스터
 const MONSTER_BASE_HP: float = 10.0
-const MONSTER_HP_GROWTH: float = 1.15
+const MONSTER_HP_GROWTH: float = 1.16   # 단련(M5.5)을 넣으면서 1.15에서 올렸다. docs/BALANCE_SIM.md
 const MONSTERS_PER_STAGE: int = 10
 const GOLD_PER_HP: float = 1.0 / 15.0
 const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오기까지 (초)
@@ -26,7 +26,7 @@ const OFFLINE_BASE_RATE: float = 0.5
 # 단잠(OFFLINE_RATE_PER_NAP_LEVEL)은 memory.gd에 있다
 
 
-## 일반 몬스터 체력: 10 × 1.15^(s − 1)
+## 일반 몬스터 체력: 10 × 1.16^(s − 1)
 func monster_hp(stage: int) -> float:
 	return MONSTER_BASE_HP * pow(MONSTER_HP_GROWTH, stage - 1)
 

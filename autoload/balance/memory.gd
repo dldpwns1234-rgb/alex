@@ -1,8 +1,8 @@
 extends "res://autoload/balance/skills.gd"
 ## Balance 4부: 회귀와 기억의 상점 (GDD 7절). 순서는 Memory 열거형과 같다
 
-# 회귀: 이번 판 최고 스테이지 100 이상, 결정 floor(10 × 1.1^(최고 스테이지 − 100))
-const PRESTIGE_MIN_STAGE: int = 100
+# 회귀: 이번 판 최고 스테이지 120 이상, 결정 floor(10 × 1.1^(최고 스테이지 − 120)). 단련을 넣으면서 100에서 올렸다
+const PRESTIGE_MIN_STAGE: int = 120
 const PRESTIGE_BASE_CRYSTALS: float = 10.0
 const PRESTIGE_GROWTH: float = 1.1
 

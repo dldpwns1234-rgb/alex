@@ -39,14 +39,14 @@ func _test_balance(balance: Node) -> void:
 	_equal(balance.max_affordable(5.0, 1, summed - 1.0), 9, "조금 모자라면 9레벨")
 
 	_close(balance.monster_hp(1), 10.0, "1스테이지 체력")
-	_close(balance.monster_hp(2), 11.5, "2스테이지 체력")
-	_close(balance.monster_hp(100), 10.0 * pow(1.15, 99), "100스테이지 체력")
+	_close(balance.monster_hp(2), 11.6, "2스테이지 체력")
+	_close(balance.monster_hp(100), 10.0 * pow(Balance.MONSTER_HP_GROWTH, 99), "100스테이지 체력")
 	_close(balance.kill_gold(15.0), 1.0, "처치 골드")
 
 	_equal(balance.is_boss_stage(4), false, "4스테이지는 일반")
 	_equal(balance.is_boss_stage(5), true, "5스테이지는 보스")
 	_equal(balance.is_boss_stage(10), true, "10스테이지는 보스")
-	_close(balance.boss_hp(5), 10.0 * pow(1.15, 4) * 10.0, "보스 체력 ×10")
+	_close(balance.boss_hp(5), 10.0 * pow(Balance.MONSTER_HP_GROWTH, 4) * 10.0, "보스 체력 ×10")
 	_close(balance.enemy_hp(5), balance.boss_hp(5), "보스 스테이지의 적 체력")
 	_close(balance.enemy_hp(6), balance.monster_hp(6), "일반 스테이지의 적 체력")
 	_close(balance.boss_time_limit(0), 30.0, "보스 제한 시간")

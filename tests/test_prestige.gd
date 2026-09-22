@@ -11,11 +11,11 @@ func run() -> void:
 
 
 func _test_balance() -> void:
-	_equal(Balance.can_prestige(99), false, "99스테이지는 회귀 불가")
-	_equal(Balance.can_prestige(100), true, "100스테이지부터 회귀")
-	_close(Balance.crystal_reward(99), 0.0, "조건 미달이면 결정 0")
-	_close(Balance.crystal_reward(100), 10.0, "100스테이지 결정 10")
-	_close(Balance.crystal_reward(120), floor(10.0 * pow(1.1, 20)), "120스테이지 결정 67")
+	_equal(Balance.can_prestige(119), false, "119스테이지는 회귀 불가")
+	_equal(Balance.can_prestige(120), true, "120스테이지부터 회귀")
+	_close(Balance.crystal_reward(119), 0.0, "조건 미달이면 결정 0")
+	_close(Balance.crystal_reward(120), 10.0, "120스테이지 결정 10")
+	_close(Balance.crystal_reward(140), floor(10.0 * pow(1.1, 20)), "140스테이지 결정 67")
 	_close(Balance.memory_cost(0), 1.0, "첫 레벨 비용 1")
 	_close(Balance.memory_cost(3), 8.0, "4번째 레벨 비용 8")
 	_close(Balance.sword_multiplier(2), 2.25, "검술 2레벨 ×2.25")
@@ -35,13 +35,13 @@ func _test_prestige() -> void:
 	_equal(Prestige.perform(), false, "조건 미달이면 아무 일도 없다")
 	_close(Prestige.crystals, 0.0, "결정 그대로")
 
-	Game.highest_stage = 120
-	Game.stage = 118
-	_equal(Prestige.can_prestige(), true, "120스테이지면 회귀 가능")
+	Game.highest_stage = 140
+	Game.stage = 138
+	_equal(Prestige.can_prestige(), true, "140스테이지면 회귀 가능")
 	_close(Prestige.crystal_reward(), 67.0, "받을 결정 67")
 	_equal(Prestige.perform(), true, "회귀")
 	_close(Prestige.crystals, 67.0, "결정을 받았다")
-	_equal(Prestige.best_stage, 120, "역대 최고 스테이지")
+	_equal(Prestige.best_stage, 140, "역대 최고 스테이지")
 	_equal(Prestige.prestige_count, 1, "회귀 1회")
 	_equal(Game.stage, 1, "스테이지 1로")
 	_equal(Game.highest_stage, 1, "이번 판 최고 스테이지도 1로")

@@ -107,7 +107,7 @@ func _test_save() -> void:
 	_equal(Training.levels[24], 0, "모자란 항목은 0")
 
 	Training.levels[0] = 4
-	Game.highest_stage = 100
+	Game.highest_stage = Balance.PRESTIGE_MIN_STAGE
 	Prestige.perform()
 	_equal(Training.levels[0], 0, "회귀하면 단련도 초기화")
 	_fresh_run()
