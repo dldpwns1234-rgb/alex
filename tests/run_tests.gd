@@ -10,6 +10,7 @@ extends Node
 const SUITES: Array[GDScript] = [
 	preload("res://tests/test_formulas.gd"),
 	preload("res://tests/test_game.gd"),
+	preload("res://tests/test_boss.gd"),
 ]
 
 

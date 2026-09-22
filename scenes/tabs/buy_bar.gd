@@ -2,7 +2,7 @@ extends HBoxContainer
 ## 구매 배수 ×1, ×10, 최대 (GDD 9절). 탭 패널 위에 놓인다.
 ## 누르면 Party.set_buy_mode()를 부르고, buy_mode_changed를 받아 눌린 상태를 맞춘다.
 
-const MARGIN: int = 16
+const BUTTON_MIN_WIDTH: float = 120.0  # 손가락으로 누를 수 있는 폭
 const LABELS: Dictionary = {
 	Party.BuyMode.ONE: "×1",
 	Party.BuyMode.TEN: "×%d" % Balance.BULK_COUNT,
@@ -22,6 +22,7 @@ func _ready() -> void:
 		button.text = LABELS[mode]
 		button.toggle_mode = true
 		button.button_group = group
+		button.custom_minimum_size = Vector2(BUTTON_MIN_WIDTH, 0.0)
 		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(Party.set_buy_mode.bind(mode))
 		add_child(button)

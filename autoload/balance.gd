@@ -21,6 +21,11 @@ const MONSTERS_PER_STAGE: int = 10
 const GOLD_PER_HP: float = 1.0 / 15.0
 const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오기까지 (초)
 
+# 보스: 5의 배수 스테이지에 1마리, 체력 ×10, 제한 시간 30초
+const BOSS_STAGE_INTERVAL: int = 5
+const BOSS_HP_MULTIPLIER: float = 10.0
+const BOSS_TIME_LIMIT: float = 30.0     # 초. 시간의 모래(M5)가 더한다
+
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
 
@@ -70,7 +75,25 @@ func monster_hp(stage: int) -> float:
 	return MONSTER_BASE_HP * pow(MONSTER_HP_GROWTH, stage - 1)
 
 
-## 처치 골드: 체력 ÷ 15. 황금의 기억과 황금 손길은 M4·M5에서 붙는다
+func is_boss_stage(stage: int) -> bool:
+	return stage % BOSS_STAGE_INTERVAL == 0
+
+
+## 보스 체력: 몬스터 체력 × 10
+func boss_hp(stage: int) -> float:
+	return monster_hp(stage) * BOSS_HP_MULTIPLIER
+
+
+## 이 스테이지에 나오는 적의 체력
+func enemy_hp(stage: int) -> float:
+	return boss_hp(stage) if is_boss_stage(stage) else monster_hp(stage)
+
+
+func boss_time_limit() -> float:
+	return BOSS_TIME_LIMIT
+
+
+## 처치 골드: 체력 ÷ 15 (보스 포함). 황금의 기억과 황금 손길은 M4·M5에서 붙는다
 func kill_gold(max_hp: float) -> float:
 	return max_hp * GOLD_PER_HP
 

@@ -3,6 +3,7 @@ extends Control
 ## 아래 상수는 배치와 연출용이며 게임 수치가 아니다.
 
 const MONSTER_COLOR := Color("c94f4f")
+const BOSS_COLOR := Color("8e3fb8")
 const HIT_COLOR := Color.WHITE
 const HP_BAR_COLOR := Color("5fd36a")
 const FIGURE_SIZE := Vector2(220, 220)
@@ -20,6 +21,7 @@ var _name_label: Label
 var _hp_bar: ProgressBar
 var _hp_label: Label
 var _flash_tween: Tween
+var _base_color: Color = MONSTER_COLOR
 
 
 func _ready() -> void:
@@ -58,16 +60,19 @@ func _ready() -> void:
 	add_child(_hp_label)
 
 
-func spawn(max_hp: float) -> void:
+func spawn(max_hp: float, boss: bool) -> void:
+	_base_color = BOSS_COLOR if boss else MONSTER_COLOR
+	_name_label.text = "보스" if boss else "몬스터"
 	_figure.visible = true
-	_figure.color = MONSTER_COLOR
+	_figure.color = _base_color
 	_hp_bar.max_value = max_hp
 	set_hp(max_hp)
 
 
+## 체력은 올림해서 보인다. 버림이면 0.5가 남은 몬스터가 "0"으로 보여 죽은 것처럼 읽힌다
 func set_hp(hp: float) -> void:
 	_hp_bar.value = hp
-	_hp_label.text = "%s / %s" % [Num.format(hp), Num.format(_hp_bar.max_value)]
+	_hp_label.text = "%s / %s" % [Num.format(ceil(hp)), Num.format(ceil(_hp_bar.max_value))]
 
 
 func die() -> void:
@@ -79,7 +84,7 @@ func hit_flash() -> void:
 		_flash_tween.kill()
 	_figure.color = HIT_COLOR
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(_figure, "color", MONSTER_COLOR, HIT_FLASH_DURATION)
+	_flash_tween.tween_property(_figure, "color", _base_color, HIT_FLASH_DURATION)
 
 
 ## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다
