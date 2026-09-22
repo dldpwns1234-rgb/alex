@@ -9,6 +9,7 @@ const HERO_BASE_DAMAGE: float = 1.0
 
 # 레벨업
 const LEVEL_COST_GROWTH: float = 1.07
+const BULK_COUNT: int = 10               # 구매 배수 ×10
 const MILESTONE_FIRST_LEVEL: int = 10    # 이 레벨에서 첫 마일스톤
 const MILESTONE_INTERVAL: int = 25       # 이후 이 간격마다 +1
 const MILESTONE_MULTIPLIER: float = 2.0  # 마일스톤당 공격력 배율
@@ -40,6 +41,19 @@ func attack(base_damage: float, level: int) -> float:
 ## 레벨업 비용 (L → L+1): 기본 비용 × 1.07^L
 func level_cost(base_cost: float, level: int) -> float:
 	return base_cost * pow(LEVEL_COST_GROWTH, level)
+
+
+## n레벨 한 번에 구매: 기본 비용 × 1.07^L × (1.07^n − 1) / 0.07
+func bulk_cost(base_cost: float, level: int, count: int) -> float:
+	var growth := LEVEL_COST_GROWTH - 1.0
+	return level_cost(base_cost, level) * (pow(LEVEL_COST_GROWTH, count) - 1.0) / growth
+
+
+## 골드로 살 수 있는 최대 n: floor(log(골드 × 0.07 / (기본 비용 × 1.07^L) + 1) / log(1.07)). 못 사면 0
+func max_affordable(base_cost: float, level: int, gold: float) -> int:
+	var growth := LEVEL_COST_GROWTH - 1.0
+	var ratio := gold * growth / level_cost(base_cost, level) + 1.0
+	return floori(log(ratio) / log(LEVEL_COST_GROWTH))
 
 
 ## 용사 클릭 피해. 검술의 기억과 용사의 각성은 M5에서 붙는다
@@ -83,8 +97,12 @@ func companion_unlock_stage(index: int) -> int:
 	return COMPANIONS[index]["unlock_stage"]
 
 
+func companion_base_cost(index: int) -> float:
+	return COMPANIONS[index]["base_cost"]
+
+
 func companion_cost(index: int, level: int) -> float:
-	return level_cost(COMPANIONS[index]["base_cost"], level)
+	return level_cost(companion_base_cost(index), level)
 
 
 ## 궁수 치명타 기대값: 1 + 확률 × (배율 − 1) = 1.4. 실제 피해는 이 기대값으로 계산하고 치명타는 연출만 한다

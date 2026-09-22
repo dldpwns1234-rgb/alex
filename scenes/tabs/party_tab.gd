@@ -31,6 +31,7 @@ func _ready() -> void:
 	Game.gold_changed.connect(_refresh.unbind(1))
 	Game.stage_changed.connect(_refresh.unbind(1))
 	Party.companion_changed.connect(_refresh.unbind(2))
+	Party.buy_mode_changed.connect(_refresh.unbind(1))
 	_refresh()
 
 
@@ -86,5 +87,6 @@ func _refresh() -> void:
 		else:
 			_title_labels[i].text = "%s  (미고용)" % name
 		_note_labels[i].text = Balance.companion_note(i)
-		_buttons[i].text = "%s (%s 골드)" % ["고용" if level == 0 else "레벨업", Num.format(purchase.cost)]
+		var verb := "고용" if level == 0 else "레벨업"
+		_buttons[i].text = "%s ×%d (%s 골드)" % [verb, purchase.count, Num.format(purchase.cost)]
 		_buttons[i].disabled = not purchase.affordable

@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
 [ext_resource type="Script" path="res://scenes/battle/battle.gd" id="3_battle"]
 [ext_resource type="Script" path="res://scenes/tabs/hero_tab.gd" id="4_hero_tab"]
 [ext_resource type="Script" path="res://scenes/tabs/party_tab.gd" id="5_party_tab"]
+[ext_resource type="Script" path="res://scenes/tabs/buy_bar.gd" id="6_buy_bar"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -33,6 +34,12 @@ script = ExtResource("2_top_bar")
 layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("3_battle")
+
+[node name="BuyBar" type="HBoxContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_constants/separation = 8
+script = ExtResource("6_buy_bar")
 
 [node name="Tabs" type="TabContainer" parent="Layout"]
 custom_minimum_size = Vector2(0, 520)

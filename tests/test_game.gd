@@ -5,6 +5,7 @@ extends "res://tests/test_case.gd"
 func run() -> void:
 	_test_game()
 	_test_party()
+	_test_buy_modes()
 
 
 func _test_game() -> void:
@@ -83,3 +84,35 @@ func _test_party() -> void:
 	var before := Game.monster_hp
 	_advance(0.25)
 	_close(Game.monster_hp, before - (3.0 + 22.4) * 0.25, "0.25초 동안 DPS × delta")
+
+
+func _test_buy_modes() -> void:
+	_fresh_run()
+	Party.set_buy_mode(Party.BuyMode.TEN)
+	var ten := Party.hero_purchase()
+	_equal(ten.count, 10, "×10 모드는 10레벨")
+	_close(ten.cost, Balance.bulk_cost(5.0, 1, 10), "×10 비용")
+	_equal(ten.affordable, false, "골드 0이면 못 산다")
+	_equal(Party.buy_hero(), false, "못 사면 false")
+
+	Game.gold = ten.cost + 1.0
+	_equal(Party.buy_hero(), true, "×10 구매")
+	_equal(Party.hero_level, 11, "1 + 10 = 11레벨")
+	_close(Game.gold, 1.0, "비용을 뺀다")
+
+	Party.set_buy_mode(Party.BuyMode.MAX)
+	var none := Party.hero_purchase()
+	_equal(none.count, 1, "최대 모드에서 못 사면 1레벨 비용을 보여준다")
+	_equal(none.affordable, false, "그리고 못 산다")
+	Game.gold = Balance.bulk_cost(5.0, 11, 7) + 0.5
+	var seven := Party.hero_purchase()
+	_equal(seven.count, 7, "최대 모드는 살 수 있는 만큼")
+	_equal(Party.buy_hero(), true, "최대 구매")
+	_equal(Party.hero_level, 18, "11 + 7 = 18레벨")
+	_close(Game.gold, 0.5, "남는 골드")
+
+	Party.set_buy_mode(Party.BuyMode.ONE)
+	_equal(Party.hero_purchase().count, 1, "×1 모드")
+	Game.gold = 100.0
+	_equal(Party.buy_companion(Balance.Companion.WARRIOR), true, "동료도 같은 배수로 산다")
+	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 1, "전사 1레벨")

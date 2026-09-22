@@ -4,6 +4,10 @@ extends Node
 
 signal hero_changed(level: int)
 signal companion_changed(index: int, level: int)
+signal buy_mode_changed(mode: BuyMode)
+
+## 구매 배수 (GDD 9절): ×1, ×10, 최대. 용사 탭과 동료 탭이 같이 쓴다
+enum BuyMode { ONE, TEN, MAX }
 
 
 ## 한 번에 살 레벨 수와 비용. count는 최소 1이라 못 살 때도 비용을 보여줄 수 있다
@@ -15,6 +19,7 @@ class Purchase:
 
 var hero_level: int = Balance.HERO_START_LEVEL
 var companion_levels: Array[int] = []  # 0 = 미고용
+var buy_mode: BuyMode = BuyMode.ONE
 
 
 func _ready() -> void:
@@ -56,12 +61,19 @@ func is_companion_unlocked(index: int) -> bool:
 	return Game.highest_stage >= Balance.companion_unlock_stage(index)
 
 
+func set_buy_mode(mode: BuyMode) -> void:
+	if buy_mode == mode:
+		return
+	buy_mode = mode
+	buy_mode_changed.emit(mode)
+
+
 func hero_purchase() -> Purchase:
-	return _purchase(Balance.hero_level_cost(hero_level))
+	return _purchase(Balance.HERO_BASE_COST, hero_level)
 
 
 func companion_purchase(index: int) -> Purchase:
-	return _purchase(Balance.companion_cost(index, companion_levels[index]))
+	return _purchase(Balance.companion_base_cost(index), companion_levels[index])
 
 
 func buy_hero() -> bool:
@@ -85,9 +97,19 @@ func buy_companion(index: int) -> bool:
 	return true
 
 
-func _purchase(cost: float) -> Purchase:
+## 현재 구매 배수로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다
+func _purchase(base_cost: float, level: int) -> Purchase:
+	var count := 1
+	match buy_mode:
+		BuyMode.TEN:
+			count = Balance.BULK_COUNT
+		BuyMode.MAX:
+			count = maxi(Balance.max_affordable(base_cost, level, Game.gold), 1)
+			# 닫힌 공식의 부동소수 오차로 한 레벨 넘칠 수 있으니 실제 비용으로 확인한다
+			while count > 1 and Balance.bulk_cost(base_cost, level, count) > Game.gold:
+				count -= 1
 	var purchase := Purchase.new()
-	purchase.count = 1
-	purchase.cost = cost
-	purchase.affordable = Game.gold >= cost
+	purchase.count = count
+	purchase.cost = Balance.bulk_cost(base_cost, level, count)
+	purchase.affordable = Game.gold >= purchase.cost
 	return purchase

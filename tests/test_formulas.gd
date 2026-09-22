@@ -27,6 +27,17 @@ func _test_balance(balance: Node) -> void:
 	_close(balance.hero_level_cost(1), 5.35, "용사 1레벨 비용")
 	_close(balance.hero_click_damage(10), 20.0, "용사 10레벨 클릭 피해")
 
+	var summed := 0.0
+	for i in 10:
+		summed += balance.level_cost(5.0, 1 + i)
+	_close(balance.bulk_cost(5.0, 1, 10), summed, "10레벨 일괄 비용 = 낱개 비용의 합")
+	_close(balance.bulk_cost(5.0, 1, 1), balance.level_cost(5.0, 1), "1레벨 일괄 비용 = 낱개 비용")
+	_equal(balance.max_affordable(5.0, 1, 0.0), 0, "골드 0이면 못 산다")
+	_equal(balance.max_affordable(5.0, 1, 5.0), 0, "5.35 미만이면 0")
+	_equal(balance.max_affordable(5.0, 1, 6.0), 1, "6골드면 1레벨")
+	_equal(balance.max_affordable(5.0, 1, summed + 0.01), 10, "합계만큼 있으면 10레벨")
+	_equal(balance.max_affordable(5.0, 1, summed - 1.0), 9, "조금 모자라면 9레벨")
+
 	_close(balance.monster_hp(1), 10.0, "1스테이지 체력")
 	_close(balance.monster_hp(2), 11.5, "2스테이지 체력")
 	_close(balance.monster_hp(100), 10.0 * pow(1.15, 99), "100스테이지 체력")
