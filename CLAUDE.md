@@ -36,16 +36,17 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 res://
   autoload/
     balance.gd   (Balance) 모든 수치와 공식
-    game.gd      (Game) 게임 상태와 진행. 상태 변경은 여기서만
+    game.gd      (Game) 골드, 스테이지, 몬스터, 보스. 상태 변경은 Game과 Party에서만
+    party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
     num.gd       (Num) 한국식 숫자 표기
   scenes/
     main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 탭 패널)
-    battle/      전투 화면, 탭 공격, 연출
+    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(동료 4명)
     tabs/        hero, party, prestige, settings
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다). 이미지, 사운드는 M6부터
   tests/
-    run_tests.gd 헤드리스 테스트 (Balance 공식, Num.format, Game 진행)
+    run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
 ```
 

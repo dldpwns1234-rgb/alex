@@ -61,8 +61,15 @@ jobs:
             exit 1
           fi
 
+      # 테스트 안에서 난 SCRIPT ERROR는 종료 코드에 잡히지 않으므로 로그도 본다
       - name: 테스트
-        run: godot --headless --path . res://tests/run_tests.tscn
+        run: |
+          set -o pipefail
+          godot --headless --path . res://tests/run_tests.tscn 2>&1 | tee tests.log
+          if grep -q "SCRIPT ERROR" tests.log; then
+            echo "테스트 중 SCRIPT ERROR가 있습니다"
+            exit 1
+          fi
 
       - name: 웹 익스포트
         run: godot --headless --export-release "Web" build/web/index.html

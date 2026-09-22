@@ -5,7 +5,6 @@ extends Control
 const TAB_TITLES: PackedStringArray = ["용사", "동료", "회귀", "설정"]
 ## 아직 내용이 없는 탭에 보여줄 안내. 마일스톤이 끝나면 지운다
 const TAB_PLACEHOLDERS: Dictionary = {
-	"PartyTab": "동료는 M2에서 합류합니다",
 	"PrestigeTab": "회귀는 M5에서 열립니다",
 	"SettingsTab": "설정은 M3에서 추가됩니다",
 }

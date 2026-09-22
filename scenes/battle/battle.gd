@@ -1,33 +1,24 @@
 extends Control
-## 전투 화면 (GDD 3절, 9절). 화면 어디를 탭해도 용사가 클릭 피해를 준다.
-## M6 전까지는 ColorRect와 Label로 대신한다. 아래 상수는 배치와 연출용이며 게임 수치가 아니다.
+## 전투 화면 (GDD 3·9절). 왼쪽에 동료 4명, 오른쪽에 몬스터. 화면 어디를 탭해도 용사가 공격한다.
+## 도형은 MonsterView와 PartyView가 그리고, 여기서는 배치, 탭 입력, 동료 공격 연출의 타이밍을 맡는다.
+
+const MonsterView := preload("res://scenes/battle/monster_view.gd")
+const PartyView := preload("res://scenes/battle/party_view.gd")
 
 const BACKGROUND_COLOR := Color("2a2438")
-const HERO_COLOR := Color("4f8fe0")
-const MONSTER_COLOR := Color("c94f4f")
-const HIT_COLOR := Color.WHITE
-const HP_BAR_COLOR := Color("5fd36a")
-const DAMAGE_TEXT_COLOR := Color("ffe66d")
-
-const HERO_SIZE := Vector2(140, 180)
-const MONSTER_SIZE := Vector2(220, 220)
-const HERO_X: float = 0.22         # 화면 폭 대비 중심 위치
-const MONSTER_X: float = 0.7
-const HP_BAR_HEIGHT: float = 28.0
-const LABEL_HEIGHT: float = 44.0
+const TAP_TEXT_COLOR := Color("ffe66d")
+const PARTY_TEXT_COLOR := Color("dfe3ea")
+const CRIT_TEXT_COLOR := Color("ff8c42")
 const EDGE_MARGIN: float = 16.0
-const DAMAGE_FONT_SIZE: int = 40
-const DAMAGE_SPREAD: float = 50.0  # 피해 숫자가 나타나는 가로 흔들림
-const DAMAGE_RISE: float = 100.0   # 피해 숫자가 떠오르는 거리
-const DAMAGE_DURATION: float = 0.6
-const HIT_FLASH_DURATION: float = 0.1
+const LABEL_HEIGHT: float = 44.0
+const PARTY_X: float = 0.06         # 동료 열의 왼쪽 여백 (화면 폭 비율)
+const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
+const ATTACK_INTERVAL: float = 1.0  # 동료 공격 연출 주기 (GDD 3절: 약 1초)
 
-var _hero: ColorRect
-var _monster: ColorRect
-var _hp_bar: ProgressBar
-var _hp_label: Label
+var _monster_view: MonsterView
+var _party_view: PartyView
 var _kill_label: Label
-var _flash_tween: Tween
+var _attack_clocks: Array[float] = []
 
 
 func _ready() -> void:
@@ -35,13 +26,38 @@ func _ready() -> void:
 	_build()
 	resized.connect(_layout)
 	Game.monster_spawned.connect(_on_monster_spawned)
-	Game.monster_damaged.connect(_on_monster_damaged)
+	Game.monster_damaged.connect(_monster_view.set_hp)
+	Game.tap_hit.connect(_on_tap_hit)
 	Game.monster_killed.connect(_on_monster_killed)
 	Game.kills_changed.connect(_on_kills_changed)
+	Party.companion_changed.connect(_on_companion_changed)
 	_layout()
-	# Game은 오토로드라 이미 몬스터가 나와 있다. 현재 상태를 직접 읽어 채운다
+	# 오토로드가 먼저 준비돼 있으므로 현재 상태를 직접 읽어 채운다
 	_on_monster_spawned(Game.monster_max_hp)
+	_monster_view.set_hp(Game.monster_hp)
 	_on_kills_changed(Game.kills)
+	for i in Party.companion_levels.size():
+		_on_companion_changed(i, Party.companion_levels[i])
+
+
+## 동료 공격 연출: 고용한 동료마다 약 1초에 한 번 튀어나가며 그동안 준 피해를 숫자로 띄운다
+func _process(delta: float) -> void:
+	if not Game.is_monster_alive():
+		return
+	for i in _attack_clocks.size():
+		if not Party.is_companion_hired(i):
+			continue
+		_attack_clocks[i] += delta
+		if _attack_clocks[i] < ATTACK_INTERVAL:
+			continue
+		_attack_clocks[i] -= ATTACK_INTERVAL
+		_party_view.play_attack(i)
+		var amount := Party.companion_dps(i, false) * ATTACK_INTERVAL
+		# 궁수의 치명타는 연출만 한다 (GDD 6절). 피해는 이미 기대값이다
+		if i == Balance.Companion.ARCHER and randf() < Balance.ARCHER_CRIT_CHANCE:
+			_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
+		else:
+			_monster_view.pop(Num.format(amount), PARTY_TEXT_COLOR)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -58,107 +74,47 @@ func _build() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 
-	_hero = _make_figure("용사", HERO_COLOR, HERO_SIZE)
-	_monster = _make_figure("몬스터", MONSTER_COLOR, MONSTER_SIZE)
+	_party_view = PartyView.new()
+	add_child(_party_view)
+	_monster_view = MonsterView.new()
+	add_child(_monster_view)
 
-	_hp_bar = ProgressBar.new()
-	_hp_bar.show_percentage = false
-	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = HP_BAR_COLOR
-	_hp_bar.add_theme_stylebox_override("fill", fill)
-	add_child(_hp_bar)
+	_kill_label = Label.new()
+	_kill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_kill_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_kill_label)
 
-	_hp_label = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
-	_kill_label = _make_label(HORIZONTAL_ALIGNMENT_RIGHT)
-
-
-func _make_figure(text: String, color: Color, figure_size: Vector2) -> ColorRect:
-	var rect := ColorRect.new()
-	rect.color = color
-	rect.size = figure_size
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var label := Label.new()
-	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rect.add_child(label)
-	add_child(rect)
-	return rect
+	_attack_clocks.resize(Balance.COMPANIONS.size())
+	for i in _attack_clocks.size():
+		_attack_clocks[i] = i * ATTACK_INTERVAL / _attack_clocks.size()  # 동료끼리 박자를 엇갈리게
 
 
-func _make_label(alignment: HorizontalAlignment) -> Label:
-	var label := Label.new()
-	label.horizontal_alignment = alignment
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(label)
-	return label
-
-
-## 전투 화면 크기가 정해지면 (그리고 바뀌면) 도형들을 다시 배치한다
+## 전투 화면 크기가 정해지면 (그리고 바뀌면) 다시 배치한다
 func _layout() -> void:
 	var center_y := size.y * 0.5
-	_hero.position = Vector2(size.x * HERO_X - HERO_SIZE.x * 0.5, center_y - HERO_SIZE.y * 0.5)
-
-	var monster_x := size.x * MONSTER_X - MONSTER_SIZE.x * 0.5
-	_monster.position = Vector2(monster_x, center_y - MONSTER_SIZE.y * 0.5)
-
-	var bar_y := _monster.position.y + MONSTER_SIZE.y + EDGE_MARGIN
-	_hp_bar.position = Vector2(monster_x, bar_y)
-	_hp_bar.size = Vector2(MONSTER_SIZE.x, HP_BAR_HEIGHT)
-	_hp_label.position = Vector2(monster_x, bar_y + HP_BAR_HEIGHT)
-	_hp_label.size = Vector2(MONSTER_SIZE.x, LABEL_HEIGHT)
-
+	_party_view.position = Vector2(size.x * PARTY_X, center_y - _party_view.size.y * 0.5)
+	_monster_view.position = Vector2(
+		size.x * MONSTER_X - _monster_view.size.x * 0.5, center_y - _monster_view.size.y * 0.5)
 	_kill_label.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	_kill_label.size = Vector2(size.x - EDGE_MARGIN * 2.0, LABEL_HEIGHT)
 
 
 func _on_monster_spawned(max_hp: float) -> void:
-	_monster.visible = true
-	_monster.color = MONSTER_COLOR
-	_hp_bar.max_value = max_hp
-	_set_hp(max_hp)
+	_monster_view.spawn(max_hp)
 
 
-func _on_monster_damaged(hp: float, amount: float) -> void:
-	_set_hp(hp)
-	_spawn_damage_number(amount)
-	_flash_monster()
+func _on_tap_hit(amount: float) -> void:
+	_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
+	_monster_view.hit_flash()
 
 
 func _on_monster_killed(_reward: float) -> void:
-	_monster.visible = false
+	_monster_view.die()
 
 
 func _on_kills_changed(kills: int) -> void:
 	_kill_label.text = "처치 %d / %d" % [kills, Balance.MONSTERS_PER_STAGE]
 
 
-func _set_hp(hp: float) -> void:
-	_hp_bar.value = hp
-	_hp_label.text = "%s / %s" % [Num.format(hp), Num.format(_hp_bar.max_value)]
-
-
-func _spawn_damage_number(amount: float) -> void:
-	var label := Label.new()
-	label.text = Num.format(amount)
-	label.add_theme_font_size_override("font_size", DAMAGE_FONT_SIZE)
-	label.add_theme_color_override("font_color", DAMAGE_TEXT_COLOR)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var origin := _monster.position + Vector2(MONSTER_SIZE.x * 0.5, 0.0)
-	label.position = origin + Vector2(randf_range(-DAMAGE_SPREAD, DAMAGE_SPREAD), -LABEL_HEIGHT)
-	add_child(label)
-	var tween := create_tween()
-	tween.tween_property(label, "position:y", label.position.y - DAMAGE_RISE, DAMAGE_DURATION)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, DAMAGE_DURATION)
-	tween.tween_callback(label.queue_free)
-
-
-func _flash_monster() -> void:
-	if _flash_tween != null and _flash_tween.is_valid():
-		_flash_tween.kill()
-	_monster.color = HIT_COLOR
-	_flash_tween = create_tween()
-	_flash_tween.tween_property(_monster, "color", MONSTER_COLOR, HIT_FLASH_DURATION)
+func _on_companion_changed(index: int, level: int) -> void:
+	_party_view.set_hired(index, level > 0)
