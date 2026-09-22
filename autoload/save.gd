@@ -84,6 +84,7 @@ func to_dict() -> Dictionary:
 		"game": Game.to_dict(),
 		"party": Party.to_dict(),
 		"skills": Skills.to_dict(),
+		"training": Training.to_dict(),
 		"prestige": Prestige.to_dict(),
 	}
 
@@ -93,10 +94,12 @@ func from_dict(data: Dictionary) -> void:
 	var prestige_data: Variant = data.get("prestige", {})
 	var party_data: Variant = data.get("party", {})
 	var skills_data: Variant = data.get("skills", {})
+	var training_data: Variant = data.get("training", {})
 	var game_data: Variant = data.get("game", {})
 	Prestige.from_dict(prestige_data if prestige_data is Dictionary else {})
 	Party.from_dict(party_data if party_data is Dictionary else {})
 	Skills.from_dict(skills_data if skills_data is Dictionary else {})
+	Training.from_dict(training_data if training_data is Dictionary else {})
 	Game.from_dict(game_data if game_data is Dictionary else {})
 
 
@@ -156,6 +159,7 @@ func reset_data() -> void:
 	Prestige.reset()
 	Party.reset()
 	Skills.reset()
+	Training.reset()
 	Game.reset()
 	save_game()
 

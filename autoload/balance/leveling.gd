@@ -34,17 +34,15 @@ func level_cost(base_cost: float, level: int) -> float:
 	return base_cost * pow(LEVEL_COST_GROWTH, level)
 
 
-## n레벨 한 번에 구매: 기본 비용 × 1.07^L × (1.07^n − 1) / 0.07
-func bulk_cost(base_cost: float, level: int, count: int) -> float:
-	var growth := LEVEL_COST_GROWTH - 1.0
-	return level_cost(base_cost, level) * (pow(LEVEL_COST_GROWTH, count) - 1.0) / growth
+## n레벨 한 번에 구매: 기본 비용 × g^L × (g^n − 1) / (g − 1). g는 레벨업 1.07, 단련 1.3
+func bulk_cost(base_cost: float, level: int, count: int, growth: float = LEVEL_COST_GROWTH) -> float:
+	return base_cost * pow(growth, level) * (pow(growth, count) - 1.0) / (growth - 1.0)
 
 
-## 골드로 살 수 있는 최대 n: floor(log(골드 × 0.07 / (기본 비용 × 1.07^L) + 1) / log(1.07)). 못 사면 0
-func max_affordable(base_cost: float, level: int, gold: float) -> int:
-	var growth := LEVEL_COST_GROWTH - 1.0
-	var ratio := gold * growth / level_cost(base_cost, level) + 1.0
-	return floori(log(ratio) / log(LEVEL_COST_GROWTH))
+## 골드로 살 수 있는 최대 n: floor(log(골드 × (g − 1) / (기본 비용 × g^L) + 1) / log(g)). 못 사면 0
+func max_affordable(base_cost: float, level: int, gold: float, growth: float = LEVEL_COST_GROWTH) -> int:
+	var ratio := gold * (growth - 1.0) / (base_cost * pow(growth, level)) + 1.0
+	return floori(log(ratio) / log(growth))
 
 
 ## 용사 클릭 피해. 검술의 기억과 용사의 각성은 M5에서 붙는다

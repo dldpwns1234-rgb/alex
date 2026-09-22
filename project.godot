@@ -19,6 +19,7 @@ Num="*res://autoload/num.gd"
 Prestige="*res://autoload/prestige.gd"
 Party="*res://autoload/party.gd"
 Skills="*res://autoload/skills.gd"
+Training="*res://autoload/training.gd"
 Game="*res://autoload/game.gd"
 Save="*res://autoload/save.gd"
 

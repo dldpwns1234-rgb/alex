@@ -72,6 +72,7 @@ func perform() -> bool:
 	prestige_count += 1
 	Party.reset()
 	Skills.reset()
+	Training.reset()
 	Game.reset()
 	crystals_changed.emit(crystals)
 	prestiged.emit(reward)
