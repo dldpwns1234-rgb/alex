@@ -28,12 +28,16 @@ func _process(delta: float) -> void:
 		_damage_monster(dps * dt)
 
 
-## 탭 공격. 재등장을 기다리는 동안에는 피해가 들어가지 않는다
+## 탭 공격. 재등장을 기다리는 동안에는 피해가 들어가지 않는다. 클릭 치명타는 실제로 굴린다 (GDD 6.5절)
 func tap_attack() -> void:
 	if not is_monster_alive():
 		return
 	var amount := Party.click_damage()
-	tap_hit.emit(amount)
+	var chance := Training.value(Balance.Effect.CLICK_CRIT)
+	var crit := chance > 0.0 and randf() < chance
+	if crit:
+		amount *= Balance.CLICK_CRIT_MULTIPLIER
+	tap_hit.emit(amount, crit)
 	_damage_monster(amount)
 
 
@@ -65,12 +69,16 @@ func _damage_monster(amount: float) -> void:
 		_kill_monster()
 
 
+## 처치 골드 = 기본 × 황금의 기억 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금)
 func _kill_monster() -> void:
 	var reward := Balance.kill_gold(monster_max_hp) * Prestige.gold_multiplier() * Skills.gold_multiplier()
+	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
+	if is_boss_stage():
+		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)
 	gold += reward
 	kills += 1
 	boss_time_left = 0.0
-	respawn_left = Balance.RESPAWN_DELAY
+	respawn_left = respawn_delay()
 	gold_changed.emit(gold)
 	monster_killed.emit(reward)
 	# 보스는 1마리, 일반 스테이지는 10마리. 파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로 간다
@@ -89,7 +97,7 @@ func _fail_boss() -> void:
 	kills = 0
 	boss_time_left = 0.0
 	monster_hp = 0.0
-	respawn_left = Balance.RESPAWN_DELAY
+	respawn_left = respawn_delay()
 	stage -= 1
 	boss_failed.emit()
 	stage_changed.emit(stage)

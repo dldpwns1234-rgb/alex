@@ -57,7 +57,9 @@ func grant_offline(seconds: float) -> void:
 		return
 	var dps := Party.party_dps(false, false)
 	var per_second := Balance.offline_gold_per_second(Game.stage, dps) * Prestige.gold_multiplier()
-	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP))
+	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
+	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),
+		Training.value(Balance.Effect.OFFLINE_RATE))
 	if gold > 0.0:
 		Game.add_gold(gold)
 	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다

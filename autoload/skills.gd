@@ -17,7 +17,8 @@ func _process(delta: float) -> void:
 	if not is_active(Balance.Skill.STORM_SLASH):
 		_storm_clicks = 0.0
 		return
-	_storm_clicks += minf(delta, Balance.MAX_DELTA) * Balance.STORM_SLASH_CLICKS_PER_SECOND
+	var per_second := Balance.STORM_SLASH_CLICKS_PER_SECOND + Training.value(Balance.Effect.STORM_CLICKS)
+	_storm_clicks += minf(delta, Balance.MAX_DELTA) * per_second
 	while _storm_clicks >= 1.0:
 		_storm_clicks -= 1.0
 		Game.tap_attack()
@@ -49,22 +50,32 @@ func is_unlocked(index: int) -> bool:
 
 
 func is_active(index: int) -> bool:
-	return activated_at[index] > 0.0 and _now() < activated_at[index] + Balance.SKILL_DURATION
+	return activated_at[index] > 0.0 and _now() < activated_at[index] + duration()
+
+
+## 지속 시간: 30초 + 각성의 잔향 단련
+func duration() -> float:
+	return Balance.SKILL_DURATION + Training.value(Balance.Effect.SKILL_DURATION)
+
+
+## 쿨타임: 5분 × 명상 × 마나 순환 단련
+func cooldown() -> float:
+	var base := Balance.skill_cooldown(Prestige.level(Balance.Memory.MEDITATION))
+	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN))
 
 
 ## 남은 지속 시간 (초)
 func active_left(index: int) -> float:
 	if not is_active(index):
 		return 0.0
-	return activated_at[index] + Balance.SKILL_DURATION - _now()
+	return activated_at[index] + duration() - _now()
 
 
-## 남은 쿨타임 (초). 명상 레벨만큼 짧아진다
+## 남은 쿨타임 (초)
 func cooldown_left(index: int) -> float:
 	if activated_at[index] <= 0.0:
 		return 0.0
-	var cooldown := Balance.skill_cooldown(Prestige.level(Balance.Memory.MEDITATION))
-	return maxf(activated_at[index] + cooldown - _now(), 0.0)
+	return maxf(activated_at[index] + cooldown() - _now(), 0.0)
 
 
 func is_ready(index: int) -> bool:
@@ -84,14 +95,18 @@ func activate(index: int) -> bool:
 	return true
 
 
-## 전투의 함성: 활성 동안 동료 공격력 ×2
+## 전투의 함성: 활성 동안 동료 공격력 ×(2 + 함성 공명 단련)
 func party_multiplier() -> float:
-	return Balance.BATTLE_CRY_MULTIPLIER if is_active(Balance.Skill.BATTLE_CRY) else 1.0
+	if not is_active(Balance.Skill.BATTLE_CRY):
+		return 1.0
+	return Balance.BATTLE_CRY_MULTIPLIER + Training.value(Balance.Effect.BATTLE_CRY)
 
 
-## 황금 손길: 활성 동안 처치 골드 ×2
+## 황금 손길: 활성 동안 처치 골드 ×(2 + 기적 단련)
 func gold_multiplier() -> float:
-	return Balance.GOLDEN_TOUCH_MULTIPLIER if is_active(Balance.Skill.GOLDEN_TOUCH) else 1.0
+	if not is_active(Balance.Skill.GOLDEN_TOUCH):
+		return 1.0
+	return Balance.GOLDEN_TOUCH_MULTIPLIER + Training.value(Balance.Effect.GOLDEN_TOUCH)
 
 
 func _now() -> float:

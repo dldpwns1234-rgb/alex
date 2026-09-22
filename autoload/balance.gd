@@ -68,7 +68,7 @@ func offline_gold_per_second(stage: int, party_dps: float) -> float:
 	return kill_gold(hp) / (hp / party_dps + RESPAWN_DELAY)
 
 
-## 오프라인 보상: 초당 골드 × 경과 초(최대 12시간) × (0.5 + 단잠 레벨 × 0.1)
-func offline_reward(gold_per_second: float, seconds: float, nap_level: int) -> float:
+## 오프라인 보상: 초당 골드 × 경과 초(최대 12시간) × (0.5 + 단잠 레벨 × 0.1 + 안식 단련)
+func offline_reward(gold_per_second: float, seconds: float, nap_level: int, extra_rate: float = 0.0) -> float:
 	var counted := minf(seconds, OFFLINE_MAX_SECONDS)
-	return gold_per_second * counted * (OFFLINE_BASE_RATE + OFFLINE_RATE_PER_NAP_LEVEL * nap_level)
+	return gold_per_second * counted * (OFFLINE_BASE_RATE + OFFLINE_RATE_PER_NAP_LEVEL * nap_level + extra_rate)

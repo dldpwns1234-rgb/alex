@@ -7,7 +7,7 @@ signal stage_changed(stage: int)
 signal kills_changed(kills: int)
 signal monster_spawned(max_hp: float, boss: bool)
 signal monster_damaged(hp: float)         # 체력바 갱신용. 탭 피해와 동료 피해 모두
-signal tap_hit(amount: float)             # 탭 피해 숫자 연출용
+signal tap_hit(amount: float, crit: bool)  # 탭 피해 숫자 연출용. crit는 클릭 치명타
 signal monster_killed(reward: float)
 signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
@@ -75,6 +75,11 @@ func is_boss_stage() -> bool:
 	return Balance.is_boss_stage(stage)
 
 
+## 다음 몬스터가 나오기까지. 도발 단련이 줄인다
+func respawn_delay() -> float:
+	return maxf(Balance.RESPAWN_DELAY + Training.value(Balance.Effect.RESPAWN_DELAY), 0.0)
+
+
 func add_gold(amount: float) -> void:
 	gold += amount
 	gold_changed.emit(gold)
@@ -100,7 +105,8 @@ func _spawn_monster() -> void:
 	var boss := is_boss_stage()
 	monster_max_hp = Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp
-	boss_time_left = Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) if boss else 0.0
+	var limit := Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) + Training.value(Balance.Effect.BOSS_TIME)
+	boss_time_left = limit if boss else 0.0
 	monster_spawned.emit(monster_max_hp, boss)
 	if boss:
 		boss_timer_changed.emit(boss_time_left)

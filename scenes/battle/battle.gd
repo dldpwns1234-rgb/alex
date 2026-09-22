@@ -118,8 +118,11 @@ func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 	_monster_view.spawn(max_hp, boss)
 
 
-func _on_tap_hit(amount: float) -> void:
-	_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
+func _on_tap_hit(amount: float, crit: bool) -> void:
+	if crit:
+		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
+	else:
+		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
 	_monster_view.hit_flash()
 
 
