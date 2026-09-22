@@ -15,6 +15,7 @@
 autoload/   Balance(수치·공식, balance/ 부분 스크립트를 상속으로 연결) · Num(한국식 숫자 표기) · Game(골드·스테이지·몬스터·보스) · Party(용사·동료 레벨과 구매) · Skills(스킬) · Prestige(회귀·기억의 상점) · Save(저장·불러오기·오프라인 보상)
 scenes/     main.tscn 세로 화면 전체 · top_bar · battle/ 전투 화면 · skill_bar · tabs/ 탭 패널과 구매 배수
 tests/      헤드리스 테스트 러너와 스위트 (공식, 진행, 보스, 저장, 오프라인, 스킬, 회귀)
+tools/      밸런스 시뮬레이션 (익스포트에서 제외)
 assets/     한글 폰트. 이미지와 사운드는 M6부터
 docs/       기획서
 ```
@@ -30,6 +31,9 @@ godot --headless --path . --quit
 
 # 테스트 (공식, 숫자 표기, 전투 진행)
 godot --headless --path . res://tests/run_tests.tscn
+
+# 밸런스 시뮬레이션 — 실제 게임 코드로 회귀 12번까지 돌려 GDD 13절 목표와 비교한다 (결과: docs/BALANCE_SIM.md)
+godot --headless --path . res://tools/balance_sim.tscn
 
 # 웹 익스포트 — build/ 를 Godot이 스캔하지 않도록 .gdignore를 먼저 만든다
 mkdir -p build/web && touch build/.gdignore
