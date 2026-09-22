@@ -140,7 +140,7 @@ func _damage_monster(amount: float) -> void:
 
 
 func _kill_monster() -> void:
-	var reward := Balance.kill_gold(monster_max_hp) * Skills.gold_multiplier()
+	var reward := Balance.kill_gold(monster_max_hp) * Prestige.gold_multiplier() * Skills.gold_multiplier()
 	gold += reward
 	kills += 1
 	boss_time_left = 0.0
@@ -180,7 +180,7 @@ func _spawn_monster() -> void:
 	var boss := is_boss_stage()
 	monster_max_hp = Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp
-	boss_time_left = Balance.boss_time_limit() if boss else 0.0
+	boss_time_left = Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) if boss else 0.0
 	monster_spawned.emit(monster_max_hp, boss)
 	if boss:
 		boss_timer_changed.emit(boss_time_left)

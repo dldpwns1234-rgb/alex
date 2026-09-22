@@ -49,7 +49,8 @@ func _test_balance(balance: Node) -> void:
 	_close(balance.boss_hp(5), 10.0 * pow(1.15, 4) * 10.0, "보스 체력 ×10")
 	_close(balance.enemy_hp(5), balance.boss_hp(5), "보스 스테이지의 적 체력")
 	_close(balance.enemy_hp(6), balance.monster_hp(6), "일반 스테이지의 적 체력")
-	_close(balance.boss_time_limit(), 30.0, "보스 제한 시간")
+	_close(balance.boss_time_limit(0), 30.0, "보스 제한 시간")
+	_close(balance.boss_time_limit(2), 36.0, "시간의 모래 2레벨이면 36초")
 
 
 func _test_companions(balance: Node) -> void:

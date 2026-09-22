@@ -63,19 +63,24 @@ func from_dict(data: Dictionary) -> void:
 	buy_mode_changed.emit(buy_mode)
 
 
+## 클릭 피해: 기본 × 검술의 기억 + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
 func click_damage() -> float:
-	return Balance.hero_click_damage(hero_level)
+	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier()
+	return base + party_dps(Game.is_boss_stage()) * Prestige.awakening_share()
 
 
-## 동료 DPS 합계 × 전투의 함성. boss는 현재 적이 보스인지
-func party_dps(boss: bool) -> float:
-	return Balance.party_dps(companion_levels, boss) * Skills.party_multiplier()
+## 동료 DPS 합계 × 검술의 기억 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
+## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다
+func party_dps(boss: bool, with_skills: bool = true) -> float:
+	var dps := Balance.party_dps(companion_levels, boss) * Prestige.sword_multiplier()
+	return dps * Skills.party_multiplier() if with_skills else dps
 
 
-## 동료 한 명이 실제로 내는 DPS (성직자 버프와 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
+## 동료 한 명이 실제로 내는 DPS (성직자 버프, 검술의 기억, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
 func companion_dps(index: int, boss: bool) -> float:
 	var cleric := Balance.cleric_multiplier(companion_levels[Balance.Companion.CLERIC])
-	return Balance.companion_dps(index, companion_levels[index], boss) * cleric * Skills.party_multiplier()
+	var dps := Balance.companion_dps(index, companion_levels[index], boss) * cleric
+	return dps * Prestige.sword_multiplier() * Skills.party_multiplier()
 
 
 func is_companion_hired(index: int) -> bool:

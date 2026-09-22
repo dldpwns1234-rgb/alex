@@ -59,11 +59,12 @@ func active_left(index: int) -> float:
 	return activated_at[index] + Balance.SKILL_DURATION - _now()
 
 
-## 남은 쿨타임 (초). 명상(M5)은 아직 0레벨
+## 남은 쿨타임 (초). 명상 레벨만큼 짧아진다
 func cooldown_left(index: int) -> float:
 	if activated_at[index] <= 0.0:
 		return 0.0
-	return maxf(activated_at[index] + Balance.skill_cooldown(0) - _now(), 0.0)
+	var cooldown := Balance.skill_cooldown(Prestige.level(Balance.Memory.MEDITATION))
+	return maxf(activated_at[index] + cooldown - _now(), 0.0)
 
 
 func is_ready(index: int) -> bool:

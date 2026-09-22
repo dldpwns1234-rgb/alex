@@ -16,6 +16,7 @@ config/icon="res://icon.svg"
 ; 순서가 곧 초기화 순서. Balance는 다른 모든 오토로드가 참조하므로 맨 앞이다
 Balance="*res://autoload/balance.gd"
 Num="*res://autoload/num.gd"
+Prestige="*res://autoload/prestige.gd"
 Party="*res://autoload/party.gd"
 Skills="*res://autoload/skills.gd"
 Game="*res://autoload/game.gd"

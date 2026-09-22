@@ -50,12 +50,14 @@ func _process(delta: float) -> void:
 		save_game()
 
 
-## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다. 단잠(M5)은 아직 0레벨
+## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다.
+## 동료 DPS와 처치 골드에 기억의 상점 효과는 넣고 스킬은 뺀다
 func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
-	var per_second := Balance.offline_gold_per_second(Game.stage, Party.party_dps(false))
-	var gold := Balance.offline_reward(per_second, seconds, 0)
+	var dps := Party.party_dps(false, false)
+	var per_second := Balance.offline_gold_per_second(Game.stage, dps) * Prestige.gold_multiplier()
+	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP))
 	if gold > 0.0:
 		Game.add_gold(gold)
 	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다
@@ -82,14 +84,17 @@ func to_dict() -> Dictionary:
 		"game": Game.to_dict(),
 		"party": Party.to_dict(),
 		"skills": Skills.to_dict(),
+		"prestige": Prestige.to_dict(),
 	}
 
 
 ## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다
 func from_dict(data: Dictionary) -> void:
+	var prestige_data: Variant = data.get("prestige", {})
 	var party_data: Variant = data.get("party", {})
 	var skills_data: Variant = data.get("skills", {})
 	var game_data: Variant = data.get("game", {})
+	Prestige.from_dict(prestige_data if prestige_data is Dictionary else {})
 	Party.from_dict(party_data if party_data is Dictionary else {})
 	Skills.from_dict(skills_data if skills_data is Dictionary else {})
 	Game.from_dict(game_data if game_data is Dictionary else {})
@@ -148,6 +153,7 @@ func import_string(text: String) -> bool:
 
 ## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
 func reset_data() -> void:
+	Prestige.reset()
 	Party.reset()
 	Skills.reset()
 	Game.reset()

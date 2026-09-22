@@ -33,8 +33,9 @@ func _advance(seconds: float) -> void:
 		left -= Balance.MAX_DELTA
 
 
-## 새 판 상태에서 시작한다
+## 아무것도 없는 상태에서 시작한다 (회귀 데이터까지 지운다)
 func _fresh_run() -> void:
+	Prestige.reset()
 	Party.reset()
 	Skills.reset()
 	Game.reset()

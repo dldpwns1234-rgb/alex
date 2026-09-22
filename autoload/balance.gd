@@ -1,6 +1,6 @@
-extends "res://autoload/balance/skills.gd"
+extends "res://autoload/balance/memory.gd"
 ## 모든 수치와 공식. 다른 파일에 게임 수치를 하드코딩하지 않는다.
-## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬은
+## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점은
 ## autoload/balance/ 아래 부분 스크립트에 있다 (상속으로 이어져 있어 Balance.로 모두 부른다).
 ## s = 스테이지
 
@@ -23,7 +23,7 @@ const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
 const OFFLINE_MIN_GAP: float = 10.0               # 초. 이보다 짧은 공백은 그냥 넘어간다
 const OFFLINE_MAX_SECONDS: float = 12.0 * 60.0 * 60.0  # 최대 12시간까지 인정
 const OFFLINE_BASE_RATE: float = 0.5
-const OFFLINE_RATE_PER_NAP_LEVEL: float = 0.1     # 단잠(M5) 레벨당 +10%p
+# 단잠(OFFLINE_RATE_PER_NAP_LEVEL)은 memory.gd에 있다
 
 
 ## 일반 몬스터 체력: 10 × 1.15^(s − 1)
@@ -45,11 +45,12 @@ func enemy_hp(stage: int) -> float:
 	return boss_hp(stage) if is_boss_stage(stage) else monster_hp(stage)
 
 
-func boss_time_limit() -> float:
-	return BOSS_TIME_LIMIT
+## 보스 제한 시간: 30초 + 시간의 모래 3초/레벨
+func boss_time_limit(sand_level: int) -> float:
+	return BOSS_TIME_LIMIT + sand_bonus(sand_level)
 
 
-## 처치 골드: 체력 ÷ 15 (보스 포함). 황금 손길(×2)은 Skills가, 황금의 기억은 M5가 곱한다
+## 기본 처치 골드: 체력 ÷ 15 (보스 포함). 황금의 기억(Prestige)과 황금 손길(Skills)은 Game이 곱한다
 func kill_gold(max_hp: float) -> float:
 	return max_hp * GOLD_PER_HP
 
