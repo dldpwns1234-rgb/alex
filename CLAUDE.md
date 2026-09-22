@@ -72,7 +72,8 @@ docs/GDD.md      기획서
 ## 저장 규칙
 
 - `user://save.json`에 JSON으로 저장한다. `save_version` 필드 필수 (현재 1)
-- 30초마다, 그리고 창이나 탭의 포커스를 잃을 때 저장한다. 포커스 알림이 웹에서 실제로 오는지 M3에서 확인한다
+- 30초마다, 그리고 창이나 탭의 포커스를 잃을 때 저장한다
+  - 웹에서는 창 blur가 `NOTIFICATION_APPLICATION_FOCUS_OUT`으로 오지 않는다 (M3 브라우저 검사). 그래서 Save가 `JavaScriptBridge`로 `visibilitychange`와 `pagehide`를 직접 받아 저장한다. 데스크톱은 포커스 아웃 알림을 그대로 쓴다
 - 내보내기 문자열은 저장 JSON을 `Marshalls.utf8_to_base64()`로 인코딩한 것이다
 - 새 필드를 추가하면 불러오기에서 기본값을 채워서 옛 저장 데이터가 깨지지 않게 한다
 

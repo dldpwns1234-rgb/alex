@@ -15,11 +15,27 @@ var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 �
 var _autosave_left: float = AUTOSAVE_INTERVAL
 var _last_unix: float = Time.get_unix_time_from_system()
 var _base64_regex := RegEx.create_from_string(BASE64_PATTERN)
+var _web_callback: JavaScriptObject  # 브라우저 이벤트 콜백. 참조를 잃으면 수거된다
 
 
 func _ready() -> void:
 	_last_unix = Time.get_unix_time_from_system()
+	_hook_browser_events()
 	load_game()
+
+
+## 웹에서는 창 blur가 포커스 아웃 알림으로 오지 않는 것을 브라우저 검사로 확인했다 (M3).
+## 탭이 숨겨지거나 닫힐 때 오는 visibilitychange와 pagehide를 직접 받아 저장한다
+func _hook_browser_events() -> void:
+	if not OS.has_feature("web"):
+		return
+	_web_callback = JavaScriptBridge.create_callback(_on_browser_event)
+	JavaScriptBridge.get_interface("document").addEventListener("visibilitychange", _web_callback)
+	JavaScriptBridge.get_interface("window").addEventListener("pagehide", _web_callback)
+
+
+func _on_browser_event(_args: Array) -> void:
+	save_game()
 
 
 func _process(delta: float) -> void:
