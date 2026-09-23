@@ -86,10 +86,13 @@ func play_attack(index: int) -> void:
 	_actors[index].attack()
 
 
-func play_hero_attack() -> void:
+## 탭: 달려들어 베고(베는 중이면 그대로), 그와 별개로 칼을 짧게 휘두른다. downward는 내려베기인지
+func play_hero_attack(downward: bool) -> void:
 	_hero.strike()
+	_hero.swing(1.0 if downward else -1.0)
 
 
-## 달려든 용사의 손 자리 (이 뷰 좌표). 검격 궤적이 여기를 축으로 돈다
+## 달려든 용사의 손 자리 (이 뷰 좌표). 검격 자국이 여기를 축으로 돈다. 연타 중 용사가 오가더라도 자국은 늘
+## 같은 자리(몬스터 앞)에 남아야 읽히므로 지금 위치가 아니라 달려든 위치를 쓴다
 func hero_hand() -> Vector2:
 	return _hero.position + HERO_SIZE * HERO_HAND + Vector2(Actor.STRIKE_DISTANCE, 0.0)

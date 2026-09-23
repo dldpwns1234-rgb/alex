@@ -41,11 +41,12 @@ func _actor() -> void:
 	actor.spawn()
 	actor.attack()
 	actor.strike()
+	actor.swing(1.0)
 	actor.hit(true)
 	actor.hit(true, 1.8)
+	actor.hit(true, 1.0, true)
 	actor.hit(false)
-	actor.set_overlay(Zones.monster_texture(2), Vector2(40, 20), Vector2.ZERO)
-	actor.set_overlay(null, Vector2(40, 20), Vector2.ZERO)
+	_equal(actor.sprite() != null, true, "그림 노드를 내준다")
 	actor.set_locked(true)
 	actor.set_locked(false)
 	actor.die(0.05)
@@ -58,8 +59,8 @@ func _actor() -> void:
 	actor.queue_free()
 	var stage := Stage.new()
 	add_child(stage)
-	stage.slash(Vector2(100, 100), true, false)
-	stage.slash(Vector2(100, 100), false, true)
+	stage.slash(Vector2(100, 100), true, false, false)
+	stage.slash(Vector2(100, 100), false, true, true)
 	stage.impact(Vector2(200, 100), true, false)
 	stage.impact(Vector2(200, 100), false, true)
 	stage.shake(8.0)
@@ -67,5 +68,9 @@ func _actor() -> void:
 	await get_tree().create_timer(0.6).timeout  # 가장 긴 연출(처치 고리 0.3초)보다 길게
 	await get_tree().process_frame  # queue_free가 실제로 지워지도록 한 프레임
 	_equal(stage.get_child_count(), 0, "연출이 끝나면 스스로 사라진다")
+	for i in Stage.MAX_FX + 3:  # 사라진 연출의 참조가 남아 있어도, 상한을 넘어도 문제없이 붙는다
+		stage.impact(Vector2(200, 100), false, false)
+	await get_tree().process_frame  # 상한 때문에 지운 것들이 실제로 사라지도록
+	_equal(stage.get_child_count(), Stage.MAX_FX, "동시에 남는 연출은 상한까지")
 	stage.queue_free()
 	passed += 1

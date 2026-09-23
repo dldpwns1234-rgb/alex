@@ -1,82 +1,107 @@
 extends Node2D
-## 검격 궤적 (GDD 11절): 용사의 손을 축으로 도는 호를 칼끝이 쓸고 지나간 자리로 그린다.
-## 앞머리는 두껍고 밝고, 꼬리는 얇아지며 투명해진다. 매 프레임 호의 양 끝(앞머리·꼬리)을 옮겨 실제로 움직인다.
-## 내려베기는 위앞에서 아래앞으로, 올려베기는 그 반대. 축이 용사 쪽이라 활은 저절로 몬스터 쪽으로 불룩하다.
-## 만들어서 add_child()하면 알아서 재생하고 사라진다. 상수는 연출용이다.
+## 검격 자국 한 번 (GDD 11절). 용사의 손을 축으로 도는 초승달: 양 끝이 뾰족하고 가운데가 두꺼운 흰 면에 이 게임 그림체와
+## 같은 어두운 외곽선. 그 뒤에 얇은 잔상 하나, 그리고 칼이 지나간 자리에 가는 "베인 자국" 선이 조금 더 오래 남는다.
+## 훑는 움직임 없이 즉시 나타나 짧게 사라진다. 연타로 겹쳐도 선명한 X자 난무로 읽힌다. 축이 용사 쪽이라 활은 저절로
+## 몬스터 쪽으로 불룩하다. 순수한 세로 호는 내려베기와 올려베기가 같은 자국이 되므로, 호를 제 가운데를 축으로 기울여
+## 대각선 내려베기(＼)와 올려베기(／)로 구분한다. 만들어서 add_child()하면 알아서 재생하고 사라진다.
 
 const RADIUS: float = 120.0
-const START_ANGLE: float = -80.0  # 도. 0이 앞(오른쪽), 음수가 위
-const END_ANGLE: float = 32.0
-const ANGLE_JITTER: float = 6.0
-const SWEEP: float = 0.08         # 초. 앞머리가 끝까지 가는 시간
-const TAIL_DELAY: float = 0.04    # 꼬리가 따라 나서기까지
-const TAIL_SWEEP: float = 0.1     # 꼬리가 끝까지 가는 시간
-const SEGMENTS: int = 14
-const CORE_WIDTH: float = 26.0
-const GLOW_WIDTH: float = 54.0
-const CORE_COLOR := Color(1.0, 1.0, 1.0)
-const GLOW_COLOR := Color("ffe66d", 0.55)
-const CRIT_CORE_COLOR := Color("ffd7a0")
-const CRIT_GLOW_COLOR := Color("ff8c42", 0.6)
-const CRIT_SCALE: float = 1.3
-const TAIL_WIDTH_RATIO: float = 0.08  # 꼬리 끝 굵기 (앞머리 대비)
+const START_ANGLE: float = -62.0  # 도. 0이 앞(오른쪽), 음수가 위
+const END_ANGLE: float = 24.0
+const ANGLE_JITTER: float = 5.0
+const TILT: float = 18.0          # 도. 호를 제 가운데를 축으로 기울여 ＼(내려베기)와 ／(올려베기)를 만든다
+const SEGMENTS: int = 16
+const BLADE_WIDTH: float = 28.0   # 초승달 가운데 굵기
+const OUTLINE: float = 5.0        # 외곽선 두께 (양쪽 합)
+const AFTERIMAGE_OFFSET: float = 9.0    # 도. 휘두른 반대쪽으로
+const AFTERIMAGE_ALPHA: float = 0.35
+const AFTERIMAGE_WIDTH: float = 0.55    # 초승달 대비
+const CUT_WIDTH: float = 3.0      # 베인 자국 선
+const BLADE_HOLD: float = 0.05
+const BLADE_FADE: float = 0.07
+const CUT_HOLD: float = 0.12
+const CUT_FADE: float = 0.12
+const POP_SCALE: float = 1.1      # 살짝 크게 나타나 제 크기로 (칼이 뻗는 느낌)
+const POP_DURATION: float = 0.05
+const FLURRY_SCALE: float = 0.85  # 난무(연타) 때는 작고 빠르게
+const FLURRY_LIFE: float = 0.7
+const CRIT_SCALE: float = 1.25
+const FILL := Color(1.0, 1.0, 1.0)
+const OUTLINE_COLOR := Color("2b2438")
 
-var _from: float = 0.0  # 라디안
-var _to: float = 0.0
-var _size: float = 1.0
 var _clock: float = 0.0
-var _core: Line2D
-var _glow: Line2D
+var _life: float = 1.0  # 지속 시간 배율
+var _blade: Array[Line2D] = []  # 외곽선, 면, 잔상
+var _cut: Array[Line2D] = []    # 베인 자국 외곽선, 선
 
 
-func _init(pivot: Vector2, downward: bool, crit: bool) -> void:
+func _init(pivot: Vector2, downward: bool, crit: bool, flurry: bool) -> void:
 	position = pivot
-	_size = CRIT_SCALE if crit else 1.0
+	var size := (CRIT_SCALE if crit else 1.0) * (FLURRY_SCALE if flurry else 1.0)
+	_life = FLURRY_LIFE if flurry else 1.0
 	var jitter := deg_to_rad(randf_range(-ANGLE_JITTER, ANGLE_JITTER))
-	_from = deg_to_rad(START_ANGLE if downward else END_ANGLE) + jitter
-	_to = deg_to_rad(END_ANGLE if downward else START_ANGLE) + jitter
-	_glow = _make_line(GLOW_WIDTH * _size, CRIT_GLOW_COLOR if crit else GLOW_COLOR)
-	_core = _make_line(CORE_WIDTH * _size, CRIT_CORE_COLOR if crit else CORE_COLOR)
-	add_child(_glow)
-	add_child(_core)
-	_update(0.0, 0.0)
+	var from := deg_to_rad(START_ANGLE if downward else END_ANGLE) + jitter
+	var to := deg_to_rad(END_ANGLE if downward else START_ANGLE) + jitter
+	var tilt := deg_to_rad(-TILT if downward else TILT)  # ＼ 는 반시계, ／ 는 시계 방향
+	var points := _arc(from, to, size)
+	var middle := (points[0] + points[points.size() - 1]) * 0.5
+	var behind := deg_to_rad(-AFTERIMAGE_OFFSET if downward else AFTERIMAGE_OFFSET)
+	var shadow := _tilted(_arc(from + behind, to + behind, size), middle, tilt)
+	points = _tilted(points, middle, tilt)
+	_blade = [_line(points, BLADE_WIDTH * size + OUTLINE, OUTLINE_COLOR, true), _line(points, BLADE_WIDTH * size, FILL, true)]
+	if not flurry:  # 난무 때는 잔상까지 겹치면 어지럽다
+		_blade.push_front(_line(shadow, BLADE_WIDTH * AFTERIMAGE_WIDTH * size, Color(FILL, AFTERIMAGE_ALPHA), true))
+	_cut = [_line(points, CUT_WIDTH + OUTLINE * 0.6, OUTLINE_COLOR, false), _line(points, CUT_WIDTH, FILL, false)]
+	for line: Line2D in _blade + _cut:
+		add_child(line)
+	scale = Vector2.ONE * POP_SCALE
 
 
-func _make_line(width: float, color: Color) -> Line2D:
+func _arc(from: float, to: float, size: float) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in SEGMENTS + 1:
+		var angle := lerpf(from, to, float(i) / SEGMENTS)
+		points.append(Vector2(cos(angle), sin(angle)) * RADIUS * size)
+	return points
+
+
+## 점들을 center를 축으로 angle만큼 돌린다
+func _tilted(points: PackedVector2Array, center: Vector2, angle: float) -> PackedVector2Array:
+	var result := PackedVector2Array()
+	for point: Vector2 in points:
+		result.append(center + (point - center).rotated(angle))
+	return result
+
+
+## pointed면 양 끝이 뾰족한 초승달, 아니면 고른 굵기의 선
+func _line(points: PackedVector2Array, width: float, color: Color, pointed: bool) -> Line2D:
 	var line := Line2D.new()
+	line.points = points
 	line.width = width
 	line.default_color = color
 	line.joint_mode = Line2D.LINE_JOINT_ROUND
-	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	line.end_cap_mode = Line2D.LINE_CAP_ROUND
-	var curve := Curve.new()  # 점 순서는 꼬리(0)에서 앞머리(1)
-	curve.add_point(Vector2(0.0, TAIL_WIDTH_RATIO))
-	curve.add_point(Vector2(0.7, 0.8))
-	curve.add_point(Vector2(1.0, 1.0))
-	line.width_curve = curve
-	var gradient := Gradient.new()
-	gradient.set_color(0, Color(color, 0.0))
-	gradient.set_color(1, color)
-	line.gradient = gradient
+	line.antialiased = true
+	if pointed:
+		var curve := Curve.new()
+		curve.add_point(Vector2(0.0, 0.0))
+		curve.add_point(Vector2(0.55, 1.0))
+		curve.add_point(Vector2(1.0, 0.0))
+		line.width_curve = curve
+	else:
+		line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		line.end_cap_mode = Line2D.LINE_CAP_ROUND
 	return line
 
 
 func _process(delta: float) -> void:
 	_clock += delta
-	var head := 1.0 - pow(1.0 - clampf(_clock / SWEEP, 0.0, 1.0), 2.0)  # 빠르게 나가서 느려진다
-	var tail := clampf((_clock - TAIL_DELAY) / TAIL_SWEEP, 0.0, 1.0)
-	if tail >= 1.0:
+	var pop := clampf(_clock / (POP_DURATION * _life), 0.0, 1.0)
+	scale = Vector2.ONE * lerpf(POP_SCALE, 1.0, pop)
+	var blade_alpha := 1.0 - clampf((_clock - BLADE_HOLD * _life) / (BLADE_FADE * _life), 0.0, 1.0)
+	var cut_alpha := 1.0 - clampf((_clock - CUT_HOLD * _life) / (CUT_FADE * _life), 0.0, 1.0)
+	for line: Line2D in _blade:
+		line.modulate.a = blade_alpha
+	for line: Line2D in _cut:
+		line.modulate.a = cut_alpha
+	if blade_alpha <= 0.0 and cut_alpha <= 0.0:
 		queue_free()
-		return
-	_update(tail, head)
-
-
-func _update(tail: float, head: float) -> void:
-	var points := PackedVector2Array()
-	var from := lerpf(_from, _to, tail)
-	var to := lerpf(_from, _to, head)
-	for i in SEGMENTS + 1:
-		var angle := lerpf(from, to, float(i) / SEGMENTS)
-		points.append(Vector2(cos(angle), sin(angle)) * RADIUS * _size)
-	_core.points = points
-	_glow.points = points

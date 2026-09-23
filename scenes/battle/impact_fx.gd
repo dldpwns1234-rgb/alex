@@ -1,21 +1,21 @@
 extends Node2D
-## 접촉 섬광 (GDD 11절): 칼이 닿은 점에서 별 모양 빛이 터지며 커졌다 사라진다. 처치 타는 흰 고리가 퍼진다.
+## 접촉 불꽃 (GDD 11절): 칼이 닿은 점에서 가늘고 날카로운 흰 불꽃이 터지며 커졌다 사라진다. 처치 타는 흰 고리가 퍼진다.
 ## 만들어서 add_child()하면 알아서 재생하고 사라진다. 상수는 연출용이다.
 
-const BURST_RADIUS: float = 16.0
-const SPIKES: int = 6
-const SPIKE_LENGTH: float = 44.0
-const SPIKE_WIDTH: float = 9.0
-const GROW: float = 0.07
-const FADE: float = 0.12
-const START_SCALE: float = 0.3
-const END_SCALE: float = 1.2
+const CORE_RADIUS: float = 9.0
+const SPIKES: int = 4
+const SPIKE_LENGTH: float = 34.0
+const SPIKE_WIDTH: float = 5.0
+const GROW: float = 0.05
+const FADE: float = 0.08
+const START_SCALE: float = 0.4
+const END_SCALE: float = 1.1
 const CRIT_SCALE: float = 1.5
 const COLOR := Color(1.0, 1.0, 1.0)
-const CRIT_COLOR := Color("ffb060")
-const RING_RADIUS: float = 150.0
-const RING_WIDTH: float = 12.0
-const RING_DURATION: float = 0.3
+const CRIT_COLOR := Color("fff0d0")
+const RING_RADIUS: float = 140.0
+const RING_WIDTH: float = 8.0
+const RING_DURATION: float = 0.25
 const RING_COLOR := Color(1.0, 1.0, 1.0, 0.9)
 
 var _color: Color = COLOR
@@ -47,15 +47,15 @@ func _draw() -> void:
 	var alpha := 1.0 - clampf((_clock - GROW * 0.5) / FADE, 0.0, 1.0)
 	if alpha > 0.0:
 		var color := Color(_color, alpha)
-		draw_circle(Vector2.ZERO, BURST_RADIUS * size, color)
+		draw_circle(Vector2.ZERO, CORE_RADIUS * size, color)
 		for i in SPIKES:
 			var angle := _spin + TAU * i / SPIKES
 			var along := Vector2(cos(angle), sin(angle))
 			var across := along.orthogonal() * SPIKE_WIDTH * size * 0.5
 			draw_polygon(PackedVector2Array([
-				along * BURST_RADIUS * size * 0.5 + across,
+				along * CORE_RADIUS * size * 0.5 + across,
 				along * SPIKE_LENGTH * size,
-				along * BURST_RADIUS * size * 0.5 - across,
+				along * CORE_RADIUS * size * 0.5 - across,
 			]), PackedColorArray([color, color, color]))
 	if _ring:
 		var t := clampf(_clock / RING_DURATION, 0.0, 1.0)

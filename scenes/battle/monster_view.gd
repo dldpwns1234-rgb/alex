@@ -29,16 +29,20 @@ const POP_DURATION: float = 0.6
 const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
 const POP_PUNCH: float = 1.5       # 피해 숫자가 이만큼 크게 나타나 원래 크기로 줄어든다
 const POP_PUNCH_DURATION: float = 0.1
-const SPARK_COLOR := Color("ffe66d")
-const CRIT_SPARK_COLOR := Color("ff8c42")
-const SPARK_COUNT: int = 10
-const SPARK_LIFETIME: float = 0.4
-const SPARK_SPEED := Vector2(220.0, 380.0)  # 최소, 최대
-const SPARK_GRAVITY := Vector2(0.0, 700.0)
-const SPARK_SCALE := Vector2(0.35, 0.7)     # 최소, 최대
+# 파편: 칼에서 튀는 쇠 불꽃 줄기. 날아가는 방향으로 세워지고 대체로 앞위쪽(칼이 나가는 쪽)으로 튄다
+const SPARK_COLOR := Color(1.0, 1.0, 1.0)
+const CRIT_SPARK_COLOR := Color("ffd7a0")
+const SPARK_COUNT: int = 8
+const SPARK_LIFETIME: float = 0.32
+const SPARK_DIRECTION := Vector2(1.0, -0.35)
+const SPARK_SPREAD: float = 55.0            # 도
+const SPARK_SPEED := Vector2(260.0, 460.0)  # 최소, 최대
+const SPARK_GRAVITY := Vector2(0.0, 600.0)
+const SPARK_SCALE := Vector2(0.5, 0.9)      # 최소, 최대
 const CRIT_SHAKE_SCALE: float = 1.8  # 치명타는 이만큼 더 세게 밀린다
 
 var _actor: Actor
+var _crown: TextureRect
 var _hp_bar: ProgressBar
 var _hp_fill: StyleBoxFlat
 var _hp_label: Label
@@ -53,6 +57,14 @@ func _ready() -> void:
 	_actor = Actor.new(Zones.monster_texture(1), FIGURE_SIZE, false)
 	_actor.pivot_offset = Vector2(FIGURE_SIZE.x * 0.5, FIGURE_SIZE.y)  # 보스는 발끝 기준으로 커진다
 	add_child(_actor)
+	_crown = TextureRect.new()  # 그림 노드에 붙여 함께 움직인다
+	_crown.texture = CROWN
+	_crown.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_crown.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_crown.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_crown.size = CROWN_SIZE
+	_crown.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_actor.sprite().add_child(_crown)
 
 	_hp_bar = ProgressBar.new()
 	_hp_bar.show_percentage = false
@@ -89,7 +101,9 @@ func _make_sparks() -> CPUParticles2D:
 	sparks.amount = SPARK_COUNT
 	sparks.lifetime = SPARK_LIFETIME
 	sparks.position = IMPACT_POINT
-	sparks.spread = 180.0
+	sparks.direction = SPARK_DIRECTION
+	sparks.spread = SPARK_SPREAD
+	sparks.particle_flag_align_y = true
 	sparks.gravity = SPARK_GRAVITY
 	sparks.initial_velocity_min = SPARK_SPEED.x
 	sparks.initial_velocity_max = SPARK_SPEED.y
@@ -103,11 +117,12 @@ func _make_sparks() -> CPUParticles2D:
 
 
 func spawn(max_hp: float, boss: bool, stage: int) -> void:
-	_actor.set_texture(Zones.monster_texture(stage))
-	_actor.set_tint(Zones.monster_tint(stage))
+	_actor.sprite().texture = Zones.monster_texture(stage)
+	_actor.sprite().self_modulate = Zones.monster_tint(stage)
 	_actor.scale = Vector2.ONE * (BOSS_SCALE if boss else 1.0)
-	var crown_y := Zones.head_top(stage) * FIGURE_SIZE.y - CROWN_SIZE.y * 0.85
-	_actor.set_overlay(CROWN if boss else null, CROWN_SIZE, Vector2((FIGURE_SIZE.x - CROWN_SIZE.x) * 0.5, crown_y))
+	_crown.visible = boss
+	_crown.position = Vector2((FIGURE_SIZE.x - CROWN_SIZE.x) * 0.5,
+		Zones.head_top(stage) * FIGURE_SIZE.y - CROWN_SIZE.y * 0.85)
 	_name = Zones.monster_name(stage, boss)
 	_hp_fill.bg_color = BOSS_HP_BAR_COLOR if boss else HP_BAR_COLOR
 	_hp_bar.max_value = max_hp
@@ -131,9 +146,9 @@ func vanish(duration: float) -> void:
 	_actor.die(duration, false)
 
 
-## 피격. strong(탭 공격)이면 번쩍이며 굳었다 밀리고 파편이 튄다. crit이면 더 세게, 주황색
-func hit(strong: bool, crit: bool = false) -> void:
-	_actor.hit(strong, CRIT_SHAKE_SCALE if crit else 1.0)
+## 피격. strong(탭 공격)이면 번쩍이며 굳었다 밀리고 불꽃이 튄다. crit이면 더 세게. flurry(연타 중)면 굳지 않는다
+func hit(strong: bool, crit: bool = false, flurry: bool = false) -> void:
+	_actor.hit(strong, CRIT_SHAKE_SCALE if crit else 1.0, flurry)
 	if strong:
 		_sparks.color = CRIT_SPARK_COLOR if crit else SPARK_COLOR
 		_sparks.restart()

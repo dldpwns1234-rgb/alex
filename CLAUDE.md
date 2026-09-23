@@ -51,7 +51,7 @@ res://
     top_bar.gd, skill_bar.gd(쿨타임·지속 시간 막), nav_bar.gd(탭 버튼 5개와 점), tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
-                 stage(흔들리는 무대, 궤적·섬광을 띄움), slash_fx(용사 손을 축으로 도는 검격 궤적, Line2D), impact_fx(접촉 섬광과 처치 고리)
+                 stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(용사 손을 축으로 도는 초승달 검격 자국, Line2D), impact_fx(접촉 불꽃과 처치 고리)
     tabs/        hero, party, training, prestige, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 4), monsters/(6종), fx/(왕관, 파편), ui/(아이콘). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)

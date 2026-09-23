@@ -2,7 +2,7 @@ extends Control
 ## 전투 인물 하나 (용사, 동료, 몬스터). 정지 이미지 한 장에 Tween으로 움직임을 준다 (GDD 11절).
 ## 대기: 숨 쉬듯 늘었다 줄고, 공격: 앞으로 튀어나갔다 복귀, 피격: 번쩍이며 잠깐 굳은 뒤(히트 스톱) 납작해지며
 ## 뒤로 밀렸다 튕겨 돌아옴, 처치: 쓰러지며 사라짐. 그림은 바라보는 방향대로 그려져 있고 facing은 방향에만 쓴다.
-## 상수는 연출용이다.
+## 기울기는 자세(_pose: 공격·쓰러짐)와 휘두르기(_swing: 탭마다 짧게)를 더한 값이다. 상수는 연출용이다.
 
 const FLASH_SHADER := preload("res://assets/shaders/flash.gdshader")
 
@@ -18,7 +18,11 @@ const STRIKE_HOLD: float = 0.06      # 닿은 자세로 멈추는 시간 (히트
 const STRIKE_BACK: float = 0.2
 const STRIKE_WINDUP: float = 12.0    # 도. 젖힌 채 시작해서
 const STRIKE_SWING: float = 24.0     # 도. 앞으로 크게 기울며 벤다
+const SWING_KICK: float = 9.0        # 도. 탭마다 칼을 짧게 휘두르는 기울기 (달려드는 중에도)
+const SWING_OUT: float = 0.04
+const SWING_BACK: float = 0.09
 const HIT_STOP: float = 0.05         # 맞고 흰색으로 굳는 시간. 그 뒤에 밀린다
+const FLURRY_FLASH: float = 0.4      # 연타 중에는 약하게 번쩍이고 굳지 않는다 (10Hz로 깜빡이지 않게)
 const KNOCKBACK: float = 16.0
 const KNOCKBACK_OUT: float = 0.06
 const KNOCKBACK_BACK: float = 0.22
@@ -39,15 +43,17 @@ var squash: Vector2 = Vector2.ONE  # 피격 연출용 배율. Tween이 바꾼다
 var breathing: bool = true
 
 var _sprite: TextureRect
-var _overlay: TextureRect
 var _material: ShaderMaterial
 var _phase: float = 0.0
 var _clock: float = 0.0
+var _pose: float = 0.0   # 라디안. 공격·쓰러짐 Tween이 바꾼다
+var _swing: float = 0.0  # 라디안. swing()이 짧게 흔든다
 var _dying: bool = false
 var _busy_until_msec: int = 0  # 베는 중에는 다시 시작하지 않는다 (폭풍 베기의 초당 10회 탭에도 떨리지 않게)
 var _move: Tween
 var _life: Tween
 var _flash: Tween
+var _swing_tween: Tween
 
 
 func _init(texture: Texture2D, figure_size: Vector2, faces_right: bool) -> void:
@@ -73,35 +79,18 @@ func _process(delta: float) -> void:
 	_clock += delta
 	var breath := BREATH_AMOUNT * sin(_clock * TAU / BREATH_PERIOD + _phase) if breathing else 0.0
 	_sprite.scale = Vector2(1.0 - breath * 0.5, 1.0 + breath) * pop * squash
+	_sprite.rotation = _pose + _swing
 
 
-func set_texture(texture: Texture2D) -> void:
-	_sprite.texture = texture
-
-
-func set_tint(color: Color) -> void:
-	_sprite.self_modulate = color
+## 그림 노드. 그림·색조를 바꾸고, 함께 움직여야 하는 장식(보스 왕관)을 붙이고, 지금 위치 오프셋(달려든 거리)을 읽는다
+func sprite() -> TextureRect:
+	return _sprite
 
 
 ## 고용 전의 동료: 어두운 실루엣으로 가만히 서 있다
 func set_locked(locked: bool) -> void:
 	_sprite.self_modulate = LOCKED_COLOR if locked else Color.WHITE
 	breathing = not locked
-
-
-## 머리 위 장식 (보스 왕관). 인물과 함께 움직인다. texture가 null이면 감춘다
-func set_overlay(texture: Texture2D, overlay_size: Vector2, offset: Vector2) -> void:
-	if _overlay == null:
-		_overlay = TextureRect.new()
-		_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_overlay.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-		_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_sprite.add_child(_overlay)
-	_overlay.texture = texture
-	_overlay.size = overlay_size
-	_overlay.position = offset
-	_overlay.visible = texture != null
 
 
 ## 동료 공격: 앞으로 튀어나갔다 돌아온다
@@ -117,37 +106,49 @@ func strike() -> void:
 	_lunge(STRIKE_DISTANCE, STRIKE_OUT, STRIKE_HOLD, STRIKE_BACK, STRIKE_WINDUP, STRIKE_SWING)
 
 
-func _lunge(distance: float, out: float, hold: float, back: float, windup: float, swing: float) -> void:
+## 탭마다 칼을 짧게 휘두른다. direction은 1이면 앞으로 내려, -1이면 올려. 달려드는 중에도 겹쳐 보인다
+func swing(direction: float) -> void:
+	if _dying:
+		return
+	_kill(_swing_tween)
+	_swing_tween = create_tween()
+	_swing_tween.tween_property(self, "_swing", deg_to_rad(SWING_KICK) * direction * facing, SWING_OUT)
+	_swing_tween.tween_property(self, "_swing", 0.0, SWING_BACK)
+
+
+func _lunge(distance: float, out: float, hold: float, back: float, windup: float, swing_angle: float) -> void:
 	if _dying:
 		return
 	_kill(_move)
 	_sprite.position = Vector2.ZERO
-	_sprite.rotation = deg_to_rad(-windup) * facing
+	_pose = deg_to_rad(-windup) * facing
 	_move = create_tween()
 	_move.tween_property(_sprite, "position:x", distance * facing, out) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_move.parallel().tween_property(_sprite, "rotation", deg_to_rad(swing) * facing, out) \
+	_move.parallel().tween_property(self, "_pose", deg_to_rad(swing_angle) * facing, out) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	if hold > 0.0:
 		_move.tween_interval(hold)
 	_move.tween_property(_sprite, "position:x", 0.0, back).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-	_move.parallel().tween_property(_sprite, "rotation", 0.0, back)
+	_move.parallel().tween_property(self, "_pose", 0.0, back)
 
 
-## 피격. strong(탭 공격)이면 흰색으로 번쩍이며 잠깐 굳은 뒤 납작해지며 뒤로 밀렸다 튕겨 돌아온다.
-## 약한 피격(동료 공격)은 살짝만 밀린다. power는 밀림 배율 (치명타는 더 크게)
-func hit(strong: bool, power: float = 1.0) -> void:
+## 피격. strong(탭 공격)이면 흰색으로 번쩍이며 잠깐 굳은 뒤 납작해지며 뒤로 밀렸다 튕겨 돌아온다. 지금 자리에서
+## 이어 밀리므로 연타하면 밀린 채 흔들린다. flurry(연타 중)면 굳지 않고 약하게 번쩍인다. 약한 피격(동료 공격)은
+## 살짝만 밀린다. power는 밀림 배율 (치명타는 더 크게)
+func hit(strong: bool, power: float = 1.0, flurry: bool = false) -> void:
 	if _dying:
 		return
 	_kill(_move)
-	_sprite.position.x = 0.0
 	_move = create_tween()
 	if strong:
 		_kill(_flash)
-		_material.set_shader_parameter("flash", 1.0)
+		_material.set_shader_parameter("flash", FLURRY_FLASH if flurry else 1.0)
 		_flash = create_tween()
-		_flash.tween_property(_material, "shader_parameter/flash", 0.0, FLASH_DURATION).set_delay(HIT_STOP)
-		_move.tween_interval(HIT_STOP)
+		_flash.tween_property(_material, "shader_parameter/flash", 0.0, FLASH_DURATION) \
+			.set_delay(0.0 if flurry else HIT_STOP)
+		if not flurry:
+			_move.tween_interval(HIT_STOP)
 	else:
 		power *= WEAK_HIT_POWER
 	var squashed := Vector2.ONE.lerp(SQUASH, minf(power, MAX_SQUASH_POWER))
@@ -168,7 +169,7 @@ func die(duration: float, fall: bool = true) -> void:
 	_life = create_tween().set_parallel(true)
 	_life.tween_property(_sprite, "modulate:a", 0.0, duration)
 	if fall:
-		_life.tween_property(_sprite, "rotation", deg_to_rad(FALL_ANGLE) * -facing, duration) \
+		_life.tween_property(self, "_pose", deg_to_rad(FALL_ANGLE) * -facing, duration) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		_life.tween_property(_sprite, "position:y", FALL_DROP, duration)
 	else:
@@ -181,7 +182,8 @@ func spawn() -> void:
 	_kill(_move)
 	_kill(_life)
 	_sprite.position = Vector2.ZERO
-	_sprite.rotation = 0.0
+	_pose = 0.0
+	_swing = 0.0
 	_sprite.modulate.a = 1.0
 	_material.set_shader_parameter("flash", 0.0)
 	squash = Vector2.ONE

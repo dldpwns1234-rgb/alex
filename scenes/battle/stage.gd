@@ -1,15 +1,17 @@
 extends Control
-## 전투 무대: 배경, 파티, 몬스터를 담고 통째로 흔들린다 (화면 흔들림). 검격 궤적과 접촉 섬광도 여기에 띄운다.
-## Battle이 타이밍을 정하고 여기 함수를 부른다. 상수는 연출용이다.
+## 전투 무대: 배경, 파티, 몬스터를 담고 통째로 흔들린다 (화면 흔들림). 검격 자국과 접촉 불꽃도 여기에 띄운다.
+## Battle이 타이밍을 정하고 여기 함수를 부른다. 연타로 연출이 쌓이면 오래된 것부터 지운다. 상수는 연출용이다.
 
 const SlashFx := preload("res://scenes/battle/slash_fx.gd")
 const ImpactFx := preload("res://scenes/battle/impact_fx.gd")
 
 const SHAKE_DURATION: float = 0.12
 const MAX_SHAKE: float = 12.0  # 연타해도 이 이상 커지지 않는다
+const MAX_FX: int = 6          # 동시에 남는 연출 수
 
 var _shake_amount: float = 0.0
 var _shake_left: float = 0.0
+var _fx: Array[Node2D] = []
 
 
 func _ready() -> void:
@@ -35,11 +37,20 @@ func shake(amount: float) -> void:
 	_shake_left = SHAKE_DURATION
 
 
-## 검격 궤적. pivot은 용사의 손 자리
-func slash(pivot: Vector2, downward: bool, crit: bool) -> void:
-	add_child(SlashFx.new(pivot, downward, crit))
+## 검격 자국. hand는 용사의 손 자리. flurry는 연타 중(작고 빠르게)
+func slash(hand: Vector2, downward: bool, crit: bool, flurry: bool) -> void:
+	_add(SlashFx.new(hand, downward, crit, flurry))
 
 
-## 접촉 섬광. ring이면 처치 고리도 퍼진다
+## 접촉 불꽃. ring이면 처치 고리도 퍼진다
 func impact(point: Vector2, crit: bool, ring: bool) -> void:
-	add_child(ImpactFx.new(point, crit, ring))
+	_add(ImpactFx.new(point, crit, ring))
+
+
+func _add(fx: Node2D) -> void:
+	# 스스로 사라진 연출은 해제된 참조로 남으므로 먼저 걸러낸다 (형이 있는 람다 인자에는 해제된 객체를 넘길 수 없다)
+	_fx = _fx.filter(func(node: Variant) -> bool: return is_instance_valid(node) and not node.is_queued_for_deletion())
+	while _fx.size() >= MAX_FX:
+		_fx.pop_front().queue_free()
+	_fx.append(fx)
+	add_child(fx)

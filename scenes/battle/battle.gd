@@ -16,9 +16,9 @@ const LABEL_HEIGHT: float = 44.0
 const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
 const ATTACK_INTERVAL: float = 1.0  # 동료 공격 연출 주기 (GDD 3절: 약 1초)
 const BOSS_ESCAPE_DURATION: float = 0.5
-# 탭 한 번의 박자: 용사가 달려드는 동안 궤적이 쓸리기 시작하고, 칼이 몬스터를 지나는 순간 맞는다
-const SLASH_START_DELAY: float = 0.03
+# 탭 한 번의 박자: 용사가 달려든 뒤 칼이 몬스터를 지나는 순간 자국과 타격이 함께 나온다
 const TAP_LAND_DELAY: float = 0.08
+const FLURRY_GAP: float = 0.18  # 초. 이보다 빨리 이어지는 탭은 난무: 자국은 작고 짧게, 몬스터는 굳지 않는다
 const TAP_SHAKE: float = 3.0
 const CRIT_SHAKE: float = 8.0
 const KILL_SHAKE: float = 5.0
@@ -30,6 +30,7 @@ var _stage: Stage
 var _backdrop: Backdrop
 var _monster_view: MonsterView
 var _downward: bool = true  # 다음 검격이 내려베기인지
+var _last_tap_msec: int = 0
 var _party_view: PartyView
 var _kill_label: Label
 var _challenge_button: Button
@@ -135,23 +136,24 @@ func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 
 
 func _on_tap_hit(amount: float, crit: bool) -> void:
-	_party_view.play_hero_attack()
-	get_tree().create_timer(SLASH_START_DELAY, false).timeout.connect(_start_slash.bind(crit))
-	get_tree().create_timer(TAP_LAND_DELAY, false).timeout.connect(_land_tap.bind(amount, crit))
-
-
-func _start_slash(crit: bool) -> void:
-	_stage.slash(_party_view.hero_hand(), _downward, crit)
+	var now := Time.get_ticks_msec()
+	var flurry := now - _last_tap_msec < FLURRY_GAP * 1000.0
+	_last_tap_msec = now
+	_party_view.play_hero_attack(_downward)
+	get_tree().create_timer(TAP_LAND_DELAY, false).timeout.connect(_land_tap.bind(amount, crit, flurry, _downward))
 	_downward = not _downward
 
 
-## 칼이 몬스터에 닿는 순간: 숫자, 굳었다 밀리는 몬스터, 접촉 섬광, 화면 흔들림
-func _land_tap(amount: float, crit: bool) -> void:
+## 칼이 몬스터에 닿는 순간: 검격 자국(치명타는 X자), 숫자, 굳었다 밀리는 몬스터, 접촉 불꽃, 화면 흔들림
+func _land_tap(amount: float, crit: bool, flurry: bool, downward: bool) -> void:
+	var hand := _party_view.hero_hand()
+	_stage.slash(hand, downward, crit, flurry)
 	if crit:
+		_stage.slash(hand, not downward, crit, flurry)
 		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR, true)
 	else:
 		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
-	_monster_view.hit(true, crit)
+	_monster_view.hit(true, crit, flurry)
 	_stage.impact(_monster_view.position + MonsterView.IMPACT_POINT, crit, false)
 	_stage.shake(CRIT_SHAKE if crit else TAP_SHAKE)
 
