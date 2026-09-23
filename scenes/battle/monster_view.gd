@@ -28,9 +28,12 @@ const POP_DURATION: float = 0.6
 # 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국과 파편이 여기서 나온다
 const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
 const SLASH_SIZE := Vector2(190, 240)
-const SLASH_ANGLE: float = 14.0      # 도. 세로 자국을 번갈아 살짝 왼쪽·오른쪽으로 기울인다
-const SLASH_JITTER: float = 8.0
-const SLASH_START_SCALE := Vector2(0.7, 0.25)  # 위 끝을 붙잡고 아래로 늘어나며 나타난다 (내려 베기)
+# 칼끝의 궤적은 왼쪽에 선 용사의 어깨를 축으로 돌므로 항상 몬스터 쪽(오른쪽)으로 불룩하다. 뒤집지 않는다.
+# 대신 앞으로 내려베기(＼, 위에서 아래로 늘어남)와 올려베기(／, 아래에서 위로 늘어남)를 번갈아 한다
+const SLASH_TILT: float = 12.0       # 도. 세로에서 기울이는 각도
+const SLASH_JITTER: float = 6.0      # 도. 매번 조금씩 다르게
+const SLASH_OFFSET_JITTER: float = 10.0  # px. 같은 자리에 도장 찍히지 않게
+const SLASH_START_SCALE := Vector2(0.7, 0.25)  # 시작 끝을 붙잡고 칼이 지나는 방향으로 늘어나며 나타난다
 const SLASH_CRIT_SCALE: float = 1.3
 const SLASH_GROW: float = 0.09
 const SLASH_HOLD: float = 0.04
@@ -51,7 +54,7 @@ var _hp_fill: StyleBoxFlat
 var _hp_label: Label
 var _sparks: CPUParticles2D
 var _name: String = ""
-var _swing_side: float = 1.0
+var _downward: bool = true  # 다음 베기가 내려베기인지
 
 
 func _ready() -> void:
@@ -148,17 +151,20 @@ func hit(strong: bool, crit: bool = false) -> void:
 		_sparks.restart()
 
 
-## 베기 자국: 위에서 아래로 내려 긋듯 늘어나며 나타난 뒤 사라진다. 벨 때마다 기울기와 활 방향을 번갈아 바꾼다
+## 베기 자국: 칼이 지나는 방향으로 늘어나며 나타난 뒤 사라진다. 내려베기와 올려베기를 번갈아 한다
 func _slash(crit: bool) -> void:
-	_swing_side = -_swing_side
+	var downward := _downward
+	_downward = not _downward
 	var slash := TextureRect.new()
 	slash.texture = SLASH
 	slash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	slash.size = SLASH_SIZE
-	slash.pivot_offset = Vector2(SLASH_SIZE.x * 0.5, 0.0)  # 위 끝 기준
-	slash.position = IMPACT_POINT - SLASH_SIZE * 0.5
-	slash.flip_h = _swing_side < 0.0
-	slash.rotation = deg_to_rad(SLASH_ANGLE * _swing_side + randf_range(-SLASH_JITTER, SLASH_JITTER))
+	# 내려베기는 위 끝, 올려베기는 아래 끝을 붙잡고 늘어난다
+	slash.pivot_offset = Vector2(SLASH_SIZE.x * 0.5, 0.0 if downward else SLASH_SIZE.y)
+	slash.position = IMPACT_POINT - SLASH_SIZE * 0.5 + Vector2(
+		randf_range(-SLASH_OFFSET_JITTER, SLASH_OFFSET_JITTER), randf_range(-SLASH_OFFSET_JITTER, SLASH_OFFSET_JITTER))
+	var tilt := -SLASH_TILT if downward else SLASH_TILT  # ＼ 는 반시계, ／ 는 시계 방향
+	slash.rotation = deg_to_rad(tilt + randf_range(-SLASH_JITTER, SLASH_JITTER))
 	slash.scale = SLASH_START_SCALE
 	slash.modulate = CRIT_SLASH_COLOR if crit else Color.WHITE
 	slash.mouse_filter = Control.MOUSE_FILTER_IGNORE
