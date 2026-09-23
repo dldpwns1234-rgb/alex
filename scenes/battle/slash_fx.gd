@@ -11,19 +11,19 @@ const END_ANGLE: float = 24.0
 const ANGLE_JITTER: float = 5.0
 const TILT: float = 18.0          # 도. 호를 제 가운데를 축으로 기울여 ＼(내려베기)와 ／(올려베기)를 만든다
 const SEGMENTS: int = 16
-const BLADE_WIDTH: float = 28.0   # 초승달 가운데 굵기
-const OUTLINE: float = 5.0        # 외곽선 두께 (양쪽 합)
+const BLADE_WIDTH: float = 44.0   # 초승달 가운데 굵기
+const OUTLINE: float = 6.0        # 외곽선 두께 (양쪽 합)
 const AFTERIMAGE_OFFSET: float = 9.0    # 도. 휘두른 반대쪽으로
 const AFTERIMAGE_ALPHA: float = 0.35
-const AFTERIMAGE_WIDTH: float = 0.55    # 초승달 대비
-const CUT_WIDTH: float = 3.0      # 베인 자국 선
+const AFTERIMAGE_WIDTH: float = 0.5     # 초승달 대비
+const CUT_WIDTH: float = 5.0      # 베인 자국 선
 const BLADE_HOLD: float = 0.05
 const BLADE_FADE: float = 0.07
 const CUT_HOLD: float = 0.12
 const CUT_FADE: float = 0.12
 const POP_SCALE: float = 1.1      # 살짝 크게 나타나 제 크기로 (칼이 뻗는 느낌)
 const POP_DURATION: float = 0.05
-const FLURRY_SCALE: float = 0.85  # 난무(연타) 때는 작고 빠르게
+const FLURRY_SCALE: float = 0.9   # 난무(연타) 때는 조금 작고 빠르게
 const FLURRY_LIFE: float = 0.7
 const CRIT_SCALE: float = 1.25
 const FILL := Color(1.0, 1.0, 1.0)
@@ -84,7 +84,8 @@ func _line(points: PackedVector2Array, width: float, color: Color, pointed: bool
 	if pointed:
 		var curve := Curve.new()
 		curve.add_point(Vector2(0.0, 0.0))
-		curve.add_point(Vector2(0.55, 1.0))
+		curve.add_point(Vector2(0.35, 0.9))
+		curve.add_point(Vector2(0.6, 1.0))
 		curve.add_point(Vector2(1.0, 0.0))
 		line.width_curve = curve
 	else:
