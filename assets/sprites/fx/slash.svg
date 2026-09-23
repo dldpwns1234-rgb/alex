@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- 탭 공격 베기 자국. 몬스터 위에 잠깐 나타난다 -->
-  <path d="M28 212 C96 60 176 24 236 20 C176 66 122 130 64 224 Z" fill="#ffffff" opacity="0.92"/>
-  <path d="M40 196 C100 84 168 46 222 32" fill="none" stroke="#ffe66d" stroke-width="6" stroke-linecap="round"/>
+  <!-- 탭 공격 베기 자국. 바깥은 노란 번짐, 안쪽은 흰 날. 몬스터 앞에서 커지며 사라진다 -->
+  <path d="M16 224 C70 90 150 30 248 12 C170 60 110 130 52 236 Z" fill="#ffe66d" opacity="0.55"/>
+  <path d="M30 214 C84 100 156 44 236 22 C168 72 116 136 60 220 Z" fill="#ffffff" opacity="0.95"/>
+  <path d="M44 196 C98 104 160 56 226 32" fill="none" stroke="#fff7c0" stroke-width="5" stroke-linecap="round"/>
 </svg>

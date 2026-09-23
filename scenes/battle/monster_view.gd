@@ -6,6 +6,7 @@ const Actor := preload("res://scenes/battle/actor.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
 const CROWN := preload("res://assets/sprites/fx/crown.svg")
 const SLASH := preload("res://assets/sprites/fx/slash.svg")
+const SPARK := preload("res://assets/sprites/fx/spark.svg")
 
 const FIGURE_SIZE := Vector2(220, 220)
 const BOSS_SCALE: float = 1.3
@@ -19,18 +20,38 @@ const GAP: float = 10.0
 const OUTLINE_SIZE: int = 6
 const OUTLINE_COLOR := Color("2b2438")
 const POP_FONT_SIZE: int = 40
+const POP_CRIT_FONT_SIZE: int = 52
 const POP_START: float = 0.35      # 피해 숫자가 나타나는 높이 (그림 높이 비율). 몬스터 얼굴 위
 const POP_SPREAD: float = 40.0     # 피해 숫자가 나타나는 가로 흔들림
 const POP_RISE: float = 100.0      # 피해 숫자가 떠오르는 거리
 const POP_DURATION: float = 0.6
-const SLASH_SIZE := Vector2(200, 200)
-const SLASH_DURATION: float = 0.25
+# 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국과 파편이 여기서 나온다
+const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
+const SLASH_SIZE := Vector2(220, 220)
+const SLASH_ANGLE: float = 28.0      # 도. 한 번은 위에서 아래로, 다음은 아래에서 위로 번갈아 벤다
+const SLASH_JITTER: float = 12.0
+const SLASH_START_SCALE: float = 0.45
+const SLASH_CRIT_SCALE: float = 1.3
+const SLASH_GROW: float = 0.09
+const SLASH_HOLD: float = 0.04
+const SLASH_FADE: float = 0.2
+const CRIT_SLASH_COLOR := Color("ffb060")
+const SPARK_COLOR := Color("ffe66d")
+const CRIT_SPARK_COLOR := Color("ff8c42")
+const SPARK_COUNT: int = 10
+const SPARK_LIFETIME: float = 0.4
+const SPARK_SPEED := Vector2(220.0, 380.0)  # 최소, 최대
+const SPARK_GRAVITY := Vector2(0.0, 700.0)
+const SPARK_SCALE := Vector2(0.35, 0.7)     # 최소, 최대
+const CRIT_SHAKE_SCALE: float = 1.8
 
 var _actor: Actor
 var _hp_bar: ProgressBar
 var _hp_fill: StyleBoxFlat
 var _hp_label: Label
+var _sparks: CPUParticles2D
 var _name: String = ""
+var _swing_side: float = 1.0
 
 
 func _ready() -> void:
@@ -63,6 +84,30 @@ func _ready() -> void:
 	_hp_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_outline(_hp_label)
 	add_child(_hp_label)
+	_sparks = _make_sparks()
+	add_child(_sparks)
+
+
+func _make_sparks() -> CPUParticles2D:
+	var sparks := CPUParticles2D.new()
+	sparks.texture = SPARK
+	sparks.emitting = false
+	sparks.one_shot = true
+	sparks.explosiveness = 1.0
+	sparks.amount = SPARK_COUNT
+	sparks.lifetime = SPARK_LIFETIME
+	sparks.position = IMPACT_POINT
+	sparks.spread = 180.0
+	sparks.gravity = SPARK_GRAVITY
+	sparks.initial_velocity_min = SPARK_SPEED.x
+	sparks.initial_velocity_max = SPARK_SPEED.y
+	sparks.scale_amount_min = SPARK_SCALE.x
+	sparks.scale_amount_max = SPARK_SCALE.y
+	var fade := Gradient.new()
+	fade.set_color(0, Color.WHITE)
+	fade.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	sparks.color_ramp = fade
+	return sparks
 
 
 func spawn(max_hp: float, boss: bool, stage: int) -> void:
@@ -94,33 +139,42 @@ func vanish(duration: float) -> void:
 	_actor.vanish(duration)
 
 
-## 피격. strong(탭 공격)이면 번쩍이고 베기 자국이 남는다
-func hit(strong: bool) -> void:
-	_actor.hit(strong)
+## 피격. strong(탭 공격)이면 번쩍이고 베기 자국과 파편이 나온다. crit이면 더 크고 주황색
+func hit(strong: bool, crit: bool = false) -> void:
+	_actor.hit(strong, CRIT_SHAKE_SCALE if crit else 1.0)
 	if strong:
-		_slash()
+		_slash(crit)
+		_sparks.color = CRIT_SPARK_COLOR if crit else SPARK_COLOR
+		_sparks.restart()
 
 
-func _slash() -> void:
+## 베기 자국: 작게 나타나 빠르게 커진 뒤 사라진다. 벨 때마다 방향을 번갈아 X자를 그린다
+func _slash(crit: bool) -> void:
+	_swing_side = -_swing_side
 	var slash := TextureRect.new()
 	slash.texture = SLASH
 	slash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	slash.size = SLASH_SIZE
 	slash.pivot_offset = SLASH_SIZE * 0.5
-	slash.position = (FIGURE_SIZE - SLASH_SIZE) * 0.5
-	slash.rotation = randf_range(-PI, PI)
+	slash.position = IMPACT_POINT - SLASH_SIZE * 0.5
+	slash.flip_v = _swing_side < 0.0
+	slash.rotation = deg_to_rad(SLASH_ANGLE * _swing_side + randf_range(-SLASH_JITTER, SLASH_JITTER))
+	slash.scale = Vector2.ONE * SLASH_START_SCALE
+	slash.modulate = CRIT_SLASH_COLOR if crit else Color.WHITE
 	slash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(slash)
 	var tween := create_tween()
-	tween.tween_property(slash, "modulate:a", 0.0, SLASH_DURATION)
+	tween.tween_property(slash, "scale", Vector2.ONE * (SLASH_CRIT_SCALE if crit else 1.0), SLASH_GROW) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(slash, "modulate:a", 0.0, SLASH_FADE).set_delay(SLASH_HOLD)
 	tween.tween_callback(slash.queue_free)
 
 
-## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다
-func pop(text: String, color: Color) -> void:
+## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때
+func pop(text: String, color: Color, big: bool = false) -> void:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", POP_FONT_SIZE)
+	label.add_theme_font_size_override("font_size", POP_CRIT_FONT_SIZE if big else POP_FONT_SIZE)
 	label.add_theme_color_override("font_color", color)
 	_outline(label)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE

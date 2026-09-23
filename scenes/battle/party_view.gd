@@ -86,4 +86,4 @@ func play_attack(index: int) -> void:
 
 
 func play_hero_attack() -> void:
-	_hero.attack()
+	_hero.strike()

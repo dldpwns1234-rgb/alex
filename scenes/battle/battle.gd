@@ -15,6 +15,7 @@ const LABEL_HEIGHT: float = 44.0
 const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
 const ATTACK_INTERVAL: float = 1.0  # 동료 공격 연출 주기 (GDD 3절: 약 1초)
 const BOSS_ESCAPE_DURATION: float = 0.5
+const TAP_LAND_DELAY: float = 0.06  # 용사가 달려드는 시간. 그 뒤에 피해 숫자와 베기 자국이 나온다
 const OUTLINE_SIZE: int = 6
 const OUTLINE_COLOR := Color("2b2438")
 const CHALLENGE_BUTTON_SIZE := Vector2(300, 80)
@@ -125,12 +126,16 @@ func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 
 
 func _on_tap_hit(amount: float, crit: bool) -> void:
+	_party_view.play_hero_attack()
+	get_tree().create_timer(TAP_LAND_DELAY, false).timeout.connect(_land_tap.bind(amount, crit))
+
+
+func _land_tap(amount: float, crit: bool) -> void:
 	if crit:
-		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
+		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR, true)
 	else:
 		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
-	_party_view.play_hero_attack()
-	_monster_view.hit(true)
+	_monster_view.hit(true, crit)
 
 
 func _on_monster_killed(_reward: float) -> void:

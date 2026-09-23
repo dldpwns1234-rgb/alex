@@ -11,6 +11,11 @@ const LUNGE_DISTANCE: float = 40.0
 const LUNGE_OUT: float = 0.1
 const LUNGE_BACK: float = 0.2
 const LUNGE_TILT: float = 10.0      # 도
+const STRIKE_DISTANCE: float = 90.0  # 탭 공격: 몬스터 앞까지 달려드는 거리
+const STRIKE_OUT: float = 0.07
+const STRIKE_BACK: float = 0.2
+const STRIKE_WINDUP: float = 12.0    # 도. 젖힌 채 시작해서
+const STRIKE_SWING: float = 24.0     # 도. 앞으로 크게 기울며 벤다
 const SHAKE_DISTANCE: float = 10.0
 const SHAKE_DURATION: float = 0.18
 const FLASH_DURATION: float = 0.15
@@ -31,6 +36,7 @@ var _material: ShaderMaterial
 var _phase: float = 0.0
 var _clock: float = 0.0
 var _dying: bool = false
+var _strike_end_msec: int = 0  # 베는 중에는 다시 시작하지 않는다 (폭풍 베기의 초당 10회 탭에도 떨리지 않게)
 var _move: Tween
 var _life: Tween
 var _flash: Tween
@@ -105,12 +111,30 @@ func attack() -> void:
 	_move.parallel().tween_property(_sprite, "rotation", 0.0, LUNGE_BACK)
 
 
-## 뒤로 밀리듯 흔들린다. strong이면 흰색으로 번쩍인다 (탭 공격)
-func hit(strong: bool) -> void:
+## 탭 공격 (용사): 크게 달려들어 앞으로 기울며 베고 돌아온다. 베는 중이면 그대로 둔다
+func strike() -> void:
+	if _dying or Time.get_ticks_msec() < _strike_end_msec:
+		return
+	_strike_end_msec = Time.get_ticks_msec() + roundi((STRIKE_OUT + STRIKE_BACK) * 1000.0)
+	_kill(_move)
+	_sprite.position = Vector2.ZERO
+	_sprite.rotation = deg_to_rad(-STRIKE_WINDUP) * facing
+	_move = create_tween()
+	_move.tween_property(_sprite, "position:x", STRIKE_DISTANCE * facing, STRIKE_OUT) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_move.parallel().tween_property(_sprite, "rotation", deg_to_rad(STRIKE_SWING) * facing, STRIKE_OUT) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_move.tween_property(_sprite, "position:x", 0.0, STRIKE_BACK) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	_move.parallel().tween_property(_sprite, "rotation", 0.0, STRIKE_BACK)
+
+
+## 뒤로 밀리듯 흔들린다. strong이면 흰색으로 번쩍인다 (탭 공격). scale은 흔들림 배율 (치명타는 더 크게)
+func hit(strong: bool, shake_scale: float = 1.0) -> void:
 	if _dying:
 		return
 	_kill(_move)
-	var distance := SHAKE_DISTANCE if strong else SHAKE_DISTANCE * 0.5
+	var distance := (SHAKE_DISTANCE if strong else SHAKE_DISTANCE * 0.5) * shake_scale
 	_sprite.position.x = 0.0
 	_move = create_tween()
 	_move.tween_property(_sprite, "position:x", -distance * facing, SHAKE_DURATION * 0.3)
