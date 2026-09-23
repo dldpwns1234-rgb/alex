@@ -50,11 +50,11 @@ res://
     main.gd      내비게이션이 고른 패널만 보이고 단련 탭 점을 갱신한다
     top_bar.gd, skill_bar.gd(쿨타임·지속 시간 막), nav_bar.gd(탭 버튼 5개와 점), tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명)
-                 actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
+                 actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트), slash_fx(베기 자국 한 줄)
     tabs/        hero, party, training, prestige, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 4), monsters/(6종), fx/(왕관, 베기). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
-  assets/shaders/ flash.gdshader (피격 번쩍임)
+  assets/shaders/ flash.gdshader (피격 번쩍임), slash.gdshader (베기 자국 훑기)
   assets/ui/theme.tres 전체 테마. 손으로 고치지 않는다: tools/make_theme.gd의 상수를 고치고 다시 만든다
   tools/make_theme.gd  테마 생성기. `<GODOT 경로> --headless --path . --script tools/make_theme.gd`
   tests/

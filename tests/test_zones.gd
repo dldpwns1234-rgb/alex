@@ -3,6 +3,7 @@ extends "res://tests/test_case.gd"
 
 const Zones := preload("res://scenes/battle/zones.gd")
 const Actor := preload("res://scenes/battle/actor.gd")
+const SlashFx := preload("res://scenes/battle/slash_fx.gd")
 
 
 func run() -> void:
@@ -55,4 +56,10 @@ func _actor() -> void:
 	await get_tree().process_frame
 	_equal(actor.pop > 0.0, true, "등장 연출 배율은 양수")
 	actor.queue_free()
+	for downward: bool in [true, false]:
+		var slash := SlashFx.new(Vector2(50, 50), downward, not downward)
+		add_child(slash)
+		_equal(slash.material != null, true, "베기 자국은 훑기 셰이더를 쓴다")
+	await get_tree().process_frame
+	await get_tree().process_frame
 	passed += 1

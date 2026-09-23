@@ -1,11 +1,11 @@
 extends Control
-## 몬스터 한 마리의 표시: 그림(Actor), 이름과 체력바, 피해 숫자, 베기 자국. 상태는 Battle이 Game에서 받아 넘겨준다.
+## 몬스터 한 마리의 표시: 그림(Actor), 이름과 체력바, 피해 숫자, 베기 자국(SlashFx)과 파편. 상태는 Battle이 Game에서 받아 넘겨준다.
 ## 몬스터 종류와 색은 스테이지로 정한다 (Zones). 아래 상수는 배치와 연출용이며 게임 수치가 아니다.
 
 const Actor := preload("res://scenes/battle/actor.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
+const SlashFx := preload("res://scenes/battle/slash_fx.gd")
 const CROWN := preload("res://assets/sprites/fx/crown.svg")
-const SLASH := preload("res://assets/sprites/fx/slash.svg")
 const SPARK := preload("res://assets/sprites/fx/spark.svg")
 
 const FIGURE_SIZE := Vector2(220, 220)
@@ -25,20 +25,8 @@ const POP_START: float = 0.35      # 피해 숫자가 나타나는 높이 (그�
 const POP_SPREAD: float = 40.0     # 피해 숫자가 나타나는 가로 흔들림
 const POP_RISE: float = 100.0      # 피해 숫자가 떠오르는 거리
 const POP_DURATION: float = 0.6
-# 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국과 파편이 여기서 나온다
+# 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국(SlashFx)과 파편이 여기서 나온다
 const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
-const SLASH_SIZE := Vector2(190, 240)
-# 칼끝의 궤적은 왼쪽에 선 용사의 어깨를 축으로 돌므로 항상 몬스터 쪽(오른쪽)으로 불룩하다. 뒤집지 않는다.
-# 대신 앞으로 내려베기(＼, 위에서 아래로 늘어남)와 올려베기(／, 아래에서 위로 늘어남)를 번갈아 한다
-const SLASH_TILT: float = 12.0       # 도. 세로에서 기울이는 각도
-const SLASH_JITTER: float = 6.0      # 도. 매번 조금씩 다르게
-const SLASH_OFFSET_JITTER: float = 10.0  # px. 같은 자리에 도장 찍히지 않게
-const SLASH_START_SCALE := Vector2(0.7, 0.25)  # 시작 끝을 붙잡고 칼이 지나는 방향으로 늘어나며 나타난다
-const SLASH_CRIT_SCALE: float = 1.3
-const SLASH_GROW: float = 0.09
-const SLASH_HOLD: float = 0.04
-const SLASH_FADE: float = 0.2
-const CRIT_SLASH_COLOR := Color("ffb060")
 const SPARK_COLOR := Color("ffe66d")
 const CRIT_SPARK_COLOR := Color("ff8c42")
 const SPARK_COUNT: int = 10
@@ -151,29 +139,10 @@ func hit(strong: bool, crit: bool = false) -> void:
 		_sparks.restart()
 
 
-## 베기 자국: 칼이 지나는 방향으로 늘어나며 나타난 뒤 사라진다. 내려베기와 올려베기를 번갈아 한다
+## 베기 자국. 내려베기와 올려베기를 번갈아 한다
 func _slash(crit: bool) -> void:
-	var downward := _downward
+	add_child(SlashFx.new(IMPACT_POINT, _downward, crit))
 	_downward = not _downward
-	var slash := TextureRect.new()
-	slash.texture = SLASH
-	slash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	slash.size = SLASH_SIZE
-	# 내려베기는 위 끝, 올려베기는 아래 끝을 붙잡고 늘어난다
-	slash.pivot_offset = Vector2(SLASH_SIZE.x * 0.5, 0.0 if downward else SLASH_SIZE.y)
-	slash.position = IMPACT_POINT - SLASH_SIZE * 0.5 + Vector2(
-		randf_range(-SLASH_OFFSET_JITTER, SLASH_OFFSET_JITTER), randf_range(-SLASH_OFFSET_JITTER, SLASH_OFFSET_JITTER))
-	var tilt := -SLASH_TILT if downward else SLASH_TILT  # ＼ 는 반시계, ／ 는 시계 방향
-	slash.rotation = deg_to_rad(tilt + randf_range(-SLASH_JITTER, SLASH_JITTER))
-	slash.scale = SLASH_START_SCALE
-	slash.modulate = CRIT_SLASH_COLOR if crit else Color.WHITE
-	slash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(slash)
-	var tween := create_tween()
-	tween.tween_property(slash, "scale", Vector2.ONE * (SLASH_CRIT_SCALE if crit else 1.0), SLASH_GROW) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(slash, "modulate:a", 0.0, SLASH_FADE).set_delay(SLASH_HOLD)
-	tween.tween_callback(slash.queue_free)
 
 
 ## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때
