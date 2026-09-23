@@ -12,8 +12,7 @@ const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 
 const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
-## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막아 실제 저장 파일을 건드리지 않는다.
-## (시뮬레이션은 _ready 한 번에 수십 초를 쓰므로, 끄지 않으면 그 시간이 오프라인 공백으로 잡혀 저장된다)
+## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막는다 (시뮬레이션은 _ready 한 번에 수십 초를 써서 공백으로 잡힌다)
 var blocked: bool = false
 var _autosave_left: float = AUTOSAVE_INTERVAL
 var _last_unix: float = Time.get_unix_time_from_system()
@@ -27,8 +26,7 @@ func _ready() -> void:
 	load_game()
 
 
-## 웹에서는 창 blur가 포커스 아웃 알림으로 오지 않는 것을 브라우저 검사로 확인했다 (M3).
-## 탭이 숨겨지거나 닫힐 때 오는 visibilitychange와 pagehide를 직접 받아 저장한다
+## 웹에서는 창 blur가 포커스 아웃 알림으로 오지 않는다 (M3 검사). 탭이 숨겨지거나 닫힐 때의 브라우저 이벤트를 직접 받아 저장한다
 func _hook_browser_events() -> void:
 	if not OS.has_feature("web"):
 		return
@@ -56,13 +54,14 @@ func _process(delta: float) -> void:
 
 
 ## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다.
-## 동료 DPS와 처치 골드에 기억의 상점과 업적 효과는 넣고 스킬은 뺀다
+## 동료 DPS와 처치 골드에 기억의 상점, 업적, 장비 효과는 넣고 스킬은 뺀다
 func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var dps := Party.party_dps(false, false)
 	var per_second := Balance.offline_gold_per_second(Game.stage, dps) * Prestige.gold_multiplier()
-	per_second *= Achievements.gold_multiplier() * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
+	per_second *= Achievements.gold_multiplier() * Equipment.gold_multiplier()
+	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),
 		Training.value(Balance.Effect.OFFLINE_RATE))
 	if gold > 0.0:
@@ -92,6 +91,7 @@ func to_dict() -> Dictionary:
 		"promotions": Promotions.to_dict(),
 		"prestige": Prestige.to_dict(),
 		"achievements": Achievements.to_dict(),
+		"equipment": Equipment.to_dict(),
 	}
 
 
@@ -102,6 +102,7 @@ func from_dict(data: Dictionary) -> void:
 	Achievements.from_dict(_section(data, "achievements"))
 	Party.from_dict(_section(data, "party"))
 	Promotions.from_dict(_section(data, "promotions"))
+	Equipment.from_dict(_section(data, "equipment"))
 	Skills.from_dict(_section(data, "skills"))
 	Training.from_dict(_section(data, "training"))
 	Game.from_dict(_section(data, "game"))
@@ -128,8 +129,6 @@ func save_game() -> void:
 ## 저장 파일이 있으면 불러오고, 마지막 저장 이후 비운 시간을 오프라인 보상으로 준다.
 ## 없거나 깨졌으면 false를 주고 상태는 그대로 둔다
 func load_game() -> bool:
-	if not FileAccess.file_exists(save_path):
-		return false
 	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
 		return false
@@ -170,6 +169,7 @@ func import_string(text: String) -> bool:
 func reset_data() -> void:
 	Prestige.reset()
 	Achievements.reset()
+	Equipment.reset()
 	Party.reset()
 	Skills.reset()
 	Training.reset()

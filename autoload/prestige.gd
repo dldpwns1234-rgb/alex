@@ -62,7 +62,7 @@ func crystal_reward() -> float:
 	return Balance.crystal_reward(Game.highest_stage)
 
 
-## 회귀: 결정을 받고 새 판을 시작한다. 결정, 상점 레벨, 통계, 업적은 남는다
+## 회귀: 결정을 받고 새 판을 시작한다. 결정, 상점 레벨, 통계, 업적, 장비는 남는다
 func perform() -> bool:
 	if not can_prestige():
 		return false

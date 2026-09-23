@@ -1,6 +1,6 @@
 extends Label
-## 화면 위에 잠깐 떠오르는 알림 (업적 달성). 부모의 아래쪽 가운데에 나타나 살짝 떠오르며 밝아졌다 사라진다.
-## 여러 개가 겹치면 차례로 보여준다. 상수는 연출용이다.
+## 화면 위에 잠깐 떠오르는 알림 (업적 달성, 승급, 장비). 부모의 아래쪽 가운데에 나타나 살짝 떠오르며 밝아졌다 사라진다.
+## 여러 개가 겹치면 차례로 보여준다. 글자색을 따로 줄 수 있다 (장비 등급 색). 상수는 연출용이다.
 
 const FADE_IN: float = 0.15
 const HOLD: float = 1.8
@@ -8,7 +8,7 @@ const FADE_OUT: float = 0.4
 const RISE: float = 12.0          # 나타나며 떠오르는 거리
 const BOTTOM_MARGIN: float = 20.0
 
-var _queue: PackedStringArray = []
+var _queue: Array[Dictionary] = []  # {"text": String, "color": Color}
 var _tween: Tween
 var _resting_y: float = 0.0
 
@@ -21,8 +21,9 @@ func _ready() -> void:
 	get_parent().resized.connect(_place)
 
 
-func show_message(text: String) -> void:
-	_queue.append(text)
+## color가 흰색이면 테마의 글자색을 그대로 쓴다
+func show_message(message: String, color: Color = Color.WHITE) -> void:
+	_queue.append({"text": message, "color": color})
 	if _tween == null or not _tween.is_running():
 		_next()
 
@@ -30,8 +31,12 @@ func show_message(text: String) -> void:
 func _next() -> void:
 	if _queue.is_empty():
 		return
-	text = _queue[0]
-	_queue.remove_at(0)
+	var entry: Dictionary = _queue.pop_front()
+	text = entry["text"]
+	if entry["color"] == Color.WHITE:
+		remove_theme_color_override("font_color")
+	else:
+		add_theme_color_override("font_color", entry["color"])
 	reset_size()
 	_place()
 	position.y = _resting_y + RISE

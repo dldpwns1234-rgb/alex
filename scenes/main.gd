@@ -1,10 +1,12 @@
 extends Control
 ## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 내비게이션과 패널을 위에서부터 쌓는다.
-## 내비게이션이 고른 패널만 보이고, 승급할 수 있는 동료가 있으면 동료 탭에, 살 수 있는 단련이 있으면 단련 탭에,
-## 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다. 업적을 달성하거나 동료가 승급하면 전투 화면 아래에 알림을 띄운다.
+## 내비게이션이 고른 패널만 보이고, 강화할 수 있는 장비가 있으면 용사 탭에, 승급할 수 있는 동료가 있으면 동료 탭에,
+## 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
+## 업적 달성, 승급, 장비 획득은 전투 화면 아래에 알림을 띄운다.
 
 const Toast := preload("res://scenes/toast.gd")
 
+const HERO_TAB: int = 0
 const PARTY_TAB: int = 1
 const TRAINING_TAB: int = 2
 const ACHIEVEMENTS_TAB: int = 4
@@ -34,6 +36,9 @@ func _ready() -> void:
 	Party.companion_changed.connect(_refresh_badges.unbind(2))
 	Promotions.promotion_changed.connect(_refresh_badges.unbind(2))
 	Promotions.promoted.connect(_on_promoted)
+	Equipment.equipment_changed.connect(_refresh_badges.unbind(1))
+	Equipment.stones_changed.connect(_refresh_badges.unbind(1))
+	Equipment.item_dropped.connect(_on_item_dropped)
 	Achievements.unlocked.connect(_on_achievement_unlocked)
 	Achievements.seen_changed.connect(_refresh_achievement_badge)
 	_refresh_badges()
@@ -45,8 +50,9 @@ func _show_panel(index: int) -> void:
 		(_panels.get_child(i) as Control).visible = i == index
 
 
-## 골드나 레벨이 바뀔 때마다: 승급할 수 있는 동료, 살 수 있는 단련
+## 골드, 레벨, 강화석이 바뀔 때마다: 강화할 수 있는 장비, 승급할 수 있는 동료, 살 수 있는 단련
 func _refresh_badges() -> void:
+	_nav.set_badge(HERO_TAB, Equipment.any_enhanceable())
 	_nav.set_badge(PARTY_TAB, Promotions.any_affordable())
 	_nav.set_badge(TRAINING_TAB, Training.any_affordable())
 
@@ -62,6 +68,12 @@ func _on_achievement_unlocked(index: int) -> void:
 
 func _on_promoted(index: int, rank: int) -> void:
 	_toast.show_message("%s 승급 · %s" % [Balance.companion_name(index), Balance.promotion_stars(rank)])
+
+
+## 장비 알림: 등급 색으로 이름을 보이고, 장착했는지 분해했는지 적는다
+func _on_item_dropped(slot: int, grade: int, _stage: int, equipped: bool) -> void:
+	var outcome := "장착" if equipped else "분해 · 강화석 +%s" % Num.format(Balance.dismantle_stones(grade))
+	_toast.show_message("%s 획득 · %s" % [Balance.item_name(slot, grade), outcome], Balance.grade_color(grade))
 
 
 ## 돌아오면 비운 시간과 받은 골드를 먼저 보여준다 (GDD 8·9절). 동료가 없어 받을 게 없으면 띄우지 않는다

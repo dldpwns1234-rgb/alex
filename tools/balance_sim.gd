@@ -3,10 +3,9 @@ extends Node
 ##
 ##   godot --headless --path . res://tools/balance_sim.tscn
 ##
-## 가정: 초당 4클릭, 스킬 없음, 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다
-## (용사·동료 레벨, 단련, 승급 모두. 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때 산다), 보스 재도전은
-## 게임의 자동 재도전(Game.auto_retry, Balance.AUTO_RETRY_*)에 맡긴다, 3분 동안 최고 스테이지가
-## 오르지 않으면 회귀, 결정은 검술·황금 중 싼 것에 쓴다.
+## 가정: 초당 4클릭, 스킬 없음, 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급.
+## 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때), 강화석은 생기는 대로 강화에 쓴다, 보스 재도전은 게임의 자동 재도전에
+## 맡긴다, 3분 동안 최고 스테이지가 오르지 않으면 회귀, 결정은 검술·황금 중 싼 것에 쓴다. 장비 드롭은 고정 시드로 굴린다.
 
 const CLICKS_PER_SECOND: float = 4.0
 const FRAME: float = 0.25          # Game의 delta 상한과 같다
@@ -14,6 +13,7 @@ const STALL_SECONDS: float = 180.0  # 이만큼 최고 스테이지가 안 오�
 const MAX_PRESTIGES: int = 12
 const MAX_HOURS: float = 10.0
 const REPORT_STAGES: PackedStringArray = ["10", "20", "40", "60", "80", "100", "120", "150", "200"]
+const RANDOM_SEED: int = 20260923  # 장비 드롭이 실행마다 같도록
 
 var _t: float = 0.0                 # 시뮬레이션 시간 (초)
 var _run_start: float = 0.0
@@ -22,13 +22,14 @@ var _best_this_run: int = 0         # 이번 판에서 본 최고 스테이지. 
 var _reported: Dictionary = {}
 var _previous_best: int = 0
 var _beat_previous_at: float = -1.0
-var _lines: PackedStringArray = []
 
 
 func _ready() -> void:
 	Save.blocked = true  # 시뮬레이션은 저장하지 않는다. 시작할 때 읽힌 저장이 있어도 전부 새로 시작한다
+	seed(RANDOM_SEED)
 	Prestige.reset()
 	Achievements.reset()
+	Equipment.reset()
 	Party.reset()
 	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()
@@ -71,6 +72,9 @@ func _progress_rate() -> float:
 
 
 func _buy_everything() -> void:
+	for slot in Balance.SLOT_LABELS.size():
+		while Equipment.enhance(slot):
+			pass
 	while true:
 		var current := _progress_rate()
 		var best_ratio := 0.0
@@ -181,7 +185,6 @@ func _on_companion_changed(index: int, level: int) -> void:
 
 
 func _report(line: String) -> void:
-	_lines.append(line)
 	print(line)
 
 
