@@ -73,12 +73,15 @@ func _test_load_grants() -> void:
 	_fresh_run()
 	_received.clear()
 	_equal(Save.load_game(), true, "불러오기")
-	var expected := 50.0 + Balance.offline_reward(Balance.offline_gold_per_second(1, 3.0), 1000.0, 0)
-	_equal(absf(Game.gold - expected) < 0.01, true, "저장 골드 + 1000초 보상")
 	await get_tree().process_frame
 	_equal(_received.size(), 1, "보상 시그널이 한 번 온다")
 	if _received.size() == 1:
-		_equal(absf(_received[0][0] - 1000.0) < 1.0, true, "인정된 시간 약 1000초")
+		# 저장 시각을 적고 불러올 때까지 흐른 실제 시간(느린 러너에서는 1초 넘게)이 그대로 인정되므로,
+		# 기대값은 1000초가 아니라 인정된 시간으로 계산한다
+		var seconds: float = _received[0][0]
+		_equal(seconds >= 1000.0 and seconds < 1010.0, true, "인정된 시간 약 1000초")
+		var expected := 50.0 + Balance.offline_reward(Balance.offline_gold_per_second(1, 3.0), seconds, 0)
+		_close(Game.gold, expected, "저장 골드 + 인정된 시간의 보상")
 
 	# 가져오기는 보상을 주지 않는다
 	_fresh_run()
