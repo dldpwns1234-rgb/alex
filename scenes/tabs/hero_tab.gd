@@ -2,9 +2,12 @@ extends MarginContainer
 ## 용사 탭: 레벨, 클릭 피해, 레벨업 버튼. 구매 배수는 탭 패널 위의 BuyBar가 정한다.
 ## Game·Party의 시그널을 받아 표시만 하고, 구매는 Party.buy_hero()를 부른다.
 
+const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
+
 const MARGIN: int = 24
 const ROW_GAP: int = 16
 const BUTTON_HEIGHT: float = 88.0
+const PORTRAIT_SIZE := Vector2(120, 120)
 
 var _level_label: Label
 var _damage_label: Label
@@ -19,11 +22,27 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", ROW_GAP)
 	add_child(column)
 
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", ROW_GAP)
+	column.add_child(header)
+	var portrait := TextureRect.new()
+	portrait.texture = HERO_TEXTURE
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	portrait.custom_minimum_size = PORTRAIT_SIZE
+	header.add_child(portrait)
+	var text := VBoxContainer.new()
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	text.add_theme_constant_override("separation", ROW_GAP)
+	header.add_child(text)
+
 	_level_label = Label.new()
-	column.add_child(_level_label)
+	text.add_child(_level_label)
 
 	_damage_label = Label.new()
-	column.add_child(_damage_label)
+	text.add_child(_damage_label)
 
 	_buy_button = Button.new()
 	_buy_button.custom_minimum_size = Vector2(0.0, BUTTON_HEIGHT)

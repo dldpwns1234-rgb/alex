@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 성직자: 흰 베일과 금색 테두리, 머리 위 광륜, 흰 로브, 금 고리 지팡이 -->
+  <ellipse cx="124" cy="30" rx="40" ry="9" fill="none" stroke="#f2c94c" stroke-width="6" opacity="0.9"/>
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M90 150 L158 150 L178 234 L70 234 Z" fill="#f4efe6"/>
+    <path d="M112 150 L136 150 L142 234 L106 234 Z" fill="#e0c04f" stroke="none"/>
+    <rect x="86" y="196" width="80" height="10" fill="#e0c04f" stroke="none"/>
+    <path d="M60 116 C48 36 140 14 184 56 C200 72 200 100 190 128 L172 122 C178 94 164 68 130 64 C100 62 84 84 84 126 L64 132 Z" fill="#f4efe6"/>
+    <circle cx="132" cy="106" r="44" fill="#ffd9b3"/>
+    <path d="M62 120 C52 50 132 24 178 58 C170 66 160 64 152 62 C120 56 96 70 84 122 Z" fill="#f4efe6"/>
+    <path d="M70 128 C60 60 132 32 176 62" fill="none" stroke="#e0c04f" stroke-width="5"/>
+    <path d="M198 236 L192 104" fill="none" stroke="#8b5a2b" stroke-width="10"/>
+    <circle cx="190" cy="86" r="18" fill="none" stroke="#f2c94c" stroke-width="9"/>
+    <circle cx="190" cy="86" r="5" fill="#f2c94c" stroke="none"/>
+    <circle cx="194" cy="172" r="12" fill="#ffd9b3"/>
+  </g>
+  <ellipse cx="122" cy="110" rx="6" ry="8" fill="#2b2438"/>
+  <ellipse cx="154" cy="110" rx="6" ry="8" fill="#2b2438"/>
+  <circle cx="124" cy="107" r="2.5" fill="#fff"/>
+  <circle cx="156" cy="107" r="2.5" fill="#fff"/>
+  <path d="M132 130 q8 5 16 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="106" cy="126" r="7" fill="#ff9aa2" opacity="0.5"/>
+  <circle cx="166" cy="126" r="7" fill="#ff9aa2" opacity="0.5"/>
+</svg>

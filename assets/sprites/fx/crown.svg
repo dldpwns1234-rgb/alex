@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 128" width="256" height="128">
+  <!-- 보스 표시용 금관. 몬스터 머리 위에 얹는다 -->
+  <path d="M32 112 L20 34 L76 72 L128 14 L180 72 L236 34 L224 112 Z" fill="#f2c94c" stroke="#2b2438" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="128" cy="86" r="9" fill="#e0484f"/>
+  <circle cx="76" cy="92" r="7" fill="#4f8fe0"/>
+  <circle cx="180" cy="92" r="7" fill="#4f8fe0"/>
+</svg>

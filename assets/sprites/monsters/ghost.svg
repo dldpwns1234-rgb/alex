@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 유령: 하늘색 천, 물결 밑단, 뚫린 눈과 입 -->
+  <g opacity="0.94" stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M60 232 C50 120 80 56 128 56 C176 56 206 120 196 232 L174 212 L150 232 L128 212 L106 232 L84 212 Z" fill="#dfe6ff"/>
+    <path d="M176 84 C196 76 208 92 202 108" fill="none" stroke="#dfe6ff" stroke-width="12"/>
+  </g>
+  <ellipse cx="102" cy="122" rx="11" ry="15" fill="#2b2438"/>
+  <ellipse cx="140" cy="122" rx="11" ry="15" fill="#2b2438"/>
+  <circle cx="99" cy="118" r="3" fill="#fff"/>
+  <circle cx="137" cy="118" r="3" fill="#fff"/>
+  <ellipse cx="121" cy="158" rx="10" ry="14" fill="#2b2438"/>
+  <circle cx="84" cy="146" r="8" fill="#9fb0ff" opacity="0.7"/>
+  <circle cx="160" cy="146" r="8" fill="#9fb0ff" opacity="0.7"/>
+</svg>

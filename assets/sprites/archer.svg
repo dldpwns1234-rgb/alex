@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 궁수: 초록 두건, 가죽 조끼, 앞에 당긴 활과 화살, 등 뒤 화살통 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M62 150 L84 146 L96 210 L74 214 Z" fill="#4a3f5c"/>
+    <path d="M68 148 L66 128 M76 146 L78 124 M86 146 L90 128" fill="none" stroke="#8b5a2b" stroke-width="5"/>
+    <rect x="88" y="148" width="74" height="84" rx="24" fill="#8b5a2b"/>
+    <rect x="104" y="156" width="42" height="34" rx="10" fill="#6fcf5f" stroke="none"/>
+    <ellipse cx="108" cy="232" rx="17" ry="9" fill="#4a3f5c"/>
+    <ellipse cx="142" cy="232" rx="17" ry="9" fill="#4a3f5c"/>
+    <path d="M58 104 C46 30 150 6 190 62 C204 82 200 106 190 126 L172 118 C178 92 164 66 130 62 C100 60 84 82 84 122 L64 128 Z" fill="#5fb36a"/>
+    <circle cx="132" cy="104" r="46" fill="#ffd9b3"/>
+    <path d="M60 108 C50 44 132 20 178 54 C170 62 160 62 152 60 C120 52 96 66 84 116 Z" fill="#5fb36a"/>
+    <path d="M176 118 Q244 178 176 240" fill="none" stroke="#a0522d" stroke-width="9"/>
+    <path d="M176 118 L176 240" fill="none" stroke="#e9e4d6" stroke-width="3"/>
+    <path d="M112 180 L206 180" fill="none" stroke="#8b5a2b" stroke-width="5"/>
+    <path d="M206 180 L192 170 L192 190 Z" fill="#dfe3ea"/>
+    <path d="M112 180 L100 170 L118 180 L100 190 Z" fill="#e0484f"/>
+    <circle cx="176" cy="180" r="12" fill="#ffd9b3"/>
+  </g>
+  <ellipse cx="122" cy="108" rx="6" ry="8" fill="#2b2438"/>
+  <ellipse cx="154" cy="108" rx="6" ry="8" fill="#2b2438"/>
+  <circle cx="124" cy="105" r="2.5" fill="#fff"/>
+  <circle cx="156" cy="105" r="2.5" fill="#fff"/>
+  <path d="M132 128 q8 5 16 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="106" cy="124" r="7" fill="#ff9aa2" opacity="0.5"/>
+  <circle cx="166" cy="124" r="7" fill="#ff9aa2" opacity="0.5"/>
+</svg>

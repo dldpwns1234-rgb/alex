@@ -3,6 +3,12 @@ extends MarginContainer
 ## Game·Party의 시그널을 받아 표시만 하고, 구매는 Party.buy_companion()을 부른다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const PORTRAITS: Array[Texture2D] = [  # Balance.Companion 순서
+	preload("res://assets/sprites/warrior.svg"),
+	preload("res://assets/sprites/archer.svg"),
+	preload("res://assets/sprites/mage.svg"),
+	preload("res://assets/sprites/cleric.svg"),
+]
 
 const MARGIN: int = 16
 const ROW_GAP: int = 8
@@ -10,7 +16,10 @@ const ROW_PADDING: int = 12
 const NOTE_FONT_SIZE: int = 22
 const NOTE_COLOR := Color("b8b4c8")
 const BUTTON_SIZE := Vector2(250, 72)
+const PORTRAIT_SIZE := Vector2(72, 72)
+const LOCKED_PORTRAIT_COLOR := Color(0.5, 0.48, 0.6)
 
+var _portraits: Array[TextureRect] = []
 var _title_labels: Array[Label] = []
 var _note_labels: Array[Label] = []
 var _buttons: Array[Button] = []
@@ -44,7 +53,17 @@ func _make_row(index: int) -> PanelContainer:
 		margin.add_theme_constant_override(side, ROW_PADDING)
 	panel.add_child(margin)
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", ROW_PADDING)
 	margin.add_child(row)
+
+	var portrait := TextureRect.new()
+	portrait.texture = PORTRAITS[index]
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	portrait.custom_minimum_size = PORTRAIT_SIZE
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(portrait)
 
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -67,6 +86,7 @@ func _make_row(index: int) -> PanelContainer:
 	button.pressed.connect(_on_buy_pressed.bind(index))
 	row.add_child(button)
 
+	_portraits.append(portrait)
 	_title_labels.append(title)
 	_note_labels.append(note)
 	_buttons.append(button)
@@ -81,6 +101,7 @@ func _refresh() -> void:
 	for i in _buttons.size():
 		var name := Balance.companion_name(i)
 		var level := Party.companion_levels[i]
+		_portraits[i].self_modulate = Color.WHITE if level > 0 else LOCKED_PORTRAIT_COLOR
 		if not Party.is_companion_unlocked(i):
 			_title_labels[i].text = "%s  (스테이지 %d에 합류)" % [name, Balance.companion_unlock_stage(i)]
 			_note_labels[i].text = Balance.companion_note(i)

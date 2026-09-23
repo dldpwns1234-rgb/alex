@@ -48,9 +48,12 @@ res://
   scenes/
     main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 패널)
     top_bar.gd, skill_bar.gd, tabs/buy_bar.gd
-    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(동료 4명)
+    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명)
+                 actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
     tabs/        hero, party, training, prestige, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
-  assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다). 이미지, 사운드는 M6부터
+  assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
+  assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 4), monsters/(6종), fx/(왕관, 베기). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
+  assets/shaders/ flash.gdshader (피격 번쩍임)
   tests/
     run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
@@ -91,5 +94,6 @@ docs/GDD.md      기획서
   - GODOT 경로: `godot` (PATH에 없으면 `.github/workflows/web.yml`의 설치 단계대로 4.7.1을 받는다)
   - 처음 한 번, 그리고 에셋을 추가했을 때는 먼저 `<GODOT 경로> --headless --import`를 실행한다
 - 공식이나 숫자 표기를 고쳤으면 `<GODOT 경로> --headless --path . res://tests/run_tests.tscn`로 테스트도 돌린다
-- M6 전까지 그래픽은 ColorRect, 도형, Label로 대신한다
+- 그래픽은 SVG를 직접 그린다 (GDD 11절). 새 SVG를 넣으면 `--import` 뒤 생긴 .import의 `svg/scale`을 1.5, `mipmaps/generate`를 true로 맞춘다
+  - 미리 보려면 `Image.load_svg_from_string()`으로 PNG를 뽑는다. 브라우저 대신 고도(ThorVG)가 그리는 결과가 기준이다
 - 기획과 다르게 구현해야 할 이유가 생기면 먼저 물어본다

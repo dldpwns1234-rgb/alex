@@ -1,21 +1,25 @@
 extends Control
-## 전투 화면 (GDD 3·9절). 왼쪽에 동료 4명, 오른쪽에 몬스터. 화면 어디를 탭해도 용사가 공격한다.
-## 도형은 MonsterView와 PartyView가 그리고, 여기서는 배치, 탭 입력, 동료 공격 연출의 타이밍을 맡는다.
+## 전투 화면 (GDD 3·9절). 왼쪽에 동료 4명과 용사, 오른쪽에 몬스터. 화면 어디를 탭해도 용사가 공격한다.
+## 그림은 Backdrop, MonsterView, PartyView가 그리고, 여기서는 배치, 탭 입력, 동료 공격 연출의 타이밍을 맡는다.
 
+const Backdrop := preload("res://scenes/battle/backdrop.gd")
 const MonsterView := preload("res://scenes/battle/monster_view.gd")
 const PartyView := preload("res://scenes/battle/party_view.gd")
+const Zones := preload("res://scenes/battle/zones.gd")
 
-const BACKGROUND_COLOR := Color("2a2438")
 const TAP_TEXT_COLOR := Color("ffe66d")
 const PARTY_TEXT_COLOR := Color("dfe3ea")
 const CRIT_TEXT_COLOR := Color("ff8c42")
 const EDGE_MARGIN: float = 16.0
 const LABEL_HEIGHT: float = 44.0
-const PARTY_X: float = 0.06         # 동료 열의 왼쪽 여백 (화면 폭 비율)
 const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
 const ATTACK_INTERVAL: float = 1.0  # 동료 공격 연출 주기 (GDD 3절: 약 1초)
+const BOSS_ESCAPE_DURATION: float = 0.5
+const OUTLINE_SIZE: int = 6
+const OUTLINE_COLOR := Color("2b2438")
 const CHALLENGE_BUTTON_SIZE := Vector2(300, 80)
 
+var _backdrop: Backdrop
 var _monster_view: MonsterView
 var _party_view: PartyView
 var _kill_label: Label
@@ -25,13 +29,14 @@ var _attack_clocks: Array[float] = []
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	clip_contents = true  # 배경 언덕과 튀어나가는 인물이 전투 화면 밖으로 그려지지 않게
 	_build()
 	resized.connect(_layout)
 	Game.monster_spawned.connect(_on_monster_spawned)
 	Game.monster_damaged.connect(_monster_view.set_hp)
 	Game.tap_hit.connect(_on_tap_hit)
 	Game.monster_killed.connect(_on_monster_killed)
-	Game.boss_failed.connect(_monster_view.die)
+	Game.boss_failed.connect(_monster_view.vanish.bind(BOSS_ESCAPE_DURATION))
 	Game.kills_changed.connect(_refresh_progress.unbind(1))
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
 	Game.farming_changed.connect(_on_farming_changed)
@@ -59,6 +64,7 @@ func _process(delta: float) -> void:
 			continue
 		_attack_clocks[i] -= ATTACK_INTERVAL
 		_party_view.play_attack(i)
+		_monster_view.hit(false)
 		var amount := Party.companion_dps(i, Game.is_boss_stage()) * ATTACK_INTERVAL
 		# 궁수의 치명타는 연출만 한다 (GDD 6절). 피해는 이미 기대값이다
 		if i == Balance.Companion.ARCHER and randf() < Balance.ARCHER_CRIT_CHANCE:
@@ -75,11 +81,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _build() -> void:
-	var background := ColorRect.new()
-	background.color = BACKGROUND_COLOR
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(background)
+	_backdrop = Backdrop.new()
+	add_child(_backdrop)
 
 	_party_view = PartyView.new()
 	add_child(_party_view)
@@ -89,6 +92,8 @@ func _build() -> void:
 	_kill_label = Label.new()
 	_kill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_kill_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_kill_label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
+	_kill_label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 	add_child(_kill_label)
 
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
@@ -102,20 +107,20 @@ func _build() -> void:
 		_attack_clocks[i] = i * ATTACK_INTERVAL / _attack_clocks.size()  # 동료끼리 박자를 엇갈리게
 
 
-## 전투 화면 크기가 정해지면 (그리고 바뀌면) 다시 배치한다
+## 전투 화면 크기가 정해지면 (그리고 바뀌면) 다시 배치한다. 용사는 몬스터와 같은 땅 선에 선다
 func _layout() -> void:
 	var center_y := size.y * 0.5
-	_party_view.position = Vector2(size.x * PARTY_X, center_y - _party_view.size.y * 0.5)
 	_monster_view.position = Vector2(
 		size.x * MONSTER_X - _monster_view.size.x * 0.5, center_y - _monster_view.size.y * 0.5)
+	_party_view.layout(size, _monster_view.position.y + MonsterView.FIGURE_SIZE.y)
 	_kill_label.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	_kill_label.size = Vector2(size.x - EDGE_MARGIN * 2.0, LABEL_HEIGHT)
-	_challenge_button.position = Vector2(
-		(size.x - CHALLENGE_BUTTON_SIZE.x) * 0.5, size.y - CHALLENGE_BUTTON_SIZE.y - EDGE_MARGIN)
+	_challenge_button.position = Vector2((size.x - CHALLENGE_BUTTON_SIZE.x) * 0.5, EDGE_MARGIN)
 
 
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
-	_monster_view.spawn(max_hp, boss)
+	_monster_view.spawn(max_hp, boss, Game.stage)
+	_backdrop.set_palette(Zones.palette(Game.stage))
 
 
 func _on_tap_hit(amount: float, crit: bool) -> void:
@@ -123,11 +128,12 @@ func _on_tap_hit(amount: float, crit: bool) -> void:
 		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
 	else:
 		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
-	_monster_view.hit_flash()
+	_party_view.play_hero_attack()
+	_monster_view.hit(true)
 
 
 func _on_monster_killed(_reward: float) -> void:
-	_monster_view.die()
+	_monster_view.die(Game.respawn_delay())
 
 
 func _refresh_progress() -> void:

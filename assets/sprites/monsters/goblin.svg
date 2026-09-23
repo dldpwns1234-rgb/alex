@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 고블린: 초록 피부, 큰 귀, 가죽 허리천, 몽둥이 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M48 236 L34 154" fill="none" stroke="#8b5a2b" stroke-width="10"/>
+    <circle cx="30" cy="140" r="22" fill="#8b5a2b"/>
+    <rect x="92" y="148" width="72" height="80" rx="22" fill="#8fb54f"/>
+    <path d="M90 190 L166 190 L172 228 L84 228 Z" fill="#8b5a2b"/>
+    <ellipse cx="110" cy="232" rx="17" ry="9" fill="#5a7a34"/>
+    <ellipse cx="144" cy="232" rx="17" ry="9" fill="#5a7a34"/>
+    <path d="M80 96 L22 66 L72 122 Z M172 96 L230 66 L180 122 Z" fill="#8fb54f"/>
+    <circle cx="126" cy="102" r="52" fill="#8fb54f"/>
+    <circle cx="52" cy="160" r="12" fill="#8fb54f"/>
+  </g>
+  <circle cx="104" cy="106" r="11" fill="#fff"/>
+  <circle cx="136" cy="106" r="11" fill="#fff"/>
+  <circle cx="100" cy="107" r="5" fill="#2b2438"/>
+  <circle cx="132" cy="107" r="5" fill="#2b2438"/>
+  <path d="M92 88 L114 96 M144 96 L166 88" fill="none" stroke="#2b2438" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 130 q18 12 36 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <path d="M106 132 L110 142 L116 132 Z" fill="#fff"/>
+</svg>

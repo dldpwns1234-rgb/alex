@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 슬라임: 초록 덩어리, 큰 눈, 물방울. 왼쪽을 본다 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="200" cy="96" r="10" fill="#6fcf5f"/>
+    <path d="M40 206 C28 140 66 84 128 84 C190 84 228 140 216 206 C210 236 46 236 40 206 Z" fill="#6fcf5f"/>
+  </g>
+  <ellipse cx="88" cy="126" rx="24" ry="14" fill="#fff" opacity="0.45"/>
+  <ellipse cx="96" cy="160" rx="9" ry="12" fill="#2b2438"/>
+  <ellipse cx="136" cy="160" rx="9" ry="12" fill="#2b2438"/>
+  <circle cx="93" cy="156" r="3" fill="#fff"/>
+  <circle cx="133" cy="156" r="3" fill="#fff"/>
+  <path d="M104 190 q12 9 24 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+</svg>

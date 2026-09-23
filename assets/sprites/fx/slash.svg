@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 탭 공격 베기 자국. 몬스터 위에 잠깐 나타난다 -->
+  <path d="M28 212 C96 60 176 24 236 20 C176 66 122 130 64 224 Z" fill="#ffffff" opacity="0.92"/>
+  <path d="M40 196 C100 84 168 46 222 32" fill="none" stroke="#ffe66d" stroke-width="6" stroke-linecap="round"/>
+</svg>

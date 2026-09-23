@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 마법사: 보라 뾰족 모자와 별, 보라 로브, 빛나는 구슬 지팡이 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M90 150 L158 150 L178 234 L70 234 Z" fill="#7b52c8"/>
+    <path d="M110 150 L138 150 L146 234 L102 234 Z" fill="#9b6fe0" stroke="none"/>
+    <rect x="86" y="192" width="80" height="10" fill="#f2c94c" stroke="none"/>
+    <circle cx="124" cy="100" r="56" fill="#ffd9b3"/>
+    <path d="M56 74 C90 60 130 40 160 8 C160 44 176 60 196 74 Z" fill="#9b6fe0"/>
+    <ellipse cx="124" cy="76" rx="80" ry="16" fill="#7b52c8"/>
+    <path d="M136 30 L140 42 L152 42 L142 50 L146 62 L136 54 L126 62 L130 50 L120 42 L132 42 Z" fill="#f2c94c" stroke="none"/>
+    <path d="M198 236 L190 104" fill="none" stroke="#8b5a2b" stroke-width="10"/>
+    <circle cx="188" cy="88" r="26" fill="#7fd1f0" opacity="0.35" stroke="none"/>
+    <circle cx="188" cy="88" r="16" fill="#7fd1f0"/>
+    <circle cx="184" cy="83" r="5" fill="#fff" stroke="none"/>
+    <circle cx="192" cy="172" r="12" fill="#ffd9b3"/>
+  </g>
+  <ellipse cx="112" cy="108" rx="6" ry="8" fill="#2b2438"/>
+  <ellipse cx="146" cy="108" rx="6" ry="8" fill="#2b2438"/>
+  <circle cx="114" cy="105" r="2.5" fill="#fff"/>
+  <circle cx="148" cy="105" r="2.5" fill="#fff"/>
+  <path d="M122 128 q8 5 16 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="96" cy="124" r="7" fill="#ff9aa2" opacity="0.5"/>
+  <circle cx="160" cy="126" r="7" fill="#ff9aa2" opacity="0.5"/>
+</svg>

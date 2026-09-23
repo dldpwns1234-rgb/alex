@@ -1,56 +1,89 @@
 extends Control
-## 동료 4명의 표시 (GDD 9절: 왼쪽 열, 오른쪽을 본다). 고용 전에는 어둡게, 고용하면 색이 들어온다.
-## play_attack()은 앞으로 튀어나갔다 돌아오는 공격 연출이다. 아래 상수는 배치와 연출용이다.
+## 용사와 동료 4명의 표시 (GDD 9절: 동료는 왼쪽 열에서 오른쪽을 본다). 용사는 몬스터 가까이 땅 위에 선다.
+## 고용 전의 동료는 어두운 실루엣이고, 아직 합류 스테이지에 못 미쳤으면 그 스테이지를 적는다. 상수는 배치와 연출용이다.
 
-const HIRED_COLORS: Array[Color] = [Color("4f8fe0"), Color("5fb36a"), Color("9b6fe0"), Color("e0c04f")]
-const LOCKED_COLOR := Color("3a3648")
-const LOCKED_TEXT_COLOR := Color("7a7690")
-const FIGURE_SIZE := Vector2(110, 110)
-const GAP: float = 14.0
-const LUNGE_DISTANCE: float = 40.0
-const LUNGE_OUT: float = 0.1
-const LUNGE_BACK: float = 0.2
+const Actor := preload("res://scenes/battle/actor.gd")
+const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
+## Balance.Companion 순서
+const COMPANION_TEXTURES: Array[Texture2D] = [
+	preload("res://assets/sprites/warrior.svg"),
+	preload("res://assets/sprites/archer.svg"),
+	preload("res://assets/sprites/mage.svg"),
+	preload("res://assets/sprites/cleric.svg"),
+]
 
-var _figures: Array[ColorRect] = []
+const FIGURE_SIZE := Vector2(100, 100)
+const HERO_SIZE := Vector2(150, 150)
+const NAME_HEIGHT: float = 22.0
+const NAME_FONT_SIZE: int = 18
+const GAP: float = 4.0
+const COLUMN_X: float = 0.05       # 동료 열의 왼쪽 (폭 비율)
+const COLUMN_SLANT: float = 14.0   # 아래 동료일수록 오른쪽으로 (원근)
+const HERO_X: float = 0.37         # 용사 중심 (폭 비율)
+const OUTLINE_SIZE: int = 5
+const OUTLINE_COLOR := Color("2b2438")
+const LOCKED_TEXT_COLOR := Color("b8b4c8")
+
+var _hero: Actor
+var _actors: Array[Actor] = []
 var _labels: Array[Label] = []
-var _tweens: Array[Tween] = []
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var count := Balance.COMPANIONS.size()
-	size = Vector2(FIGURE_SIZE.x + LUNGE_DISTANCE, count * FIGURE_SIZE.y + (count - 1) * GAP)
-	_tweens.resize(count)
-	for i in count:
-		var figure := ColorRect.new()
-		figure.size = FIGURE_SIZE
-		figure.position = Vector2(0.0, i * (FIGURE_SIZE.y + GAP))
-		figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(figure)
+	for i in Balance.COMPANIONS.size():
+		var actor := Actor.new(COMPANION_TEXTURES[i], FIGURE_SIZE, true)
+		add_child(actor)
+		_actors.append(actor)
 		var label := Label.new()
-		label.text = Balance.companion_name(i)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		label.size = Vector2(FIGURE_SIZE.x, NAME_HEIGHT)
+		label.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
+		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
+		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		figure.add_child(label)
-		_figures.append(figure)
+		add_child(label)
 		_labels.append(label)
 		set_hired(i, false)
+	_hero = Actor.new(HERO_TEXTURE, HERO_SIZE, true)
+	add_child(_hero)
+	Game.stage_changed.connect(_refresh_labels.unbind(1))
+
+
+## area 안에 배치한다. ground_y는 몬스터 발끝 높이로, 용사도 그 선에 선다
+func layout(area: Vector2, ground_y: float) -> void:
+	size = area
+	var row := FIGURE_SIZE.y + NAME_HEIGHT
+	var count := _actors.size()
+	var top := (area.y - (count * row + (count - 1) * GAP)) * 0.5
+	for i in count:
+		var origin := Vector2(area.x * COLUMN_X + i * COLUMN_SLANT, top + i * (row + GAP))
+		_actors[i].position = origin
+		_labels[i].position = origin + Vector2(0.0, FIGURE_SIZE.y)
+	_hero.position = Vector2(area.x * HERO_X - HERO_SIZE.x * 0.5, ground_y - HERO_SIZE.y)
 
 
 func set_hired(index: int, hired: bool) -> void:
-	_figures[index].color = HIRED_COLORS[index] if hired else LOCKED_COLOR
-	_labels[index].add_theme_color_override("font_color", Color.WHITE if hired else LOCKED_TEXT_COLOR)
+	_actors[index].set_locked(not hired)
+	_refresh_labels()
+
+
+func _refresh_labels() -> void:
+	for i in _labels.size():
+		if Party.is_companion_hired(i):
+			_labels[i].text = Balance.companion_name(i)
+			_labels[i].remove_theme_color_override("font_color")
+			continue
+		_labels[i].add_theme_color_override("font_color", LOCKED_TEXT_COLOR)
+		if Party.is_companion_unlocked(i):
+			_labels[i].text = Balance.companion_name(i)
+		else:
+			_labels[i].text = "스테이지 %d" % Balance.companion_unlock_stage(i)
 
 
 func play_attack(index: int) -> void:
-	var tween := _tweens[index]
-	if tween != null and tween.is_valid():
-		tween.kill()
-	var figure := _figures[index]
-	figure.position.x = 0.0
-	tween = create_tween()
-	tween.tween_property(figure, "position:x", LUNGE_DISTANCE, LUNGE_OUT)
-	tween.tween_property(figure, "position:x", 0.0, LUNGE_BACK)
-	_tweens[index] = tween
+	_actors[index].attack()
+
+
+func play_hero_attack() -> void:
+	_hero.attack()

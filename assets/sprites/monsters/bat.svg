@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 박쥐: 보라 몸통, 양쪽 날개, 송곳니 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M96 140 L28 92 L42 130 L8 150 L46 158 L34 196 L98 168 Z" fill="#5b3894"/>
+    <path d="M160 140 L228 92 L214 130 L248 150 L210 158 L222 196 L158 168 Z" fill="#5b3894"/>
+    <path d="M104 100 L94 60 L124 92 Z M152 100 L162 60 L132 92 Z" fill="#7b4fb8"/>
+    <ellipse cx="128" cy="150" rx="42" ry="50" fill="#7b4fb8"/>
+    <path d="M110 178 L116 194 L122 178 Z M134 178 L140 194 L146 178 Z" fill="#fff" stroke-width="3"/>
+  </g>
+  <ellipse cx="108" cy="138" rx="8" ry="10" fill="#2b2438"/>
+  <ellipse cx="140" cy="138" rx="8" ry="10" fill="#2b2438"/>
+  <circle cx="105" cy="135" r="3" fill="#fff"/>
+  <circle cx="137" cy="135" r="3" fill="#fff"/>
+  <path d="M112 174 L144 174" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+</svg>

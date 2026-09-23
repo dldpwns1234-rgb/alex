@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 해골: 두개골, 갈비뼈 몸통, 뼈 팔다리 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M110 218 L108 236 M146 218 L144 236" fill="none" stroke="#e9e4d6" stroke-width="10"/>
+    <ellipse cx="106" cy="236" rx="16" ry="8" fill="#e9e4d6"/>
+    <ellipse cx="146" cy="236" rx="16" ry="8" fill="#e9e4d6"/>
+    <path d="M92 156 L62 200 M164 156 L194 200" fill="none" stroke="#e9e4d6" stroke-width="10"/>
+    <circle cx="58" cy="206" r="10" fill="#e9e4d6"/>
+    <circle cx="198" cy="206" r="10" fill="#e9e4d6"/>
+    <rect x="92" y="148" width="72" height="74" rx="20" fill="#e9e4d6"/>
+    <path d="M100 166 L156 166 M100 182 L156 182 M100 198 L156 198" fill="none" stroke="#2b2438" stroke-width="5"/>
+    <circle cx="128" cy="96" r="54" fill="#e9e4d6"/>
+    <path d="M100 130 L156 130 L152 148 L104 148 Z" fill="#fff"/>
+    <path d="M116 130 L116 148 M128 130 L128 148 M140 130 L140 148" fill="none" stroke="#2b2438" stroke-width="3"/>
+  </g>
+  <ellipse cx="106" cy="98" rx="13" ry="15" fill="#2b2438"/>
+  <ellipse cx="142" cy="98" rx="13" ry="15" fill="#2b2438"/>
+  <circle cx="104" cy="98" r="4" fill="#ff8c42"/>
+  <circle cx="140" cy="98" r="4" fill="#ff8c42"/>
+  <path d="M124 112 L118 124 L130 124 Z" fill="#2b2438"/>
+</svg>
