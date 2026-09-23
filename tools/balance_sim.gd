@@ -18,6 +18,7 @@ const REPORT_STAGES: PackedStringArray = ["10", "20", "40", "60", "80", "100", "
 var _t: float = 0.0                 # 시뮬레이션 시간 (초)
 var _run_start: float = 0.0
 var _last_progress: float = 0.0     # 최고 스테이지가 마지막으로 오른 시각
+var _best_this_run: int = 0         # 이번 판에서 본 최고 스테이지. 보스에 다시 도전하는 것은 진행이 아니다
 var _reported: Dictionary = {}
 var _previous_best: int = 0
 var _beat_previous_at: float = -1.0
@@ -138,12 +139,14 @@ func _prestige() -> void:
 	_run_start = _t
 	_last_progress = _t
 	_beat_previous_at = -1.0
+	_best_this_run = 0
 	_reported.clear()
 
 
 func _on_stage_changed(stage: int) -> void:
-	if stage < Game.highest_stage:
-		return  # 보스 실패로 돌아간 것
+	if stage <= _best_this_run:
+		return  # 보스 실패로 돌아갔거나, 자동 재도전으로 같은 보스에 다시 들어간 것
+	_best_this_run = stage
 	_last_progress = _t
 	if _beat_previous_at < 0.0 and _previous_best > 0 and stage > _previous_best:
 		_beat_previous_at = _t
