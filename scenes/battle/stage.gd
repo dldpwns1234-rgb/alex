@@ -11,7 +11,7 @@ const MAX_FX: int = 6          # 동시에 남는 연출 수
 
 var _shake_amount: float = 0.0
 var _shake_left: float = 0.0
-var _fx: Array[Node2D] = []
+var _fx: Array[CanvasItem] = []
 
 
 func _ready() -> void:
@@ -47,7 +47,7 @@ func impact(point: Vector2, crit: bool, ring: bool) -> void:
 	_add(ImpactFx.new(point, crit, ring))
 
 
-func _add(fx: Node2D) -> void:
+func _add(fx: CanvasItem) -> void:
 	# 스스로 사라진 연출은 해제된 참조로 남으므로 먼저 걸러낸다 (형이 있는 람다 인자에는 해제된 객체를 넘길 수 없다)
 	_fx = _fx.filter(func(node: Variant) -> bool: return is_instance_valid(node) and not node.is_queued_for_deletion())
 	while _fx.size() >= MAX_FX:
