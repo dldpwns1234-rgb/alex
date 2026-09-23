@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- 탭 공격 베기 자국. 바깥은 노란 번짐, 안쪽은 흰 날. 몬스터 앞에서 커지며 사라진다 -->
-  <path d="M16 224 C70 90 150 30 248 12 C170 60 110 130 52 236 Z" fill="#ffe66d" opacity="0.55"/>
-  <path d="M30 214 C84 100 156 44 236 22 C168 72 116 136 60 220 Z" fill="#ffffff" opacity="0.95"/>
-  <path d="M44 196 C98 104 160 56 226 32" fill="none" stroke="#fff7c0" stroke-width="5" stroke-linecap="round"/>
+  <!-- 탭 공격 베기 자국. 위에서 아래로 내려 그은 활 모양(오른쪽으로 불룩). 바깥은 노란 번짐, 안쪽은 흰 날 -->
+  <path d="M64 4 C190 56 196 204 100 252 C150 196 148 84 64 4 Z" fill="#ffe66d" opacity="0.55"/>
+  <path d="M70 16 C182 66 186 196 102 240 C144 190 142 90 70 16 Z" fill="#ffffff" opacity="0.95"/>
+  <path d="M76 26 C172 78 174 186 104 232" fill="none" stroke="#fff7c0" stroke-width="5" stroke-linecap="round"/>
 </svg>

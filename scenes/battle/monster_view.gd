@@ -27,10 +27,10 @@ const POP_RISE: float = 100.0      # 피해 숫자가 떠오르는 거리
 const POP_DURATION: float = 0.6
 # 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국과 파편이 여기서 나온다
 const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
-const SLASH_SIZE := Vector2(220, 220)
-const SLASH_ANGLE: float = 28.0      # 도. 한 번은 위에서 아래로, 다음은 아래에서 위로 번갈아 벤다
-const SLASH_JITTER: float = 12.0
-const SLASH_START_SCALE: float = 0.45
+const SLASH_SIZE := Vector2(190, 240)
+const SLASH_ANGLE: float = 14.0      # 도. 세로 자국을 번갈아 살짝 왼쪽·오른쪽으로 기울인다
+const SLASH_JITTER: float = 8.0
+const SLASH_START_SCALE := Vector2(0.7, 0.25)  # 위 끝을 붙잡고 아래로 늘어나며 나타난다 (내려 베기)
 const SLASH_CRIT_SCALE: float = 1.3
 const SLASH_GROW: float = 0.09
 const SLASH_HOLD: float = 0.04
@@ -148,18 +148,18 @@ func hit(strong: bool, crit: bool = false) -> void:
 		_sparks.restart()
 
 
-## 베기 자국: 작게 나타나 빠르게 커진 뒤 사라진다. 벨 때마다 방향을 번갈아 X자를 그린다
+## 베기 자국: 위에서 아래로 내려 긋듯 늘어나며 나타난 뒤 사라진다. 벨 때마다 기울기와 활 방향을 번갈아 바꾼다
 func _slash(crit: bool) -> void:
 	_swing_side = -_swing_side
 	var slash := TextureRect.new()
 	slash.texture = SLASH
 	slash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	slash.size = SLASH_SIZE
-	slash.pivot_offset = SLASH_SIZE * 0.5
+	slash.pivot_offset = Vector2(SLASH_SIZE.x * 0.5, 0.0)  # 위 끝 기준
 	slash.position = IMPACT_POINT - SLASH_SIZE * 0.5
-	slash.flip_v = _swing_side < 0.0
+	slash.flip_h = _swing_side < 0.0
 	slash.rotation = deg_to_rad(SLASH_ANGLE * _swing_side + randf_range(-SLASH_JITTER, SLASH_JITTER))
-	slash.scale = Vector2.ONE * SLASH_START_SCALE
+	slash.scale = SLASH_START_SCALE
 	slash.modulate = CRIT_SLASH_COLOR if crit else Color.WHITE
 	slash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(slash)
