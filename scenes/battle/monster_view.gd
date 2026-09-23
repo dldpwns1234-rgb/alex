@@ -1,10 +1,10 @@
 extends Control
-## 몬스터 한 마리의 표시: 그림(Actor), 이름과 체력바, 피해 숫자, 베기 자국(SlashFx)과 파편. 상태는 Battle이 Game에서 받아 넘겨준다.
+## 몬스터 한 마리의 표시: 그림(Actor), 이름과 체력바, 피해 숫자, 파편. 상태는 Battle이 Game에서 받아 넘겨준다.
+## 검격 궤적과 접촉 섬광은 Stage가 띄운다.
 ## 몬스터 종류와 색은 스테이지로 정한다 (Zones). 아래 상수는 배치와 연출용이며 게임 수치가 아니다.
 
 const Actor := preload("res://scenes/battle/actor.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
-const SlashFx := preload("res://scenes/battle/slash_fx.gd")
 const CROWN := preload("res://assets/sprites/fx/crown.svg")
 const SPARK := preload("res://assets/sprites/fx/spark.svg")
 
@@ -25,8 +25,10 @@ const POP_START: float = 0.35      # 피해 숫자가 나타나는 높이 (그�
 const POP_SPREAD: float = 40.0     # 피해 숫자가 나타나는 가로 흔들림
 const POP_RISE: float = 100.0      # 피해 숫자가 떠오르는 거리
 const POP_DURATION: float = 0.6
-# 탭 공격이 닿는 자리 (몬스터 앞쪽). 베기 자국(SlashFx)과 파편이 여기서 나온다
+# 탭 공격이 닿는 자리 (몬스터 앞쪽). 파편이 여기서 나오고 Battle은 접촉 섬광을 여기 띄운다
 const IMPACT_POINT := Vector2(FIGURE_SIZE.x * 0.38, FIGURE_SIZE.y * 0.5)
+const POP_PUNCH: float = 1.5       # 피해 숫자가 이만큼 크게 나타나 원래 크기로 줄어든다
+const POP_PUNCH_DURATION: float = 0.1
 const SPARK_COLOR := Color("ffe66d")
 const CRIT_SPARK_COLOR := Color("ff8c42")
 const SPARK_COUNT: int = 10
@@ -34,7 +36,7 @@ const SPARK_LIFETIME: float = 0.4
 const SPARK_SPEED := Vector2(220.0, 380.0)  # 최소, 최대
 const SPARK_GRAVITY := Vector2(0.0, 700.0)
 const SPARK_SCALE := Vector2(0.35, 0.7)     # 최소, 최대
-const CRIT_SHAKE_SCALE: float = 1.8
+const CRIT_SHAKE_SCALE: float = 1.8  # 치명타는 이만큼 더 세게 밀린다
 
 var _actor: Actor
 var _hp_bar: ProgressBar
@@ -42,7 +44,6 @@ var _hp_fill: StyleBoxFlat
 var _hp_label: Label
 var _sparks: CPUParticles2D
 var _name: String = ""
-var _downward: bool = true  # 다음 베기가 내려베기인지
 
 
 func _ready() -> void:
@@ -127,22 +128,15 @@ func die(duration: float) -> void:
 
 ## 보스가 달아난다 (시간 초과)
 func vanish(duration: float) -> void:
-	_actor.vanish(duration)
+	_actor.die(duration, false)
 
 
-## 피격. strong(탭 공격)이면 번쩍이고 베기 자국과 파편이 나온다. crit이면 더 크고 주황색
+## 피격. strong(탭 공격)이면 번쩍이며 굳었다 밀리고 파편이 튄다. crit이면 더 세게, 주황색
 func hit(strong: bool, crit: bool = false) -> void:
 	_actor.hit(strong, CRIT_SHAKE_SCALE if crit else 1.0)
 	if strong:
-		_slash(crit)
 		_sparks.color = CRIT_SPARK_COLOR if crit else SPARK_COLOR
 		_sparks.restart()
-
-
-## 베기 자국. 내려베기와 올려베기를 번갈아 한다
-func _slash(crit: bool) -> void:
-	add_child(SlashFx.new(IMPACT_POINT, _downward, crit))
-	_downward = not _downward
 
 
 ## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때
@@ -153,10 +147,14 @@ func pop(text: String, color: Color, big: bool = false) -> void:
 	label.add_theme_color_override("font_color", color)
 	_outline(label)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.size = label.get_minimum_size()
+	label.pivot_offset = label.size * 0.5
 	label.position = Vector2(FIGURE_SIZE.x * 0.5 + randf_range(-POP_SPREAD, POP_SPREAD), FIGURE_SIZE.y * POP_START)
+	label.scale = Vector2.ONE * POP_PUNCH  # 크게 나타나 원래 크기로 줄어들며 튀어 오른다
 	add_child(label)
 	var tween := create_tween()
-	tween.tween_property(label, "position:y", label.position.y - POP_RISE, POP_DURATION)
+	tween.tween_property(label, "scale", Vector2.ONE, POP_PUNCH_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(label, "position:y", label.position.y - POP_RISE, POP_DURATION)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, POP_DURATION)
 	tween.tween_callback(label.queue_free)
 

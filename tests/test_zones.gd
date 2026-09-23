@@ -3,7 +3,7 @@ extends "res://tests/test_case.gd"
 
 const Zones := preload("res://scenes/battle/zones.gd")
 const Actor := preload("res://scenes/battle/actor.gd")
-const SlashFx := preload("res://scenes/battle/slash_fx.gd")
+const Stage := preload("res://scenes/battle/stage.gd")
 
 
 func run() -> void:
@@ -51,15 +51,21 @@ func _actor() -> void:
 	actor.die(0.05)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	actor.vanish(0.05)
+	actor.die(0.05, false)
 	actor.spawn()
 	await get_tree().process_frame
 	_equal(actor.pop > 0.0, true, "등장 연출 배율은 양수")
 	actor.queue_free()
-	for downward: bool in [true, false]:
-		var slash := SlashFx.new(Vector2(50, 50), downward, not downward)
-		add_child(slash)
-		_equal(slash.material != null, true, "베기 자국은 훑기 셰이더를 쓴다")
-	await get_tree().process_frame
-	await get_tree().process_frame
+	var stage := Stage.new()
+	add_child(stage)
+	stage.slash(Vector2(100, 100), true, false)
+	stage.slash(Vector2(100, 100), false, true)
+	stage.impact(Vector2(200, 100), true, false)
+	stage.impact(Vector2(200, 100), false, true)
+	stage.shake(8.0)
+	_equal(stage.get_child_count(), 4, "궤적 둘과 섬광 둘이 무대에 붙는다")
+	await get_tree().create_timer(0.6).timeout  # 가장 긴 연출(처치 고리 0.3초)보다 길게
+	await get_tree().process_frame  # queue_free가 실제로 지워지도록 한 프레임
+	_equal(stage.get_child_count(), 0, "연출이 끝나면 스스로 사라진다")
+	stage.queue_free()
 	passed += 1

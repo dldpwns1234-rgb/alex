@@ -1,62 +1,82 @@
-extends TextureRect
-## 베기 자국 한 줄 (GDD 11절). 칼이 지나는 방향으로 훑고 지나가는 빛줄기: 앞머리가 먼저 나가고 꼬리가 뒤따라 지워진다.
-## 내려베기는 위에서 아래로(＼), 올려베기는 아래에서 위로(／). 활은 항상 몬스터 쪽으로 불룩하다 (뒤집지 않는다).
+extends Node2D
+## 검격 궤적 (GDD 11절): 용사의 손을 축으로 도는 호를 칼끝이 쓸고 지나간 자리로 그린다.
+## 앞머리는 두껍고 밝고, 꼬리는 얇아지며 투명해진다. 매 프레임 호의 양 끝(앞머리·꼬리)을 옮겨 실제로 움직인다.
+## 내려베기는 위앞에서 아래앞으로, 올려베기는 그 반대. 축이 용사 쪽이라 활은 저절로 몬스터 쪽으로 불룩하다.
 ## 만들어서 add_child()하면 알아서 재생하고 사라진다. 상수는 연출용이다.
 
-const TEXTURE := preload("res://assets/sprites/fx/slash.svg")
-const SHADER := preload("res://assets/shaders/slash.gdshader")
-
-const SIZE := Vector2(190, 240)
-const TILT: float = 12.0           # 도. 세로에서 기울이는 각도
-const TILT_JITTER: float = 6.0
-const OFFSET_JITTER: float = 10.0  # px. 같은 자리에 도장 찍히지 않게
-const SWEEP: float = 0.1           # 초. 앞머리가 끝까지 가는 시간
-const TAIL_DELAY: float = 0.06     # 꼬리가 따라 나서기까지
-const TAIL_DELAY_CRIT: float = 0.12  # 치명타는 자국이 조금 더 남는다
-const TAIL_SWEEP_RATIO: float = 1.3  # 꼬리는 앞머리보다 느리게 지나간다
-const TRAVEL: float = 50.0         # px. 자국 전체가 칼 방향으로 미끄러지는 거리
-const START_WIDTH: float = 0.6     # 가로 배율. 1까지 커진다
+const RADIUS: float = 120.0
+const START_ANGLE: float = -80.0  # 도. 0이 앞(오른쪽), 음수가 위
+const END_ANGLE: float = 32.0
+const ANGLE_JITTER: float = 6.0
+const SWEEP: float = 0.08         # 초. 앞머리가 끝까지 가는 시간
+const TAIL_DELAY: float = 0.04    # 꼬리가 따라 나서기까지
+const TAIL_SWEEP: float = 0.1     # 꼬리가 끝까지 가는 시간
+const SEGMENTS: int = 14
+const CORE_WIDTH: float = 26.0
+const GLOW_WIDTH: float = 54.0
+const CORE_COLOR := Color(1.0, 1.0, 1.0)
+const GLOW_COLOR := Color("ffe66d", 0.55)
+const CRIT_CORE_COLOR := Color("ffd7a0")
+const CRIT_GLOW_COLOR := Color("ff8c42", 0.6)
 const CRIT_SCALE: float = 1.3
-const CRIT_COLOR := Color("ffb060")
-const HEAD_SOFT: float = 0.04
-const TAIL_SOFT: float = 0.25
+const TAIL_WIDTH_RATIO: float = 0.08  # 꼬리 끝 굵기 (앞머리 대비)
 
-var _material: ShaderMaterial
-var _along: Vector2 = Vector2.DOWN  # 칼이 지나는 방향
-var _tail_delay: float = TAIL_DELAY
-
-
-func _init(point: Vector2, downward: bool, crit: bool) -> void:
-	texture = TEXTURE
-	expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	size = SIZE
-	pivot_offset = SIZE * 0.5
-	var tilt := -TILT if downward else TILT  # ＼ 는 반시계, ／ 는 시계 방향
-	rotation = deg_to_rad(tilt + randf_range(-TILT_JITTER, TILT_JITTER))
-	_along = Vector2.DOWN.rotated(rotation) * (1.0 if downward else -1.0)
-	var jitter := Vector2(randf_range(-OFFSET_JITTER, OFFSET_JITTER), randf_range(-OFFSET_JITTER, OFFSET_JITTER))
-	position = point - SIZE * 0.5 - _along * TRAVEL * 0.5 + jitter
-	var big := CRIT_SCALE if crit else 1.0
-	scale = Vector2(START_WIDTH, 1.0) * big
-	modulate = CRIT_COLOR if crit else Color.WHITE
-	_tail_delay = TAIL_DELAY_CRIT if crit else TAIL_DELAY
-	_material = ShaderMaterial.new()
-	_material.shader = SHADER
-	_material.set_shader_parameter("downward", 1.0 if downward else -1.0)
-	_material.set_shader_parameter("head", 0.0)
-	_material.set_shader_parameter("tail", -TAIL_SOFT)
-	_material.set_shader_parameter("head_soft", HEAD_SOFT)
-	_material.set_shader_parameter("tail_soft", TAIL_SOFT)
-	material = _material
+var _from: float = 0.0  # 라디안
+var _to: float = 0.0
+var _size: float = 1.0
+var _clock: float = 0.0
+var _core: Line2D
+var _glow: Line2D
 
 
-func _ready() -> void:
-	var tween := create_tween().set_parallel(true)
-	tween.tween_property(_material, "shader_parameter/head", 1.0 + HEAD_SOFT, SWEEP)
-	tween.tween_property(_material, "shader_parameter/tail", 1.0, SWEEP * TAIL_SWEEP_RATIO).set_delay(_tail_delay)
-	tween.tween_property(self, "position", position + _along * TRAVEL, SWEEP + _tail_delay) \
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "scale:x", scale.x / START_WIDTH, SWEEP) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_callback(queue_free)
+func _init(pivot: Vector2, downward: bool, crit: bool) -> void:
+	position = pivot
+	_size = CRIT_SCALE if crit else 1.0
+	var jitter := deg_to_rad(randf_range(-ANGLE_JITTER, ANGLE_JITTER))
+	_from = deg_to_rad(START_ANGLE if downward else END_ANGLE) + jitter
+	_to = deg_to_rad(END_ANGLE if downward else START_ANGLE) + jitter
+	_glow = _make_line(GLOW_WIDTH * _size, CRIT_GLOW_COLOR if crit else GLOW_COLOR)
+	_core = _make_line(CORE_WIDTH * _size, CRIT_CORE_COLOR if crit else CORE_COLOR)
+	add_child(_glow)
+	add_child(_core)
+	_update(0.0, 0.0)
+
+
+func _make_line(width: float, color: Color) -> Line2D:
+	var line := Line2D.new()
+	line.width = width
+	line.default_color = color
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
+	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	var curve := Curve.new()  # 점 순서는 꼬리(0)에서 앞머리(1)
+	curve.add_point(Vector2(0.0, TAIL_WIDTH_RATIO))
+	curve.add_point(Vector2(0.7, 0.8))
+	curve.add_point(Vector2(1.0, 1.0))
+	line.width_curve = curve
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(color, 0.0))
+	gradient.set_color(1, color)
+	line.gradient = gradient
+	return line
+
+
+func _process(delta: float) -> void:
+	_clock += delta
+	var head := 1.0 - pow(1.0 - clampf(_clock / SWEEP, 0.0, 1.0), 2.0)  # 빠르게 나가서 느려진다
+	var tail := clampf((_clock - TAIL_DELAY) / TAIL_SWEEP, 0.0, 1.0)
+	if tail >= 1.0:
+		queue_free()
+		return
+	_update(tail, head)
+
+
+func _update(tail: float, head: float) -> void:
+	var points := PackedVector2Array()
+	var from := lerpf(_from, _to, tail)
+	var to := lerpf(_from, _to, head)
+	for i in SEGMENTS + 1:
+		var angle := lerpf(from, to, float(i) / SEGMENTS)
+		points.append(Vector2(cos(angle), sin(angle)) * RADIUS * _size)
+	_core.points = points
+	_glow.points = points

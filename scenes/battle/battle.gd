@@ -1,7 +1,8 @@
 extends Control
 ## 전투 화면 (GDD 3·9절). 왼쪽에 동료 4명과 용사, 오른쪽에 몬스터. 화면 어디를 탭해도 용사가 공격한다.
-## 그림은 Backdrop, MonsterView, PartyView가 그리고, 여기서는 배치, 탭 입력, 동료 공격 연출의 타이밍을 맡는다.
+## 그림은 Backdrop, MonsterView, PartyView, Stage(궤적·섬광·흔들림)가 그리고, 여기서는 배치, 탭 입력, 연출 타이밍을 맡는다.
 
+const Stage := preload("res://scenes/battle/stage.gd")
 const Backdrop := preload("res://scenes/battle/backdrop.gd")
 const MonsterView := preload("res://scenes/battle/monster_view.gd")
 const PartyView := preload("res://scenes/battle/party_view.gd")
@@ -15,13 +16,20 @@ const LABEL_HEIGHT: float = 44.0
 const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
 const ATTACK_INTERVAL: float = 1.0  # 동료 공격 연출 주기 (GDD 3절: 약 1초)
 const BOSS_ESCAPE_DURATION: float = 0.5
-const TAP_LAND_DELAY: float = 0.06  # 용사가 달려드는 시간. 그 뒤에 피해 숫자와 베기 자국이 나온다
+# 탭 한 번의 박자: 용사가 달려드는 동안 궤적이 쓸리기 시작하고, 칼이 몬스터를 지나는 순간 맞는다
+const SLASH_START_DELAY: float = 0.03
+const TAP_LAND_DELAY: float = 0.08
+const TAP_SHAKE: float = 3.0
+const CRIT_SHAKE: float = 8.0
+const KILL_SHAKE: float = 5.0
 const OUTLINE_SIZE: int = 6
 const OUTLINE_COLOR := Color("2b2438")
 const CHALLENGE_BUTTON_SIZE := Vector2(300, 80)
 
+var _stage: Stage
 var _backdrop: Backdrop
 var _monster_view: MonsterView
+var _downward: bool = true  # 다음 검격이 내려베기인지
 var _party_view: PartyView
 var _kill_label: Label
 var _challenge_button: Button
@@ -82,13 +90,14 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _build() -> void:
+	_stage = Stage.new()
+	add_child(_stage)
 	_backdrop = Backdrop.new()
-	add_child(_backdrop)
-
+	_stage.add_child(_backdrop)
 	_party_view = PartyView.new()
-	add_child(_party_view)
+	_stage.add_child(_party_view)
 	_monster_view = MonsterView.new()
-	add_child(_monster_view)
+	_stage.add_child(_monster_view)
 
 	_kill_label = Label.new()
 	_kill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -127,19 +136,30 @@ func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 
 func _on_tap_hit(amount: float, crit: bool) -> void:
 	_party_view.play_hero_attack()
+	get_tree().create_timer(SLASH_START_DELAY, false).timeout.connect(_start_slash.bind(crit))
 	get_tree().create_timer(TAP_LAND_DELAY, false).timeout.connect(_land_tap.bind(amount, crit))
 
 
+func _start_slash(crit: bool) -> void:
+	_stage.slash(_party_view.hero_hand(), _downward, crit)
+	_downward = not _downward
+
+
+## 칼이 몬스터에 닿는 순간: 숫자, 굳었다 밀리는 몬스터, 접촉 섬광, 화면 흔들림
 func _land_tap(amount: float, crit: bool) -> void:
 	if crit:
 		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR, true)
 	else:
 		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
 	_monster_view.hit(true, crit)
+	_stage.impact(_monster_view.position + MonsterView.IMPACT_POINT, crit, false)
+	_stage.shake(CRIT_SHAKE if crit else TAP_SHAKE)
 
 
 func _on_monster_killed(_reward: float) -> void:
 	_monster_view.die(Game.respawn_delay())
+	_stage.impact(_monster_view.position + MonsterView.FIGURE_SIZE * 0.5, false, true)
+	_stage.shake(KILL_SHAKE)
 
 
 func _refresh_progress() -> void:

@@ -20,6 +20,7 @@ const GAP: float = 4.0
 const COLUMN_X: float = 0.05       # 동료 열의 왼쪽 (폭 비율)
 const COLUMN_SLANT: float = 14.0   # 아래 동료일수록 오른쪽으로 (원근)
 const HERO_X: float = 0.37         # 용사 중심 (폭 비율)
+const HERO_HAND := Vector2(0.62, 0.62)  # 그림 안에서 칼을 쥔 손 자리 (크기 비율). 검격 궤적의 축
 const OUTLINE_SIZE: int = 5
 const OUTLINE_COLOR := Color("2b2438")
 const LOCKED_TEXT_COLOR := Color("b8b4c8")
@@ -87,3 +88,8 @@ func play_attack(index: int) -> void:
 
 func play_hero_attack() -> void:
 	_hero.strike()
+
+
+## 달려든 용사의 손 자리 (이 뷰 좌표). 검격 궤적이 여기를 축으로 돈다
+func hero_hand() -> Vector2:
+	return _hero.position + HERO_SIZE * HERO_HAND + Vector2(Actor.STRIKE_DISTANCE, 0.0)
