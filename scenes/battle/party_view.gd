@@ -1,6 +1,7 @@
 extends Control
 ## 용사와 동료 4명의 표시 (GDD 9절: 동료는 왼쪽 열에서 오른쪽을 본다). 용사는 몬스터 가까이 땅 위에 선다.
-## 고용 전의 동료는 어두운 실루엣이고, 아직 합류 스테이지에 못 미쳤으면 그 스테이지를 적는다. 상수는 배치와 연출용이다.
+## 고용 전의 동료는 어두운 실루엣이고, 아직 합류 스테이지에 못 미쳤으면 그 스테이지를 적는다.
+## 승급한 동료는 이름 옆에 별을 단다. 상수는 배치와 연출용이다.
 
 const Actor := preload("res://scenes/battle/actor.gd")
 const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
@@ -49,6 +50,7 @@ func _ready() -> void:
 	_hero = Actor.new(HERO_TEXTURE, HERO_SIZE, true)
 	add_child(_hero)
 	Game.stage_changed.connect(_refresh_labels.unbind(1))
+	Promotions.promotion_changed.connect(_refresh_labels.unbind(2))
 
 
 ## area 안에 배치한다. ground_y는 몬스터 발끝 높이로, 용사도 그 선에 선다
@@ -72,7 +74,8 @@ func set_hired(index: int, hired: bool) -> void:
 func _refresh_labels() -> void:
 	for i in _labels.size():
 		if Party.is_companion_hired(i):
-			_labels[i].text = Balance.companion_name(i)
+			var stars := Balance.promotion_stars(Promotions.rank(i))
+			_labels[i].text = Balance.companion_name(i) + (" " + stars if not stars.is_empty() else "")
 			_labels[i].remove_theme_color_override("font_color")
 			continue
 		_labels[i].add_theme_color_override("font_color", LOCKED_TEXT_COLOR)
@@ -84,6 +87,16 @@ func _refresh_labels() -> void:
 
 func play_attack(index: int) -> void:
 	_actors[index].attack()
+
+
+## 승급 연출: 등장할 때처럼 튀어오른다
+func celebrate(index: int) -> void:
+	_actors[index].spawn()
+
+
+## 동료 그림의 가운데 (이 뷰 좌표). 승급 고리가 여기서 퍼진다
+func companion_center(index: int) -> Vector2:
+	return _actors[index].position + FIGURE_SIZE * 0.5
 
 
 ## 탭: 달려들어 베고(베는 중이면 그대로), 그와 별개로 칼을 짧게 휘두른다. downward는 내려베기인지

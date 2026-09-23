@@ -52,6 +52,7 @@ func _ready() -> void:
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
 	Game.farming_changed.connect(_on_farming_changed)
 	Party.companion_changed.connect(_on_companion_changed)
+	Promotions.promoted.connect(_on_promoted)
 	_layout()
 	# 오토로드가 먼저 준비돼 있으므로 현재 상태를 직접 읽어 채운다
 	_on_monster_spawned(Game.monster_max_hp, Game.is_boss_stage())
@@ -177,3 +178,9 @@ func _on_farming_changed(farming: bool) -> void:
 
 func _on_companion_changed(index: int, level: int) -> void:
 	_party_view.set_hired(index, level > 0)
+
+
+## 승급: 동료가 튀어오르고 흰 고리가 퍼진다
+func _on_promoted(index: int, _rank: int) -> void:
+	_party_view.celebrate(index)
+	_stage.impact(_party_view.companion_center(index), false, true)

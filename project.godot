@@ -20,6 +20,7 @@ Prestige="*res://autoload/prestige.gd"
 Party="*res://autoload/party.gd"
 Skills="*res://autoload/skills.gd"
 Training="*res://autoload/training.gd"
+Promotions="*res://autoload/promotions.gd"
 Game="*res://autoload/game.gd"
 ; 업적은 Game·Party·Prestige·Skills의 시그널을 받으므로 그 뒤에, 불러올 때 부르는 Save보다는 앞에
 Achievements="*res://autoload/achievements.gd"

@@ -4,7 +4,7 @@ extends Node
 ##   godot --headless --path . res://tools/balance_sim.tscn
 ##
 ## 가정: 초당 4클릭, 스킬 없음, 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다
-## (용사·동료 레벨과 단련 모두. 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때 산다), 보스 재도전은
+## (용사·동료 레벨, 단련, 승급 모두. 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때 산다), 보스 재도전은
 ## 게임의 자동 재도전(Game.auto_retry, Balance.AUTO_RETRY_*)에 맡긴다, 3분 동안 최고 스테이지가
 ## 오르지 않으면 회귀, 결정은 검술·황금 중 싼 것에 쓴다.
 
@@ -33,6 +33,7 @@ func _ready() -> void:
 	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()
 	Training.reset()
+	Promotions.reset()
 	Game.reset()
 	Game.stage_changed.connect(_on_stage_changed)
 	Party.companion_changed.connect(_on_companion_changed)
@@ -73,7 +74,7 @@ func _buy_everything() -> void:
 	while true:
 		var current := _progress_rate()
 		var best_ratio := 0.0
-		var best_kind := ""  # "hero", "companion", "training"
+		var best_kind := ""  # "hero", "companion", "training", "promotion"
 		var best_index := -1
 		var hero := Party.hero_purchase()
 		if hero.affordable:
@@ -107,6 +108,17 @@ func _buy_everything() -> void:
 				best_ratio = ratio
 				best_kind = "training"
 				best_index = i
+		for i in Promotions.ranks.size():
+			if not Promotions.can_promote(i):
+				continue
+			var cost := Promotions.cost(i)
+			Promotions.ranks[i] += 1
+			var ratio := (_progress_rate() - current) / cost
+			Promotions.ranks[i] -= 1
+			if ratio > best_ratio:
+				best_ratio = ratio
+				best_kind = "promotion"
+				best_index = i
 		match best_kind:
 			"hero":
 				Party.buy_hero()
@@ -114,6 +126,8 @@ func _buy_everything() -> void:
 				Party.buy_companion(best_index)
 			"training":
 				Training.buy(best_index)
+			"promotion":
+				Promotions.promote(best_index)
 			_:
 				return
 

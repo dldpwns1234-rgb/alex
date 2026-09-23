@@ -14,6 +14,13 @@ const ARCHER_CRIT_MULTIPLIER: float = 5.0
 const MAGE_BOSS_MULTIPLIER: float = 3.0
 const CLERIC_BUFF_PER_LEVEL: float = 0.02
 
+# 승급 (GDD 6.6절): 동료 레벨 50마다 골드를 내고 한 단계씩 승급한다. 단계마다 그 동료의 DPS ×1.5, 최대 5단계 (×7.6).
+# ×2(5단계 ×32)는 첫 회귀가 155에서 200으로, 판당 상승이 +40에서 +85로 뛰어 GDD 13절 목표를 벗어났다. docs/BALANCE_SIM.md
+const PROMOTION_LEVEL_STEP: int = 50
+const PROMOTION_MAX_RANK: int = 5
+const PROMOTION_COST_FACTOR: float = 50.0  # 승급 비용 = 필요 레벨의 레벨업 비용 × 50 (레벨업 25개 값과 비슷하다)
+const PROMOTION_MULTIPLIER: float = 1.5
+
 
 func companion_name(index: int) -> String:
 	return COMPANIONS[index]["name"]
@@ -42,9 +49,12 @@ func cleric_multiplier(cleric_level: int, buff_per_level: float = CLERIC_BUFF_PE
 
 
 ## 동료 한 명의 DPS (성직자 버프 제외). 마법사의 ×3은 현재 적이 보스일 때만.
-## mods는 단련이 바꾼 값(Training.mods()). 비어 있으면 기본 상수를 쓴다
+## mods는 단련이 바꾼 값(Training.mods())에 승급 단계(promotion_ranks)를 얹은 것. 비어 있으면 기본 상수를 쓴다
 func companion_dps(index: int, level: int, boss: bool, mods: Dictionary = {}) -> float:
 	var dps := attack(COMPANIONS[index]["base_damage"], level)
+	var ranks: Array = mods.get("promotion_ranks", [])
+	if index < ranks.size():
+		dps *= promotion_multiplier(int(ranks[index]))
 	match index:
 		Companion.ARCHER:
 			var chance: float = mods.get("archer_crit_chance", ARCHER_CRIT_CHANCE)
@@ -79,3 +89,23 @@ func companion_note(index: int) -> String:
 		Companion.CLERIC:
 			return "동료 전체 공격력 +%d%%/레벨" % roundi(CLERIC_BUFF_PER_LEVEL * 100.0)
 	return "꾸준한 기본 피해"
+
+
+## rank단계(1~5) 승급에 필요한 동료 레벨: 50 × rank
+func promotion_level(rank: int) -> int:
+	return PROMOTION_LEVEL_STEP * rank
+
+
+## rank단계 승급 비용: 필요 레벨의 레벨업 비용 × 50
+func promotion_cost(index: int, rank: int) -> float:
+	return companion_cost(index, promotion_level(rank)) * PROMOTION_COST_FACTOR
+
+
+## 승급 단계에 따른 그 동료의 DPS 배율: 1.5^rank
+func promotion_multiplier(rank: int) -> float:
+	return pow(PROMOTION_MULTIPLIER, rank)
+
+
+## 이름 옆에 붙이는 별. 0단계면 빈 문자열
+func promotion_stars(rank: int) -> String:
+	return "★".repeat(rank)

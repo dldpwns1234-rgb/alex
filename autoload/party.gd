@@ -74,16 +74,23 @@ func click_damage() -> float:
 ## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
 ## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다
 func party_dps(boss: bool, with_skills: bool = true) -> float:
-	var dps := Balance.party_dps(companion_levels, boss, Training.mods()) * _party_bonus(boss)
+	var dps := Balance.party_dps(companion_levels, boss, _mods()) * _party_bonus(boss)
 	return dps * Skills.party_multiplier() if with_skills else dps
 
 
-## 동료 한 명이 실제로 내는 DPS (성직자 버프, 검술의 기억, 단련, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
+## 동료 한 명이 실제로 내는 DPS (성직자 버프, 승급, 검술의 기억, 단련, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
 func companion_dps(index: int, boss: bool) -> float:
-	var mods := Training.mods()
+	var mods := _mods()
 	var cleric := Balance.cleric_multiplier(companion_levels[Balance.Companion.CLERIC], mods["cleric_buff"])
 	var dps := Balance.companion_dps(index, companion_levels[index], boss, mods) * cleric
 	return dps * _party_bonus(boss) * Skills.party_multiplier()
+
+
+## 동료 공식에 넘길 보정값: 단련 값에 승급 단계를 얹는다
+func _mods() -> Dictionary:
+	var mods := Training.mods()
+	mods["promotion_ranks"] = Promotions.ranks
+	return mods
 
 
 ## 검술의 기억 × 업적 × 지휘·백전노장 (보스면 × 방패 강타)

@@ -43,12 +43,13 @@ res://
     skills.gd    (Skills) 스킬 발동·지속·쿨타임(유닉스 초 기준)과 효과 배율
     prestige.gd  (Prestige) 기억의 결정, 상점 레벨, 역대 기록, 회귀 실행. 회귀해도 남는 것들
     training.gd  (Training) 단련 레벨, 구매, 효과 합산(value·mods). 한 판 안의 패시브
+    promotions.gd (Promotions) 동료 승급 단계, 구매, DPS 배율. 한 판 안의 강화. Party가 동료 공식에 배율을 넘긴다
     achievements.gd (Achievements) 누적 통계와 업적 달성, 영구 보너스 배율. 회귀해도 남는다. 통계는 Game·Party·Prestige·Skills의 시그널로 모은다
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
     num.gd       (Num) 한국식 숫자 표기
   scenes/
     main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 내비게이션, 패널)
-    main.gd      내비게이션이 고른 패널만 보이고 단련·업적 탭 점을 갱신하며, 업적 달성 알림(toast.gd)을 띄운다
+    main.gd      내비게이션이 고른 패널만 보이고 동료(승급)·단련·업적 탭 점을 갱신하며, 업적 달성과 승급 알림(toast.gd)을 띄운다
     top_bar.gd, skill_bar.gd(쿨타임·지속 시간 막), nav_bar.gd(탭 버튼 6개와 점), toast.gd(잠깐 뜨는 알림), tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)

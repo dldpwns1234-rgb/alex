@@ -41,4 +41,5 @@ func _fresh_run() -> void:
 	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()
 	Training.reset()
+	Promotions.reset()
 	Game.reset()

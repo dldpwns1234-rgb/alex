@@ -69,12 +69,8 @@ func grant_offline(seconds: float) -> void:
 		Game.add_gold(gold)
 		Achievements.add(Balance.Stat.GOLD, gold)
 	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다
-	_emit_offline_reward.call_deferred(minf(seconds, Balance.OFFLINE_MAX_SECONDS), gold)
+	offline_reward.emit.call_deferred(minf(seconds, Balance.OFFLINE_MAX_SECONDS), gold)
 	save_game()
-
-
-func _emit_offline_reward(seconds: float, gold: float) -> void:
-	offline_reward.emit(seconds, gold)
 
 
 ## 창이나 탭의 포커스를 잃을 때, 창을 닫을 때, 모바일에서 앱이 뒤로 갈 때 저장한다
@@ -93,6 +89,7 @@ func to_dict() -> Dictionary:
 		"party": Party.to_dict(),
 		"skills": Skills.to_dict(),
 		"training": Training.to_dict(),
+		"promotions": Promotions.to_dict(),
 		"prestige": Prestige.to_dict(),
 		"achievements": Achievements.to_dict(),
 	}
@@ -101,18 +98,19 @@ func to_dict() -> Dictionary:
 ## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다.
 ## 업적은 회귀 기록(Prestige)을 본 뒤, 통계를 시그널로 받는 Party·Game보다 먼저 불러온다
 func from_dict(data: Dictionary) -> void:
-	var prestige_data: Variant = data.get("prestige", {})
-	var achievements_data: Variant = data.get("achievements", {})
-	var party_data: Variant = data.get("party", {})
-	var skills_data: Variant = data.get("skills", {})
-	var training_data: Variant = data.get("training", {})
-	var game_data: Variant = data.get("game", {})
-	Prestige.from_dict(prestige_data if prestige_data is Dictionary else {})
-	Achievements.from_dict(achievements_data if achievements_data is Dictionary else {})
-	Party.from_dict(party_data if party_data is Dictionary else {})
-	Skills.from_dict(skills_data if skills_data is Dictionary else {})
-	Training.from_dict(training_data if training_data is Dictionary else {})
-	Game.from_dict(game_data if game_data is Dictionary else {})
+	Prestige.from_dict(_section(data, "prestige"))
+	Achievements.from_dict(_section(data, "achievements"))
+	Party.from_dict(_section(data, "party"))
+	Promotions.from_dict(_section(data, "promotions"))
+	Skills.from_dict(_section(data, "skills"))
+	Training.from_dict(_section(data, "training"))
+	Game.from_dict(_section(data, "game"))
+
+
+## 저장 데이터의 한 부분. 없거나 딕셔너리가 아니면 빈 딕셔너리 (각 오토로드가 기본값으로 채운다)
+func _section(data: Dictionary, key: String) -> Dictionary:
+	var part: Variant = data.get(key, {})
+	return part if part is Dictionary else {}
 
 
 func save_game() -> void:
@@ -175,6 +173,7 @@ func reset_data() -> void:
 	Party.reset()
 	Skills.reset()
 	Training.reset()
+	Promotions.reset()
 	Game.reset()
 	save_game()
 
