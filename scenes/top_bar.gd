@@ -2,9 +2,12 @@ extends PanelContainer
 ## 상단 바: 골드, 기억의 결정, 현재 스테이지, 보스전이면 남은 시간 (GDD 9절).
 ## Game·Prestige의 시그널을 받아 표시만 한다.
 
-const MARGIN: int = 24
-const GAP: int = 24
-const TIMER_COLOR := Color("ff8c42")
+const COIN_ICON := preload("res://assets/sprites/ui/coin.svg")
+const CRYSTAL_ICON := preload("res://assets/sprites/ui/crystal.svg")
+
+const MARGIN: int = 20
+const GAP: int = 16
+const ICON_SIZE := Vector2(36, 36)
 const CRYSTAL_COLOR := Color("7fd1f0")
 
 var _gold_label: Label
@@ -24,21 +27,18 @@ func _ready() -> void:
 	margin.add_child(row)
 
 	# 숫자가 아무리 길어져도 상단 바가 화면보다 넓어지지 않도록 두 라벨은 잘라 보인다
-	_gold_label = Label.new()
-	_gold_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_gold_label.clip_text = true
-	_gold_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(_make_icon(COIN_ICON))
+	_gold_label = _make_value_label()
 	row.add_child(_gold_label)
 
-	_crystal_label = Label.new()
-	_crystal_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_crystal_label.clip_text = true
-	_crystal_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(_make_icon(CRYSTAL_ICON))
+	_crystal_label = _make_value_label()
 	_crystal_label.add_theme_color_override("font_color", CRYSTAL_COLOR)
 	row.add_child(_crystal_label)
 
 	_timer_label = Label.new()
-	_timer_label.add_theme_color_override("font_color", TIMER_COLOR)
+	_timer_label.theme_type_variation = "DangerPill"
+	_timer_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_timer_label)
 
 	_stage_label = Label.new()
@@ -59,12 +59,31 @@ func _ready() -> void:
 	_refresh_timer()
 
 
+func _make_icon(texture: Texture2D) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	icon.custom_minimum_size = ICON_SIZE
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return icon
+
+
+func _make_value_label() -> Label:
+	var label := Label.new()
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return label
+
+
 func _on_gold_changed(gold: float) -> void:
-	_gold_label.text = "골드 %s" % Num.format(gold)
+	_gold_label.text = Num.format(gold)
 
 
 func _on_crystals_changed(crystals: float) -> void:
-	_crystal_label.text = "결정 %s" % Num.format(crystals)
+	_crystal_label.text = Num.format(crystals)
 
 
 func _on_stage_changed(stage: int) -> void:

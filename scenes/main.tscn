@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scenes/skill_bar.gd" id="8_skill_bar"]
 [ext_resource type="Script" path="res://scenes/tabs/prestige_tab.gd" id="9_prestige_tab"]
 [ext_resource type="Script" path="res://scenes/tabs/training_tab.gd" id="10_training_tab"]
+[ext_resource type="Script" path="res://scenes/nav_bar.gd" id="11_nav_bar"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -32,6 +33,7 @@ theme_override_constants/separation = 0
 [node name="TopBar" type="PanelContainer" parent="Layout"]
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
+theme_type_variation = &"TopBar"
 script = ExtResource("2_top_bar")
 
 [node name="Battle" type="Control" parent="Layout"]
@@ -50,26 +52,31 @@ layout_mode = 2
 theme_override_constants/separation = 8
 script = ExtResource("6_buy_bar")
 
-[node name="Tabs" type="TabContainer" parent="Layout"]
-custom_minimum_size = Vector2(0, 500)
+[node name="Nav" type="HBoxContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+script = ExtResource("11_nav_bar")
+
+[node name="Panels" type="MarginContainer" parent="Layout"]
+custom_minimum_size = Vector2(0, 440)
 layout_mode = 2
 
-[node name="HeroTab" type="MarginContainer" parent="Layout/Tabs"]
+[node name="HeroTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("4_hero_tab")
 
-[node name="PartyTab" type="MarginContainer" parent="Layout/Tabs"]
+[node name="PartyTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("5_party_tab")
 
-[node name="TrainingTab" type="MarginContainer" parent="Layout/Tabs"]
+[node name="TrainingTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("10_training_tab")
 
-[node name="PrestigeTab" type="MarginContainer" parent="Layout/Tabs"]
+[node name="PrestigeTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("9_prestige_tab")
 
-[node name="SettingsTab" type="MarginContainer" parent="Layout/Tabs"]
+[node name="SettingsTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("7_settings_tab")

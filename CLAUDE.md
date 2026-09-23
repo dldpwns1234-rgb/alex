@@ -46,14 +46,17 @@ res://
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
     num.gd       (Num) 한국식 숫자 표기
   scenes/
-    main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 패널)
-    top_bar.gd, skill_bar.gd, tabs/buy_bar.gd
+    main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 내비게이션, 패널)
+    main.gd      내비게이션이 고른 패널만 보이고 단련 탭 점을 갱신한다
+    top_bar.gd, skill_bar.gd(쿨타임·지속 시간 막), nav_bar.gd(탭 버튼 5개와 점), tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
     tabs/        hero, party, training, prestige, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 4), monsters/(6종), fx/(왕관, 베기). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
   assets/shaders/ flash.gdshader (피격 번쩍임)
+  assets/ui/theme.tres 전체 테마. 손으로 고치지 않는다: tools/make_theme.gd의 상수를 고치고 다시 만든다
+  tools/make_theme.gd  테마 생성기. `<GODOT 경로> --headless --path . --script tools/make_theme.gd`
   tests/
     run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
@@ -65,6 +68,7 @@ docs/GDD.md      기획서
 2. UI는 Game의 시그널을 받아 표시만 한다. UI에서 상태를 직접 바꾸지 말고 Game의 함수를 호출한다.
 3. 스크립트 하나는 200줄 이하로 유지한다. 넘으면 나눈다.
 4. 반복되는 UI(동료 줄, 상점 항목)는 코드로 생성한다. .tscn은 최소 구조로만 작성한다.
+5. 색과 모양은 테마(tools/make_theme.gd)에 둔다. 컨트롤마다 스타일을 덮어쓰지 말고 타입 변형(`theme_type_variation`: AccentButton, NavButton, SkillReady, SkillActive, TopBar, Pill, DangerPill)을 쓴다. 연출용 색(피해 숫자, 체력바)은 예외다.
 
 ## 숫자 규칙
 

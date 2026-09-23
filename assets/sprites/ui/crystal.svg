@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- 기억의 결정 아이콘 -->
+  <path d="M32 4 L54 24 L32 60 L10 24 Z" fill="#7fd1f0" stroke="#2b2438" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M10 24 L54 24 M32 4 L22 24 L32 60 M32 4 L42 24 L32 60" fill="none" stroke="#3fa7d6" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M20 14 L28 10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+</svg>

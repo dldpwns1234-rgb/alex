@@ -34,6 +34,8 @@ window/stretch/aspect="keep_width"
 
 [gui]
 
+; tools/make_theme.gd가 만든 전체 테마. 팝업 창까지 같은 모양을 쓴다
+theme/custom="res://assets/ui/theme.tres"
 ; 고도 기본 폰트에는 한글이 없다. 웹에서는 시스템 폰트 대체도 안 되므로 직접 넣는다
 theme/custom_font="res://assets/fonts/NotoSansKR-Regular.ttf"
 ; 폰 화면에서 읽히는 크기
@@ -41,6 +43,8 @@ theme/default_font_size=28
 
 [rendering]
 
+; 화면 바탕색. 테마(tools/make_theme.gd)의 어두운 보라와 맞춘다
+environment/defaults/default_clear_color=Color(0.133, 0.118, 0.188, 1)
 ; Compatibility 렌더러: 웹 익스포트 조건
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

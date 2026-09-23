@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- 골드 아이콘 -->
+  <circle cx="32" cy="32" r="26" fill="#f2c94c" stroke="#2b2438" stroke-width="4"/>
+  <circle cx="32" cy="32" r="17" fill="none" stroke="#d9a527" stroke-width="4"/>
+  <path d="M32 20 L32 44 M26 26 L38 26 M26 38 L38 38" fill="none" stroke="#d9a527" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="22" cy="18" rx="6" ry="3" fill="#fff" opacity="0.55" transform="rotate(-35 22 18)"/>
+</svg>

@@ -12,7 +12,7 @@ const NOTE_COLOR := Color("b8b4c8")
 const CRYSTAL_COLOR := Color("7fd1f0")
 const BUTTON_HEIGHT: float = 72.0
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
-const CONFIRM_SIZE := Vector2i(640, 400)
+const CONFIRM_SIZE := Vector2i(600, 300)
 
 var _summary: Label
 var _prestige_button: Button
@@ -115,10 +115,12 @@ func _refresh() -> void:
 	if Prestige.can_prestige():
 		_prestige_button.text = "회귀  (결정 +%s)" % Num.format(Prestige.crystal_reward())
 		_prestige_button.disabled = false
+		_prestige_button.theme_type_variation = "AccentButton"
 	else:
 		_prestige_button.text = "회귀: 스테이지 %d 도달 시  (이번 판 최고 %d)" % [
 			Balance.PRESTIGE_MIN_STAGE, Game.highest_stage]
 		_prestige_button.disabled = true
+		_prestige_button.theme_type_variation = ""
 	for i in _buttons.size():
 		var cap := Balance.memory_max_level(i)
 		var level_text := "Lv %d / %d" % [Prestige.level(i), cap] if cap > 0 else "Lv %d" % Prestige.level(i)

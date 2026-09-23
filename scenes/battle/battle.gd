@@ -99,6 +99,7 @@ func _build() -> void:
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
 	_challenge_button = Button.new()
 	_challenge_button.size = CHALLENGE_BUTTON_SIZE
+	_challenge_button.theme_type_variation = "AccentButton"
 	_challenge_button.pressed.connect(Game.challenge_boss)
 	add_child(_challenge_button)
 
