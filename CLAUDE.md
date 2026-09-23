@@ -61,6 +61,7 @@ res://
   tests/
     run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
+docs/VFX_REFERENCES.md  검격 연출 레퍼런스와 그로부터 뽑은 형태·타격 원칙. 연출을 고치기 전에 읽는다
 ```
 
 ## 아키텍처 원칙
