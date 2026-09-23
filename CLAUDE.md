@@ -49,7 +49,7 @@ res://
     main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 내비게이션, 패널)
     main.gd      내비게이션이 고른 패널만 보이고 단련 탭 점을 갱신한다
     top_bar.gd, skill_bar.gd(쿨타임·지속 시간 막), nav_bar.gd(탭 버튼 5개와 점), tabs/buy_bar.gd
-    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명)
+    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
     tabs/        hero, party, training, prestige, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다

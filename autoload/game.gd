@@ -9,6 +9,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	var dt := minf(delta, Balance.MAX_DELTA)
+	_tick_tap_rate(dt)
+	if farming:
+		_farm_seconds += dt
+		_auto_retry()
 	if respawn_left > 0.0:
 		respawn_left -= dt
 		if respawn_left <= 0.0:
@@ -28,8 +32,27 @@ func _process(delta: float) -> void:
 		_damage_monster(dps * dt)
 
 
+## 최근 창의 탭 빈도. 창이 끝날 때마다 초당 탭 수로 굳힌다
+func _tick_tap_rate(dt: float) -> void:
+	_tap_window_left -= dt
+	if _tap_window_left <= 0.0:
+		tap_rate = _taps_in_window / Balance.TAP_RATE_WINDOW
+		_taps_in_window = 0
+		_tap_window_left = Balance.TAP_RATE_WINDOW
+
+
+## 자동 재도전 (GDD 3절): 실패 뒤 잠깐 파밍한 다음 잡을 수 있을 것 같으면, 또는 탭하는 중이면 한참마다, 스스로 도전한다.
+## 예약을 손으로 취소하면 한동안 미룬다
+func _auto_retry() -> void:
+	if not auto_retry or boss_queued or _farm_seconds < Balance.AUTO_RETRY_REST:
+		return
+	if boss_looks_beatable() or (tap_rate > 0.0 and _farm_seconds >= Balance.AUTO_RETRY_INTERVAL):
+		challenge_boss()
+
+
 ## 탭 공격. 재등장을 기다리는 동안에는 피해가 들어가지 않는다. 클릭 치명타는 실제로 굴린다 (GDD 6.5절)
 func tap_attack() -> void:
+	_taps_in_window += 1
 	if not is_monster_alive():
 		return
 	var amount := Party.click_damage()
@@ -47,6 +70,8 @@ func challenge_boss() -> void:
 		return
 	if is_monster_alive():
 		boss_queued = not boss_queued
+		if not boss_queued:
+			_farm_seconds = -Balance.AUTO_RETRY_INTERVAL  # 취소했으니 자동 재도전은 한동안 미룬다
 		boss_queued_changed.emit(boss_queued)
 		return
 	_start_boss_challenge()
@@ -94,6 +119,7 @@ func _kill_monster() -> void:
 ## 보스 시간 초과: 직전 스테이지로 돌아가 파밍 모드가 된다 (GDD 3절)
 func _fail_boss() -> void:
 	farming = true
+	_farm_seconds = 0.0
 	kills = 0
 	boss_time_left = 0.0
 	monster_hp = 0.0

@@ -15,6 +15,11 @@ const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오
 const BOSS_STAGE_INTERVAL: int = 5
 const BOSS_HP_MULTIPLIER: float = 10.0
 const BOSS_TIME_LIMIT: float = 30.0     # 초. 시간의 모래(M5)가 더한다
+# 보스 자동 재도전 (GDD 3절): 파밍 중 지금 DPS로 제한 시간의 이 비율 안에 잡을 것 같으면 스스로 도전한다
+const AUTO_RETRY_MARGIN: float = 0.9
+const AUTO_RETRY_REST: float = 10.0      # 초. 실패 직후 최소 파밍 시간 (예상이 빗나가도 연속 실패로 파밍을 잃지 않게)
+const AUTO_RETRY_INTERVAL: float = 120.0 # 초. 탭하는 중이면 예상과 무관하게 이만큼마다 한 번 더 해 본다
+const TAP_RATE_WINDOW: float = 5.0       # 초. 최근 탭 빈도를 재는 창. 예상 DPS에 클릭 피해 × 빈도를 더한다
 
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
@@ -48,6 +53,11 @@ func enemy_hp(stage: int) -> float:
 ## 보스 제한 시간: 30초 + 시간의 모래 3초/레벨
 func boss_time_limit(sand_level: int) -> float:
 	return BOSS_TIME_LIMIT + sand_bonus(sand_level)
+
+
+## 자동 재도전 판단: 체력 hp의 보스를 초당 dps로 제한 시간 limit의 여유 안에 잡을 수 있는지
+func boss_beatable(hp: float, dps: float, limit: float) -> bool:
+	return dps > 0.0 and hp / dps <= limit * AUTO_RETRY_MARGIN
 
 
 ## 기본 처치 골드: 체력 ÷ 15 (보스 포함). 황금의 기억(Prestige)과 황금 손길(Skills)은 Game이 곱한다

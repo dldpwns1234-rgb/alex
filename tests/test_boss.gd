@@ -5,6 +5,8 @@ extends "res://tests/test_case.gd"
 func run() -> void:
 	_test_boss_fight()
 	_test_mage_versus_boss()
+	_test_auto_retry()
+	_test_auto_retry_by_tapping()
 
 
 func _test_boss_fight() -> void:
@@ -107,3 +109,79 @@ func _test_mage_versus_boss() -> void:
 	var before := Game.monster_hp
 	_advance(0.25)
 	_close(Game.monster_hp, before - 330.0 * 0.25, "보스에게는 ×3 피해가 들어간다")
+
+
+## 5스테이지 보스에 실패해 4스테이지를 파밍하는 상태로 만든다
+func _farm_after_boss_fail() -> void:
+	_fresh_run()
+	Game.stage = 5
+	Game.highest_stage = 5
+	Game._spawn_monster()
+	_advance(31.0)
+	_equal(Game.farming, true, "보스 실패 → 파밍")
+
+
+## 자동 재도전: 잡을 수 있을 것 같을 때만, 실패 직후 잠깐 쉬고, 취소하면 미루고, 끄면 안 한다.
+## 예약은 몬스터가 죽는 순간 보스전으로 바뀌므로 대부분 "파밍이 끝났는가"로 확인한다
+func _test_auto_retry() -> void:
+	_farm_after_boss_fail()
+	_equal(Game.auto_retry, true, "기본은 켜짐")
+	_advance(200.0)
+	_equal(Game.boss_queued, false, "DPS가 없으면 아무리 기다려도 도전하지 않는다")
+	_equal(Game.farming, true, "계속 파밍")
+
+	Party.companion_levels[Balance.Companion.WARRIOR] = 10  # 초당 60: 5스테이지 보스(체력 187)를 3초에 잡는다
+	_equal(Game.boss_looks_beatable(), true, "잡을 수 있어 보인다")
+	_advance(Balance.MAX_DELTA)
+	_equal(Game.boss_queued, true, "잡을 수 있으면 스스로 예약")
+	Game.challenge_boss()  # 손으로 취소
+	_equal(Game.boss_queued, false, "취소")
+	_advance(Balance.AUTO_RETRY_INTERVAL * 0.5)
+	_equal(Game.farming and not Game.boss_queued, true, "취소하면 한동안 미룬다")
+	_advance(Balance.AUTO_RETRY_INTERVAL * 0.5 + Balance.AUTO_RETRY_REST + 5.0)
+	_equal(Game.farming, false, "미룬 뒤 다시 도전해 파밍을 끝낸다")
+	_equal(Game.stage >= 5, true, "보스 스테이지 이상으로 진행")
+
+	# 실패 직후에는 최소 파밍 시간 동안 쉰다
+	Party.companion_levels[Balance.Companion.WARRIOR] = 0
+	Game.stage = 5
+	Game._spawn_monster()
+	_advance(31.0)
+	_equal(Game.farming, true, "다시 실패")
+	Party.companion_levels[Balance.Companion.WARRIOR] = 10
+	_advance(Balance.AUTO_RETRY_REST * 0.5)
+	_equal(Game.farming and not Game.boss_queued, true, "실패 직후에는 쉰다")
+	_advance(Balance.AUTO_RETRY_REST * 0.5 + 5.0)
+	_equal(Game.farming, false, "쉰 뒤에 도전한다")
+
+	# 끄면 도전하지 않는다
+	Party.companion_levels[Balance.Companion.WARRIOR] = 0
+	Game.stage = 5
+	Game._spawn_monster()
+	_advance(31.0)
+	_equal(Game.farming, true, "또 실패")
+	Game.set_auto_retry(false)
+	Party.companion_levels[Balance.Companion.WARRIOR] = 10
+	_advance(Balance.AUTO_RETRY_INTERVAL + Balance.AUTO_RETRY_REST + 5.0)
+	_equal(Game.farming and not Game.boss_queued, true, "끄면 도전하지 않는다")
+	Game.set_auto_retry(true)
+	_fresh_run()
+
+
+## 탭하는 중이면 예상과 무관하게 한참마다 한 번 더 해 본다
+func _test_auto_retry_by_tapping() -> void:
+	_farm_after_boss_fail()
+	_equal(Game.boss_looks_beatable(), false, "클릭 피해 1로는 잡을 수 없어 보인다")
+	var seconds := 0.0
+	while seconds < Balance.AUTO_RETRY_INTERVAL * 0.9:
+		Game.tap_attack()
+		Game._process(Balance.MAX_DELTA)
+		seconds += Balance.MAX_DELTA
+	_equal(Game.tap_rate > 0.0, true, "탭 빈도가 잡힌다")
+	_equal(Game.farming and not Game.boss_queued, true, "간격 전에는 도전하지 않는다")
+	while seconds < Balance.AUTO_RETRY_INTERVAL + 5.0:
+		Game.tap_attack()
+		Game._process(Balance.MAX_DELTA)
+		seconds += Balance.MAX_DELTA
+	_equal(Game.boss_queued or not Game.farming, true, "탭하는 중이면 간격마다 도전")
+	_fresh_run()

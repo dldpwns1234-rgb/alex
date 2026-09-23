@@ -6,6 +6,7 @@ const Stage := preload("res://scenes/battle/stage.gd")
 const Backdrop := preload("res://scenes/battle/backdrop.gd")
 const MonsterView := preload("res://scenes/battle/monster_view.gd")
 const PartyView := preload("res://scenes/battle/party_view.gd")
+const BossControls := preload("res://scenes/battle/boss_controls.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
 
 const TAP_TEXT_COLOR := Color("ffe66d")
@@ -25,7 +26,6 @@ const CRIT_SHAKE: float = 8.0
 const KILL_SHAKE: float = 5.0
 const OUTLINE_SIZE: int = 6
 const OUTLINE_COLOR := Color("2b2438")
-const CHALLENGE_BUTTON_SIZE := Vector2(300, 80)
 
 var _stage: Stage
 var _backdrop: Backdrop
@@ -34,7 +34,7 @@ var _downward: bool = true  # 다음 검격이 내려베기인지
 var _last_tap_msec: int = 0
 var _party_view: PartyView
 var _kill_label: Label
-var _challenge_button: Button
+var _boss_controls: BossControls
 var _attack_clocks: Array[float] = []
 
 
@@ -51,7 +51,6 @@ func _ready() -> void:
 	Game.kills_changed.connect(_refresh_progress.unbind(1))
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
 	Game.farming_changed.connect(_on_farming_changed)
-	Game.boss_queued_changed.connect(_refresh_challenge_button.unbind(1))
 	Party.companion_changed.connect(_on_companion_changed)
 	_layout()
 	# 오토로드가 먼저 준비돼 있으므로 현재 상태를 직접 읽어 채운다
@@ -109,11 +108,8 @@ func _build() -> void:
 	add_child(_kill_label)
 
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
-	_challenge_button = Button.new()
-	_challenge_button.size = CHALLENGE_BUTTON_SIZE
-	_challenge_button.theme_type_variation = "AccentButton"
-	_challenge_button.pressed.connect(Game.challenge_boss)
-	add_child(_challenge_button)
+	_boss_controls = BossControls.new()
+	add_child(_boss_controls)
 
 	_attack_clocks.resize(Balance.COMPANIONS.size())
 	for i in _attack_clocks.size():
@@ -128,7 +124,7 @@ func _layout() -> void:
 	_party_view.layout(size, _monster_view.position.y + MonsterView.FIGURE_SIZE.y)
 	_kill_label.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	_kill_label.size = Vector2(size.x - EDGE_MARGIN * 2.0, LABEL_HEIGHT)
-	_challenge_button.position = Vector2((size.x - CHALLENGE_BUTTON_SIZE.x) * 0.5, EDGE_MARGIN)
+	_boss_controls.position = Vector2((size.x - BossControls.CHALLENGE_SIZE.x) * 0.5, EDGE_MARGIN)
 
 
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
@@ -176,13 +172,7 @@ func _refresh_progress() -> void:
 
 
 func _on_farming_changed(farming: bool) -> void:
-	_challenge_button.visible = farming
-	_refresh_challenge_button()
 	_refresh_progress()
-
-
-func _refresh_challenge_button() -> void:
-	_challenge_button.text = "보스 대기 중 (취소)" if Game.boss_queued else "보스 도전"
 
 
 func _on_companion_changed(index: int, level: int) -> void:

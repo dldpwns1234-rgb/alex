@@ -56,6 +56,14 @@ func _test_roundtrip() -> void:
 	_equal(Party.companion_levels, [5, 2, 0, 0], "JSON을 거친 동료 레벨")
 	_equal(typeof(Party.companion_levels[0]), TYPE_INT, "레벨은 int로 돌아온다")
 
+	# 자동 재도전 설정도 저장된다
+	Game.set_auto_retry(false)
+	var off := Save.to_dict()
+	Game.set_auto_retry(true)
+	Save.from_dict(off)
+	_equal(Game.auto_retry, false, "자동 재도전 설정 복원")
+	Game.set_auto_retry(true)
+
 
 func _test_defaults() -> void:
 	_play_a_bit()
@@ -65,6 +73,7 @@ func _test_defaults() -> void:
 	_equal(Party.hero_level, 1, "필드가 없으면 용사 1레벨")
 	_equal(Party.companion_levels, [0, 0, 0, 0], "필드가 없으면 동료 미고용")
 	_equal(Party.buy_mode, Party.BuyMode.ONE, "필드가 없으면 ×1")
+	_equal(Game.auto_retry, true, "필드가 없으면 자동 재도전 켜짐")
 
 	# 동료가 3명이던 옛 저장: 네 번째는 미고용. 이상한 값은 기본값
 	Save.from_dict({"save_version": 1, "party": {"companion_levels": [1, 2, 3], "buy_mode": 99},

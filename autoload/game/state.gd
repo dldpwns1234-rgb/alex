@@ -13,6 +13,7 @@ signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
 signal farming_changed(farming: bool)
 signal boss_queued_changed(queued: bool)  # 지금 몬스터를 잡으면 보스가 나오도록 예약됨
+signal auto_retry_changed(on: bool)
 
 var gold: float = 0.0
 var stage: int = 1
@@ -24,6 +25,11 @@ var boss_time_left: float = 0.0     # 보스전 남은 시간 (초). 보스전�
 var monster_hp: float = 0.0
 var monster_max_hp: float = 0.0
 var respawn_left: float = 0.0       # 0보다 크면 다음 몬스터를 기다리는 중 (초)
+var auto_retry: bool = true         # 파밍 중 잡을 수 있을 것 같으면 스스로 보스에 도전 (저장됨)
+var tap_rate: float = 0.0           # 최근 창의 초당 탭 수. 자동 재도전의 예상 DPS에 쓴다
+var _taps_in_window: int = 0
+var _tap_window_left: float = 0.0
+var _farm_seconds: float = 0.0      # 파밍 시작(또는 취소) 뒤 흐른 시간. 음수면 자동 재도전을 그만큼 미룬다
 
 
 ## 새 판 시작 상태로 되돌린다. 회귀(M5)에서도 쓴다
@@ -34,6 +40,9 @@ func reset() -> void:
 	kills = 0
 	farming = false
 	boss_queued = false
+	_farm_seconds = 0.0
+	tap_rate = 0.0
+	_taps_in_window = 0
 	gold_changed.emit(gold)
 	stage_changed.emit(stage)
 	kills_changed.emit(kills)
@@ -50,6 +59,7 @@ func to_dict() -> Dictionary:
 		"highest_stage": highest_stage,
 		"kills": kills,
 		"farming": farming,
+		"auto_retry": auto_retry,
 	}
 
 
@@ -60,11 +70,30 @@ func from_dict(data: Dictionary) -> void:
 	highest_stage = maxi(int(data.get("highest_stage", stage)), stage)
 	kills = clampi(int(data.get("kills", 0)), 0, Balance.MONSTERS_PER_STAGE - 1)
 	farming = bool(data.get("farming", false))
+	auto_retry = bool(data.get("auto_retry", true))
+	_farm_seconds = 0.0
 	gold_changed.emit(gold)
 	stage_changed.emit(stage)
 	kills_changed.emit(kills)
 	farming_changed.emit(farming)
+	auto_retry_changed.emit(auto_retry)
 	_spawn_monster()
+
+
+func set_auto_retry(on: bool) -> void:
+	auto_retry = on
+	auto_retry_changed.emit(auto_retry)
+
+
+## 이번 보스전의 제한 시간: 기본 + 시간의 모래 + 화염 폭발 단련
+func boss_limit() -> float:
+	return Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) + Training.value(Balance.Effect.BOSS_TIME)
+
+
+## 파밍 중인 스테이지 다음의 보스를 지금 DPS(동료 + 클릭 × 최근 탭 빈도)로 제한 시간 안에 잡을 것 같은지
+func boss_looks_beatable() -> bool:
+	var dps := Party.party_dps(true) + Party.click_damage() * tap_rate
+	return Balance.boss_beatable(Balance.boss_hp(stage + 1), dps, boss_limit())
 
 
 func is_monster_alive() -> bool:
@@ -105,8 +134,7 @@ func _spawn_monster() -> void:
 	var boss := is_boss_stage()
 	monster_max_hp = Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp
-	var limit := Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) + Training.value(Balance.Effect.BOSS_TIME)
-	boss_time_left = limit if boss else 0.0
+	boss_time_left = boss_limit() if boss else 0.0
 	monster_spawned.emit(monster_max_hp, boss)
 	if boss:
 		boss_timer_changed.emit(boss_time_left)
