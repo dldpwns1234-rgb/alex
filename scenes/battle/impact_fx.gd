@@ -11,11 +11,12 @@ const FADE: float = 0.08
 const START_SCALE: float = 0.4
 const END_SCALE: float = 1.1
 const CRIT_SCALE: float = 1.5
+const LIGHT_SCALE: float = 0.55  # 연타 중에는 작게
 const COLOR := Color(1.0, 1.0, 1.0)
 const CRIT_COLOR := Color("fff0d0")
-const RING_RADIUS: float = 140.0
-const RING_WIDTH: float = 8.0
-const RING_DURATION: float = 0.25
+const RING_RADIUS: float = 120.0
+const RING_WIDTH: float = 7.0
+const RING_DURATION: float = 0.22
 const RING_COLOR := Color(1.0, 1.0, 1.0, 0.9)
 
 var _color: Color = COLOR
@@ -25,10 +26,10 @@ var _spin: float = 0.0
 var _clock: float = 0.0
 
 
-func _init(point: Vector2, crit: bool, ring: bool) -> void:
+func _init(point: Vector2, crit: bool, ring: bool, light: bool = false) -> void:
 	position = point
 	_color = CRIT_COLOR if crit else COLOR
-	_big = CRIT_SCALE if crit else 1.0
+	_big = CRIT_SCALE if crit else (LIGHT_SCALE if light else 1.0)
 	_ring = ring
 	_spin = randf() * TAU
 

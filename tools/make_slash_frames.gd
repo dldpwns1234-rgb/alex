@@ -1,10 +1,11 @@
 extends SceneTree
-## 검격 자국 프레임 6장을 SVG로 만들어 assets/sprites/fx/slash_0.svg ~ slash_5.svg에 쓴다.
+## 검격 자국 프레임 8장을 SVG로 만들어 assets/sprites/fx/slash_0.svg ~ slash_7.svg에 쓴다.
 ##
 ##   godot --headless --path . --script tools/make_slash_frames.gd
 ##
 ## docs/VFX_REFERENCES.md의 결론(Frostwindz 픽셀 슬래시의 수명)을 따른다: 얇은 조각 → 쉼표처럼 자람 →
 ## 꽉 찬 초승달(흰 심, 중간 톤, 어두운 외곽선, 앞머리는 살짝 말림) → 꼬리부터 침식 → 가닥 → 티끌.
+## 6·7번은 난무(연타)용 가는 선이다: 두께 없이 긴 선 하나와 그 조각. 가는 선 여러 개가 연속 참격의 문법이다.
 ## 세로로 선 ")" 모양(오른쪽으로 불룩)으로 그리고 기울기·뒤집기는 SlashFx가 한다. 호의 중심은 (20, 128).
 ## 만든 뒤 --import 하고 .import의 svg/scale을 1.5, mipmaps/generate를 true로 맞춘다 (CLAUDE.md).
 
@@ -24,7 +25,8 @@ const COLOR_CORE := "#ffffff"
 
 
 func _init() -> void:
-	var frames: Array[String] = [_frame_start(), _frame_grow(), _frame_peak(), _frame_erode_1(), _frame_erode_2(), _frame_specks()]
+	var frames: Array[String] = [_frame_start(), _frame_grow(), _frame_peak(), _frame_erode_1(), _frame_erode_2(),
+		_frame_specks(), _frame_thin_line(), _frame_thin_fragments()]
 	for i in frames.size():
 		var path := OUT_DIR + "slash_%d.svg" % i
 		var file := FileAccess.open(path, FileAccess.WRITE)
@@ -76,6 +78,16 @@ func _frame_specks() -> String:
 	shapes += _band(0.86, 0.9, 3.0, -0.2 * WIDTH, 0.0)
 	shapes += _band(0.3, 0.34, 2.5, 0.25 * WIDTH, 0.0)
 	return _svg(shapes)
+
+
+## 6: 난무용 가는 선. 두께 없이 호 전체를 긋는 얇은 날 (흰 심에 외곽선)
+func _frame_thin_line() -> String:
+	return _svg(_band(0.02, 0.98, 8.0, 0.0, 1.0) + _band(0.1, 0.9, 3.0, 0.0, 0.0).replace(COLOR_FILL, COLOR_CORE))
+
+
+## 7: 난무용 조각. 가는 선이 두 토막으로 끊어져 사라진다
+func _frame_thin_fragments() -> String:
+	return _svg(_band(0.14, 0.44, 5.0, 0.15 * WIDTH, 1.0) + _band(0.58, 0.9, 5.0, -0.1 * WIDTH, 1.0))
 
 
 ## 호 위 t(0 꼬리 ~ 1 앞머리)의 점과 바깥쪽 법선

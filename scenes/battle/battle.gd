@@ -20,6 +20,7 @@ const BOSS_ESCAPE_DURATION: float = 0.5
 const TAP_LAND_DELAY: float = 0.08
 const FLURRY_GAP: float = 0.18  # 초. 이보다 빨리 이어지는 탭은 난무: 자국은 작고 짧게, 몬스터는 굳지 않는다
 const TAP_SHAKE: float = 3.0
+const FLURRY_SHAKE: float = 2.0
 const CRIT_SHAKE: float = 8.0
 const KILL_SHAKE: float = 5.0
 const OUTLINE_SIZE: int = 6
@@ -147,15 +148,16 @@ func _on_tap_hit(amount: float, crit: bool) -> void:
 ## 칼이 몬스터에 닿는 순간: 검격 자국(치명타는 X자), 숫자, 굳었다 밀리는 몬스터, 접촉 불꽃, 화면 흔들림
 func _land_tap(amount: float, crit: bool, flurry: bool, downward: bool) -> void:
 	var hand := _party_view.hero_hand()
+	var light := flurry and not crit  # 연타 중 보통 타는 부수 연출을 줄인다. 치명타는 그대로 악센트
 	_stage.slash(hand, downward, crit, flurry)
 	if crit:
 		_stage.slash(hand, not downward, crit, flurry)
 		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR, true)
 	else:
-		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR)
+		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR, false, not light)
 	_monster_view.hit(true, crit, flurry)
-	_stage.impact(_monster_view.position + MonsterView.IMPACT_POINT, crit, false)
-	_stage.shake(CRIT_SHAKE if crit else TAP_SHAKE)
+	_stage.impact(_monster_view.position + MonsterView.IMPACT_POINT, crit, false, light)
+	_stage.shake(CRIT_SHAKE if crit else (FLURRY_SHAKE if light else TAP_SHAKE))
 
 
 func _on_monster_killed(_reward: float) -> void:

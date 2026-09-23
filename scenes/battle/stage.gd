@@ -42,9 +42,9 @@ func slash(hand: Vector2, downward: bool, crit: bool, flurry: bool) -> void:
 	_add(SlashFx.new(hand, downward, crit, flurry))
 
 
-## 접촉 불꽃. ring이면 처치 고리도 퍼진다
-func impact(point: Vector2, crit: bool, ring: bool) -> void:
-	_add(ImpactFx.new(point, crit, ring))
+## 접촉 불꽃. ring이면 처치 고리도 퍼진다. light면 작게 (연타 중)
+func impact(point: Vector2, crit: bool, ring: bool, light: bool = false) -> void:
+	_add(ImpactFx.new(point, crit, ring, light))
 
 
 func _add(fx: CanvasItem) -> void:

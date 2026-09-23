@@ -33,6 +33,7 @@ const POP_PUNCH_DURATION: float = 0.1
 const SPARK_COLOR := Color(1.0, 1.0, 1.0)
 const CRIT_SPARK_COLOR := Color("ffd7a0")
 const SPARK_COUNT: int = 8
+const FLURRY_SPARK_COUNT: int = 3  # 연타 중에는 조금만
 const SPARK_LIFETIME: float = 0.32
 const SPARK_DIRECTION := Vector2(1.0, -0.35)
 const SPARK_SPREAD: float = 55.0            # 도
@@ -151,11 +152,12 @@ func hit(strong: bool, crit: bool = false, flurry: bool = false) -> void:
 	_actor.hit(strong, CRIT_SHAKE_SCALE if crit else 1.0, flurry)
 	if strong:
 		_sparks.color = CRIT_SPARK_COLOR if crit else SPARK_COLOR
+		_sparks.amount = FLURRY_SPARK_COUNT if flurry and not crit else SPARK_COUNT
 		_sparks.restart()
 
 
-## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때
-func pop(text: String, color: Color, big: bool = false) -> void:
+## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때, punch가 꺼지면 커졌다 줄지 않는다 (연타 중)
+func pop(text: String, color: Color, big: bool = false, punch: bool = true) -> void:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", POP_CRIT_FONT_SIZE if big else POP_FONT_SIZE)
@@ -165,7 +167,7 @@ func pop(text: String, color: Color, big: bool = false) -> void:
 	label.size = label.get_minimum_size()
 	label.pivot_offset = label.size * 0.5
 	label.position = Vector2(FIGURE_SIZE.x * 0.5 + randf_range(-POP_SPREAD, POP_SPREAD), FIGURE_SIZE.y * POP_START)
-	label.scale = Vector2.ONE * POP_PUNCH  # 크게 나타나 원래 크기로 줄어들며 튀어 오른다
+	label.scale = Vector2.ONE * (POP_PUNCH if punch else 1.0)  # 크게 나타나 원래 크기로 줄어들며 튀어 오른다
 	add_child(label)
 	var tween := create_tween()
 	tween.tween_property(label, "scale", Vector2.ONE, POP_PUNCH_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
