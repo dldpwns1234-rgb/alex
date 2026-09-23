@@ -56,17 +56,18 @@ func _process(delta: float) -> void:
 
 
 ## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다.
-## 동료 DPS와 처치 골드에 기억의 상점 효과는 넣고 스킬은 뺀다
+## 동료 DPS와 처치 골드에 기억의 상점과 업적 효과는 넣고 스킬은 뺀다
 func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var dps := Party.party_dps(false, false)
 	var per_second := Balance.offline_gold_per_second(Game.stage, dps) * Prestige.gold_multiplier()
-	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
+	per_second *= Achievements.gold_multiplier() * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
 	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),
 		Training.value(Balance.Effect.OFFLINE_RATE))
 	if gold > 0.0:
 		Game.add_gold(gold)
+		Achievements.add(Balance.Stat.GOLD, gold)
 	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다
 	_emit_offline_reward.call_deferred(minf(seconds, Balance.OFFLINE_MAX_SECONDS), gold)
 	save_game()
@@ -93,17 +94,21 @@ func to_dict() -> Dictionary:
 		"skills": Skills.to_dict(),
 		"training": Training.to_dict(),
 		"prestige": Prestige.to_dict(),
+		"achievements": Achievements.to_dict(),
 	}
 
 
-## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다
+## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다.
+## 업적은 회귀 기록(Prestige)을 본 뒤, 통계를 시그널로 받는 Party·Game보다 먼저 불러온다
 func from_dict(data: Dictionary) -> void:
 	var prestige_data: Variant = data.get("prestige", {})
+	var achievements_data: Variant = data.get("achievements", {})
 	var party_data: Variant = data.get("party", {})
 	var skills_data: Variant = data.get("skills", {})
 	var training_data: Variant = data.get("training", {})
 	var game_data: Variant = data.get("game", {})
 	Prestige.from_dict(prestige_data if prestige_data is Dictionary else {})
+	Achievements.from_dict(achievements_data if achievements_data is Dictionary else {})
 	Party.from_dict(party_data if party_data is Dictionary else {})
 	Skills.from_dict(skills_data if skills_data is Dictionary else {})
 	Training.from_dict(training_data if training_data is Dictionary else {})
@@ -166,6 +171,7 @@ func import_string(text: String) -> bool:
 ## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
 func reset_data() -> void:
 	Prestige.reset()
+	Achievements.reset()
 	Party.reset()
 	Skills.reset()
 	Training.reset()

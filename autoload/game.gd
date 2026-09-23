@@ -50,9 +50,12 @@ func _auto_retry() -> void:
 		challenge_boss()
 
 
-## 탭 공격. 재등장을 기다리는 동안에는 피해가 들어가지 않는다. 클릭 치명타는 실제로 굴린다 (GDD 6.5절)
-func tap_attack() -> void:
+## 탭 공격. 재등장을 기다리는 동안에는 피해가 들어가지 않는다. 클릭 치명타는 실제로 굴린다 (GDD 6.5절).
+## auto는 폭풍 베기의 자동 클릭: 탭 빈도에는 들어가지만 업적의 탭 수에는 세지 않는다
+func tap_attack(auto: bool = false) -> void:
 	_taps_in_window += 1
+	if not auto:
+		Achievements.add(Balance.Stat.TAPS, 1.0)
 	if not is_monster_alive():
 		return
 	var amount := Party.click_damage()
@@ -94,9 +97,10 @@ func _damage_monster(amount: float) -> void:
 		_kill_monster()
 
 
-## 처치 골드 = 기본 × 황금의 기억 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금)
+## 처치 골드 = 기본 × 황금의 기억 × 업적 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금)
 func _kill_monster() -> void:
-	var reward := Balance.kill_gold(monster_max_hp) * Prestige.gold_multiplier() * Skills.gold_multiplier()
+	var reward := Balance.kill_gold(monster_max_hp) * Prestige.gold_multiplier() * Achievements.gold_multiplier()
+	reward *= Skills.gold_multiplier()
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)

@@ -28,6 +28,7 @@ var _lines: PackedStringArray = []
 func _ready() -> void:
 	Save.blocked = true  # 시뮬레이션은 저장하지 않는다. 시작할 때 읽힌 저장이 있어도 전부 새로 시작한다
 	Prestige.reset()
+	Achievements.reset()
 	Party.reset()
 	Party.set_buy_mode(Party.BuyMode.ONE)
 	Skills.reset()

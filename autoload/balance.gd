@@ -1,6 +1,6 @@
-extends "res://autoload/balance/training.gd"
+extends "res://autoload/balance/achievements.gd"
 ## 모든 수치와 공식. 다른 파일에 게임 수치를 하드코딩하지 않는다.
-## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련은
+## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련, 업적은
 ## autoload/balance/ 아래 부분 스크립트에 있다 (상속으로 이어져 있어 Balance.로 모두 부른다).
 ## s = 스테이지
 

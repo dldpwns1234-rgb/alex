@@ -63,10 +63,10 @@ func from_dict(data: Dictionary) -> void:
 	buy_mode_changed.emit(buy_mode)
 
 
-## 클릭 피해: 기본 × 검술의 기억 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
+## 클릭 피해: 기본 × 검술의 기억 × 업적 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
 func click_damage() -> float:
 	var boss := Game.is_boss_stage()
-	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier()
+	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier() * Achievements.damage_multiplier()
 	base *= (1.0 + Training.value(Balance.Effect.CLICK_DAMAGE)) * _boss_bonus(boss)
 	return base + party_dps(boss) * Prestige.awakening_share()
 
@@ -86,9 +86,10 @@ func companion_dps(index: int, boss: bool) -> float:
 	return dps * _party_bonus(boss) * Skills.party_multiplier()
 
 
-## 검술의 기억 × 지휘·백전노장 (보스면 × 방패 강타)
+## 검술의 기억 × 업적 × 지휘·백전노장 (보스면 × 방패 강타)
 func _party_bonus(boss: bool) -> float:
-	return Prestige.sword_multiplier() * (1.0 + Training.value(Balance.Effect.PARTY_DAMAGE)) * _boss_bonus(boss)
+	var bonus := Prestige.sword_multiplier() * Achievements.damage_multiplier()
+	return bonus * (1.0 + Training.value(Balance.Effect.PARTY_DAMAGE)) * _boss_bonus(boss)
 
 
 func _boss_bonus(boss: bool) -> float:

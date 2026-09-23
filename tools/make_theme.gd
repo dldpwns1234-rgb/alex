@@ -5,7 +5,8 @@ extends SceneTree
 ##
 ## 색과 모양은 여기 상수가 원본이다. 고친 뒤 다시 돌려서 .tres를 갱신하고 함께 커밋한다.
 ## 타입 변형(theme_type_variation): AccentButton(금색 주요 버튼), NavButton(탭 내비게이션),
-## SkillReady(쓸 수 있는 스킬), SkillActive(발동 중 스킬), TopBar(상단 바), Pill(둥근 알림 라벨), DangerPill(붉은 알림 라벨)
+## SkillReady(쓸 수 있는 스킬), SkillActive(발동 중 스킬), TopBar(상단 바), Pill(둥근 알림 라벨), DangerPill(붉은 알림 라벨),
+## GoalBar(업적 진행 막)
 
 const OUT_PATH := "res://assets/ui/theme.tres"
 
@@ -116,6 +117,10 @@ func _panels(theme: Theme) -> void:
 	theme.set_color("font_color", "DangerPill", TEXT)
 	theme.set_stylebox("background", "ProgressBar", _flat(FIELD, FIELD, 0, 8, Vector2.ZERO))
 	theme.set_stylebox("fill", "ProgressBar", _flat(HP, HP, 0, 8, Vector2.ZERO))
+	# 업적 진행 막: 금색으로 찬다
+	_variation(theme, "GoalBar", "ProgressBar")
+	theme.set_stylebox("background", "GoalBar", _flat(FIELD, FIELD, 0, 6, Vector2.ZERO))
+	theme.set_stylebox("fill", "GoalBar", _flat(ACCENT, ACCENT, 0, 6, Vector2.ZERO))
 
 
 func _fields(theme: Theme) -> void:

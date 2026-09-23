@@ -1,14 +1,20 @@
 extends Control
 ## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 내비게이션과 패널을 위에서부터 쌓는다.
-## 내비게이션이 고른 패널만 보이고, 살 수 있는 단련이 있으면 단련 탭에 점을 찍는다.
+## 내비게이션이 고른 패널만 보이고, 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
+## 업적을 달성하면 전투 화면 아래에 알림을 띄운다.
+
+const Toast := preload("res://scenes/toast.gd")
 
 const TRAINING_TAB: int = 2
+const ACHIEVEMENTS_TAB: int = 4
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
 
 @onready var _nav: HBoxContainer = $Layout/Nav
 @onready var _panels: MarginContainer = $Layout/Panels
+@onready var _battle: Control = $Layout/Battle
 
 var _offline_dialog: AcceptDialog
+var _toast: Toast
 
 
 func _ready() -> void:
@@ -16,6 +22,8 @@ func _ready() -> void:
 	_offline_dialog.title = "오프라인 보상"
 	_offline_dialog.ok_button_text = "확인"
 	add_child(_offline_dialog)
+	_toast = Toast.new()
+	_battle.add_child(_toast)
 	Save.offline_reward.connect(_on_offline_reward)
 	_nav.tab_selected.connect(_show_panel)
 	_nav.select(0)
@@ -23,7 +31,10 @@ func _ready() -> void:
 	Training.training_changed.connect(_refresh_training_badge.unbind(2))
 	Party.hero_changed.connect(_refresh_training_badge.unbind(1))
 	Party.companion_changed.connect(_refresh_training_badge.unbind(2))
+	Achievements.unlocked.connect(_on_achievement_unlocked)
+	Achievements.seen_changed.connect(_refresh_achievement_badge)
 	_refresh_training_badge()
+	_refresh_achievement_badge()
 
 
 func _show_panel(index: int) -> void:
@@ -33,6 +44,15 @@ func _show_panel(index: int) -> void:
 
 func _refresh_training_badge() -> void:
 	_nav.set_badge(TRAINING_TAB, Training.any_affordable())
+
+
+func _refresh_achievement_badge() -> void:
+	_nav.set_badge(ACHIEVEMENTS_TAB, Achievements.has_unseen())
+
+
+func _on_achievement_unlocked(index: int) -> void:
+	_toast.show_message("업적 달성 · %s" % Balance.achievement_name(index))
+	_refresh_achievement_badge()
 
 
 ## 돌아오면 비운 시간과 받은 골드를 먼저 보여준다 (GDD 8·9절). 동료가 없어 받을 게 없으면 띄우지 않는다

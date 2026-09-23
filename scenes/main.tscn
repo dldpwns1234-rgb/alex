@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scenes/tabs/prestige_tab.gd" id="9_prestige_tab"]
 [ext_resource type="Script" path="res://scenes/tabs/training_tab.gd" id="10_training_tab"]
 [ext_resource type="Script" path="res://scenes/nav_bar.gd" id="11_nav_bar"]
+[ext_resource type="Script" path="res://scenes/tabs/achievements_tab.gd" id="12_achievements_tab"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -76,6 +77,10 @@ script = ExtResource("10_training_tab")
 [node name="PrestigeTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2
 script = ExtResource("9_prestige_tab")
+
+[node name="AchievementsTab" type="MarginContainer" parent="Layout/Panels"]
+layout_mode = 2
+script = ExtResource("12_achievements_tab")
 
 [node name="SettingsTab" type="MarginContainer" parent="Layout/Panels"]
 layout_mode = 2

@@ -1,10 +1,10 @@
 extends HBoxContainer
-## 탭 내비게이션 (GDD 9절: 용사 / 동료 / 단련 / 회귀 / 설정). 손가락으로 누르기 좋게 폭을 똑같이 나눈 큰 버튼이다.
+## 탭 내비게이션 (GDD 9절: 용사 / 동료 / 단련 / 회귀 / 업적 / 설정). 손가락으로 누르기 좋게 폭을 똑같이 나눈 큰 버튼이다.
 ## 누르면 tab_selected를 내고, Main이 그 번호의 패널만 보인다. 점(badge)은 버튼 안에 붙어 있어 탭 폭이 변하지 않는다.
 
 signal tab_selected(index: int)
 
-const TITLES: PackedStringArray = ["용사", "동료", "단련", "회귀", "설정"]
+const TITLES: PackedStringArray = ["용사", "동료", "단련", "회귀", "업적", "설정"]
 const BADGE_SIZE := Vector2(12, 12)
 const BADGE_COLOR := Color("ffe66d")
 const BADGE_OFFSET := Vector2(6, 18)  # 탭 글자의 오른쪽 위에서 얼마나 떨어질지

@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 	_storm_clicks += minf(delta, Balance.MAX_DELTA) * per_second
 	while _storm_clicks >= 1.0:
 		_storm_clicks -= 1.0
-		Game.tap_attack()
+		Game.tap_attack(true)
 
 
 ## 새 판 시작 상태. 회귀(M5)와 데이터 초기화에서 쿨타임도 지운다
