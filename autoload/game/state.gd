@@ -35,8 +35,8 @@ var _farm_seconds: float = 0.0      # 파밍 시작(또는 취소) 뒤 흐른 �
 ## 새 판 시작 상태로 되돌린다. 회귀(M5)에서도 쓴다
 func reset() -> void:
 	gold = 0.0
-	stage = 1
-	highest_stage = 1
+	stage = Rebirth.start_stage()  # 예지(운명의 상점)가 있으면 앞 스테이지를 건너뛴다
+	highest_stage = stage
 	kills = 0
 	farming = false
 	boss_queued = false

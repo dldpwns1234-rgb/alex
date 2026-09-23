@@ -2,7 +2,7 @@ extends Control
 ## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 내비게이션과 패널을 위에서부터 쌓는다.
 ## 내비게이션이 고른 패널만 보이고, 강화할 수 있는 장비가 있으면 용사 탭에, 승급할 수 있는 동료가 있으면 동료 탭에,
 ## 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
-## 업적 달성, 승급, 장비 획득은 전투 화면 아래에 알림을 띄운다.
+## 업적 달성, 승급, 장비 획득, 환생은 전투 화면 아래에 알림을 띄운다.
 
 const Toast := preload("res://scenes/toast.gd")
 
@@ -39,6 +39,7 @@ func _ready() -> void:
 	Equipment.equipment_changed.connect(_refresh_badges.unbind(1))
 	Equipment.stones_changed.connect(_refresh_badges.unbind(1))
 	Equipment.item_dropped.connect(_on_item_dropped)
+	Rebirth.reborn.connect(_on_reborn)
 	Achievements.unlocked.connect(_on_achievement_unlocked)
 	Achievements.seen_changed.connect(_refresh_achievement_badge)
 	_refresh_badges()
@@ -83,3 +84,7 @@ func _on_offline_reward(seconds: float, gold: float) -> void:
 	_offline_dialog.dialog_text = "자리를 비운 %s 동안\n동료들이 골드 %s을 모았습니다" % [
 		Num.format_duration(seconds), Num.format(gold)]
 	_offline_dialog.popup_centered(OFFLINE_POPUP_SIZE)
+
+
+func _on_reborn(reward: float) -> void:
+	_toast.show_message("환생 · 운명의 실 +%s" % Num.format(reward))

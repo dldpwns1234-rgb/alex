@@ -46,7 +46,7 @@ func _test_game() -> void:
 	_equal(Game.stage, 2, "10마리 처치 후 2스테이지")
 	_equal(Game.highest_stage, 2, "최고 스테이지 갱신")
 	_equal(Game.kills, 0, "처치 수 초기화")
-	_close(Game.monster_max_hp, 11.6, "2스테이지 몬스터 체력")
+	_close(Game.monster_max_hp, 11.7, "2스테이지 몬스터 체력")
 
 
 func _test_party() -> void:

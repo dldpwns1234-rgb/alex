@@ -85,6 +85,7 @@ func to_dict() -> Dictionary:
 		"save_version": SAVE_VERSION,
 		"saved_at": Time.get_unix_time_from_system(),
 		"game": Game.to_dict(),
+		"rebirth": Rebirth.to_dict(),
 		"party": Party.to_dict(),
 		"skills": Skills.to_dict(),
 		"training": Training.to_dict(),
@@ -98,6 +99,7 @@ func to_dict() -> Dictionary:
 ## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다.
 ## 업적은 회귀 기록(Prestige)을 본 뒤, 통계를 시그널로 받는 Party·Game보다 먼저 불러온다
 func from_dict(data: Dictionary) -> void:
+	Rebirth.from_dict(_section(data, "rebirth"))
 	Prestige.from_dict(_section(data, "prestige"))
 	Achievements.from_dict(_section(data, "achievements"))
 	Party.from_dict(_section(data, "party"))
@@ -126,8 +128,7 @@ func save_game() -> void:
 	saved.emit()
 
 
-## 저장 파일이 있으면 불러오고, 마지막 저장 이후 비운 시간을 오프라인 보상으로 준다.
-## 없거나 깨졌으면 false를 주고 상태는 그대로 둔다
+## 저장 파일이 있으면 불러오고 비운 시간을 오프라인 보상으로 준다. 없거나 깨졌으면 false를 주고 상태는 그대로 둔다
 func load_game() -> bool:
 	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
@@ -152,9 +153,7 @@ func export_string() -> String:
 ## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false를 주고 상태는 그대로 둔다.
 ## 같은 문자열을 되풀이해 넣어 오프라인 보상을 여러 번 받지 못하도록, 가져오기는 보상을 주지 않는다
 func import_string(text: String) -> bool:
-	var compact := ""
-	for part in text.split(" ", false):
-		compact += part.strip_edges()
+	var compact := text.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "")
 	# base64가 아닌 문자열을 풀려고 하면 엔진이 오류를 찍으므로 먼저 거른다 (글자 종류와 4의 배수 길이)
 	if compact.is_empty() or compact.length() % 4 != 0 or _base64_regex.search(compact) == null:
 		return false
@@ -167,6 +166,7 @@ func import_string(text: String) -> bool:
 
 ## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
 func reset_data() -> void:
+	Rebirth.reset()
 	Prestige.reset()
 	Achievements.reset()
 	Equipment.reset()

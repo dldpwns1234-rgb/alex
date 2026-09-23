@@ -1,5 +1,5 @@
 extends Node
-## 회귀와 기억의 상점 (GDD 7절). 기억의 결정, 상점 레벨, 역대 기록은 회귀해도 남는다.
+## 회귀와 기억의 상점 (GDD 7절). 기억의 결정, 상점 레벨, 역대 기록은 회귀해도 남는다 (환생에서 내려놓는다).
 ## 상태 변경은 Game·Party·Skills·Prestige의 함수로만 한다.
 
 signal crystals_changed(crystals: float)
@@ -57,9 +57,9 @@ func can_prestige() -> bool:
 	return Balance.can_prestige(Game.highest_stage)
 
 
-## 지금 회귀하면 받을 결정
+## 지금 회귀하면 받을 결정 (인연이 곱해진다)
 func crystal_reward() -> float:
-	return Balance.crystal_reward(Game.highest_stage)
+	return Balance.crystal_reward(Game.highest_stage) * Rebirth.crystal_multiplier()
 
 
 ## 회귀: 결정을 받고 새 판을 시작한다. 결정, 상점 레벨, 통계, 업적, 장비는 남는다

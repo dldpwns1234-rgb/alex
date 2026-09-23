@@ -1,6 +1,6 @@
 extends Node
-## 업적 (GDD 7.5절). 누적 통계(역대 최고 스테이지, 처치, 보스 처치, 획득 골드, 탭, 회귀, 스킬 사용, 용사 레벨, 동료 수)는
-## 회귀해도 남고 데이터 초기화에서만 지운다. 통계가 목표에 닿으면 업적이 열리고 영구 보너스가 붙는다.
+## 업적 (GDD 7.5절). 누적 통계(역대 최고 스테이지, 처치, 보스 처치, 획득 골드, 탭, 회귀, 스킬 사용, 용사 레벨, 동료 수, 환생)는
+## 회귀와 환생을 해도 남고 데이터 초기화에서만 지운다. 통계가 목표에 닿으면 업적이 열리고 영구 보너스가 붙는다.
 ## 통계는 Game·Party·Prestige·Skills의 시그널로 모은다 (오토로드 순서상 그 뒤에 있어 _ready에서 연결한다).
 ## 탭 수(Game)와 오프라인 골드(Save)만 직접 add()로 더한다. 효과는 damage_multiplier()·gold_multiplier()로
 ## Party·Game·Save가 자기 공식에 곱한다. 상태 변경은 이 오토로드의 함수로만 하고 UI는 표시만 한다.
@@ -22,6 +22,7 @@ func _ready() -> void:
 	Party.hero_changed.connect(_on_hero_changed)
 	Party.companion_changed.connect(_on_companion_changed)
 	Prestige.prestiged.connect(_on_prestiged)
+	Rebirth.reborn.connect(_on_reborn)
 	Skills.skill_activated.connect(_on_skill_activated)
 
 
@@ -160,10 +161,14 @@ func _on_companion_changed(_index: int, _level: int) -> void:
 	raise(Balance.Stat.PARTY, float(hired))
 
 
-## 회귀 횟수와 함께 역대 최고 스테이지도 회귀 기록에 맞춘다
+## 회귀 횟수는 환생을 넘어 누적한다. 역대 최고 스테이지도 회귀 기록에 맞춘다
 func _on_prestiged(_reward: float) -> void:
-	raise(Balance.Stat.PRESTIGES, float(Prestige.prestige_count))
+	add(Balance.Stat.PRESTIGES, 1.0)
 	raise(Balance.Stat.STAGE, float(Prestige.best_stage))
+
+
+func _on_reborn(_reward: float) -> void:
+	add(Balance.Stat.REBIRTHS, 1.0)
 
 
 func _on_skill_activated(_index: int) -> void:

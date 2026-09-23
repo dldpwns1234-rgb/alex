@@ -1,12 +1,12 @@
-extends "res://autoload/balance/equipment.gd"
+extends "res://autoload/balance/rebirth.gd"
 ## 모든 수치와 공식. 다른 파일에 게임 수치를 하드코딩하지 않는다.
-## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련, 업적, 장비는
+## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련, 업적, 장비, 환생은
 ## autoload/balance/ 아래 부분 스크립트에 있다 (상속으로 이어져 있어 Balance.로 모두 부른다).
 ## s = 스테이지
 
 # 몬스터
 const MONSTER_BASE_HP: float = 10.0
-const MONSTER_HP_GROWTH: float = 1.16   # 단련(M5.5)을 넣으면서 1.15에서 올렸다. docs/BALANCE_SIM.md
+const MONSTER_HP_GROWTH: float = 1.17   # 단련에서 1.15→1.16, 업적·승급·장비(M8)에서 1.17로 올렸다. docs/BALANCE_SIM.md
 const MONSTERS_PER_STAGE: int = 10
 const GOLD_PER_HP: float = 1.0 / 15.0
 const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오기까지 (초)
@@ -31,7 +31,7 @@ const OFFLINE_BASE_RATE: float = 0.5
 # 단잠(OFFLINE_RATE_PER_NAP_LEVEL)은 memory.gd에 있다
 
 
-## 일반 몬스터 체력: 10 × 1.16^(s − 1)
+## 일반 몬스터 체력: 10 × 1.17^(s − 1)
 func monster_hp(stage: int) -> float:
 	return MONSTER_BASE_HP * pow(MONSTER_HP_GROWTH, stage - 1)
 

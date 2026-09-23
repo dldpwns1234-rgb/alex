@@ -17,6 +17,8 @@ config/icon="res://icon.svg"
 Balance="*res://autoload/balance.gd"
 Num="*res://autoload/num.gd"
 Prestige="*res://autoload/prestige.gd"
+; 환생은 Game.reset()이 시작 스테이지를 물어보므로 Game보다 앞에
+Rebirth="*res://autoload/rebirth.gd"
 Party="*res://autoload/party.gd"
 Skills="*res://autoload/skills.gd"
 Training="*res://autoload/training.gd"

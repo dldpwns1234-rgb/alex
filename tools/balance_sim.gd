@@ -1,13 +1,11 @@
-extends Node
-## 밸런스 시뮬레이션 (GDD 13절). 실제 Balance·Party·Game·Prestige 코드를 그대로 돌린다.
+extends "res://tools/sim_purchases.gd"
+## 밸런스 시뮬레이션 (GDD 13절). 실제 Balance·Party·Game·Prestige·Rebirth 코드를 그대로 돌린다. 구매 정책은 sim_purchases.gd에 있다.
 ##
 ##   godot --headless --path . res://tools/balance_sim.tscn
 ##
-## 가정: 초당 4클릭, 스킬 없음, 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급.
-## 진행 속도에 안 잡히는 단련은 골드의 2% 이하일 때), 강화석은 생기는 대로 강화에 쓴다, 보스 재도전은 게임의 자동 재도전에
-## 맡긴다, 3분 동안 최고 스테이지가 오르지 않으면 회귀, 결정은 검술·황금 중 싼 것에 쓴다. 장비 드롭은 고정 시드로 굴린다.
+## 가정: 초당 4클릭, 스킬 없음, 보스 재도전은 게임의 자동 재도전에 맡긴다, 3분 동안 최고 스테이지가 오르지 않으면 회귀하고
+## 환생할 수 있으면 회귀 대신 환생한다. 장비 드롭은 고정 시드로 굴린다. 회귀 횟수는 환생을 넘어 센다.
 
-const CLICKS_PER_SECOND: float = 4.0
 const FRAME: float = 0.25          # Game의 delta 상한과 같다
 const STALL_SECONDS: float = 180.0  # 이만큼 최고 스테이지가 안 오르면 회귀
 const MAX_PRESTIGES: int = 12
@@ -16,6 +14,7 @@ const REPORT_STAGES: PackedStringArray = ["10", "20", "40", "60", "80", "100", "
 const RANDOM_SEED: int = 20260923  # 장비 드롭이 실행마다 같도록
 
 var _t: float = 0.0                 # 시뮬레이션 시간 (초)
+var _prestiges: int = 0             # 환생을 넘어 센 회귀 횟수
 var _run_start: float = 0.0
 var _last_progress: float = 0.0     # 최고 스테이지가 마지막으로 오른 시각
 var _best_this_run: int = 0         # 이번 판에서 본 최고 스테이지. 보스에 다시 도전하는 것은 진행이 아니다
@@ -27,6 +26,7 @@ var _beat_previous_at: float = -1.0
 func _ready() -> void:
 	Save.blocked = true  # 시뮬레이션은 저장하지 않는다. 시작할 때 읽힌 저장이 있어도 전부 새로 시작한다
 	seed(RANDOM_SEED)
+	Rebirth.reset()
 	Prestige.reset()
 	Achievements.reset()
 	Equipment.reset()
@@ -41,9 +41,9 @@ func _ready() -> void:
 	print("")
 	print("=== 밸런스 시뮬레이션: 초당 %d클릭, 스킬 없음 ===" % roundi(CLICKS_PER_SECOND))
 	_run_start = 0.0
-	while _t < MAX_HOURS * 3600.0 and Prestige.prestige_count < MAX_PRESTIGES:
+	while _t < MAX_HOURS * 3600.0 and _prestiges < MAX_PRESTIGES:
 		_second()
-	_report("종료: %s, 스테이지 %d, 회귀 %d회" % [_clock(_t), Game.stage, Prestige.prestige_count])
+	_report("종료: %s, 스테이지 %d, 회귀 %d회, 환생 %d회" % [_clock(_t), Game.stage, _prestiges, Rebirth.rebirth_count])
 	print("")
 	get_tree().quit(0)
 
@@ -61,79 +61,10 @@ func _second() -> void:
 		_t += FRAME
 	_buy_everything()
 	if Prestige.can_prestige() and _t - _last_progress >= STALL_SECONDS:
-		_prestige()
-
-
-## 진행 속도: (동료 DPS + 클릭 DPS) × 처치 골드 배율. 골드 대비 이 값의 상승이 큰 것부터 산다
-func _progress_rate() -> float:
-	var boss := Game.is_boss_stage()
-	var dps := Party.party_dps(boss) + Party.click_damage() * CLICKS_PER_SECOND
-	return dps * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
-
-
-func _buy_everything() -> void:
-	for slot in Balance.SLOT_LABELS.size():
-		while Equipment.enhance(slot):
-			pass
-	while true:
-		var current := _progress_rate()
-		var best_ratio := 0.0
-		var best_kind := ""  # "hero", "companion", "training", "promotion"
-		var best_index := -1
-		var hero := Party.hero_purchase()
-		if hero.affordable:
-			Party.hero_level += 1
-			best_ratio = (_progress_rate() - current) / hero.cost
-			best_kind = "hero"
-			Party.hero_level -= 1
-		for i in Party.companion_levels.size():
-			if not Party.is_companion_unlocked(i):
-				continue
-			var purchase := Party.companion_purchase(i)
-			if not purchase.affordable:
-				continue
-			Party.companion_levels[i] += 1
-			var ratio := (_progress_rate() - current) / purchase.cost
-			Party.companion_levels[i] -= 1
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "companion"
-				best_index = i
-		for i in Training.levels.size():
-			if not Training.can_buy(i):
-				continue
-			var purchase := Training.purchase(i)
-			Training.levels[i] += 1
-			var gain := _progress_rate() - current
-			Training.levels[i] -= 1
-			# 진행 속도에 안 잡히는 효과(보스 시간, 스킬, 재등장 등)는 싸면 산다
-			var ratio := gain / purchase.cost if gain > 0.0 else (1e9 if purchase.cost <= Game.gold * 0.02 else 0.0)
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "training"
-				best_index = i
-		for i in Promotions.ranks.size():
-			if not Promotions.can_promote(i):
-				continue
-			var cost := Promotions.cost(i)
-			Promotions.ranks[i] += 1
-			var ratio := (_progress_rate() - current) / cost
-			Promotions.ranks[i] -= 1
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "promotion"
-				best_index = i
-		match best_kind:
-			"hero":
-				Party.buy_hero()
-			"companion":
-				Party.buy_companion(best_index)
-			"training":
-				Training.buy(best_index)
-			"promotion":
-				Promotions.promote(best_index)
-			_:
-				return
+		if Rebirth.can_rebirth():
+			_rebirth()
+		else:
+			_prestige()
 
 
 func _prestige() -> void:
@@ -142,19 +73,33 @@ func _prestige() -> void:
 	var run_seconds := _t - _run_start
 	var beat := "이전 기록 %d 돌파 %s" % [_previous_best, _clock(_beat_previous_at - _run_start)] if _beat_previous_at >= 0.0 else "이전 기록 미돌파"
 	_report("회귀 %d: %s에 스테이지 %d 도달, 판 길이 %s, 결정 +%s, %s" % [
-		Prestige.prestige_count + 1, _clock(_t), reached, _clock(run_seconds), Num.format(reward), beat])
+		_prestiges + 1, _clock(_t), reached, _clock(run_seconds), Num.format(reward), beat])
 	_previous_best = maxi(_previous_best, reached)
 	Prestige.perform()
-	# 결정은 검술의 기억과 황금의 기억 중 싼 것부터
-	while true:
-		var sword: int = Balance.Memory.SWORD
-		var gold: int = Balance.Memory.GOLD
-		var pick := sword if Prestige.memory_cost(sword) <= Prestige.memory_cost(gold) else gold
-		if not Prestige.buy(pick):
-			break
+	_prestiges += 1
+	_buy_memories()
 	_report("    상점: 검술 Lv %d (×%s), 황금 Lv %d (×%s), 남은 결정 %s" % [
 		Prestige.level(Balance.Memory.SWORD), Num.format(Prestige.sword_multiplier()),
 		Prestige.level(Balance.Memory.GOLD), Num.format(Prestige.gold_multiplier()), Num.format(Prestige.crystals)])
+	_new_run()
+
+
+## 환생: 기억을 내려놓고 운명의 실로 운명의 상점을 산다. 이전 기록도 새 삶에서 다시 센다
+func _rebirth() -> void:
+	var reward := Rebirth.thread_reward()
+	_report("환생 %d: %s에 역대 최고 %d, 판 길이 %s, 운명의 실 +%s" % [
+		Rebirth.rebirth_count + 1, _clock(_t), Rebirth.best_stage(), _clock(_t - _run_start), Num.format(reward)])
+	Rebirth.perform()
+	_buy_fates()
+	_report("    운명: 숙명 Lv %d (×%s), 인연 Lv %d (×%s), 예지 Lv %d (시작 %d), 남은 실 %s" % [
+		Rebirth.level(Balance.Fate.DESTINY), Num.format(Rebirth.damage_multiplier()),
+		Rebirth.level(Balance.Fate.BOND), Num.format(Rebirth.crystal_multiplier()),
+		Rebirth.level(Balance.Fate.FORESIGHT), Rebirth.start_stage(), Num.format(Rebirth.threads)])
+	_previous_best = 0
+	_new_run()
+
+
+func _new_run() -> void:
 	_run_start = _t
 	_last_progress = _t
 	_beat_previous_at = -1.0
@@ -180,7 +125,7 @@ func _on_stage_changed(stage: int) -> void:
 
 
 func _on_companion_changed(index: int, level: int) -> void:
-	if level == 1 and Prestige.prestige_count == 0:
+	if level == 1 and _prestiges == 0:
 		_report("%s  %s 합류 (스테이지 %d)" % [_clock(_t), Balance.companion_name(index), Game.stage])
 
 
