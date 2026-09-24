@@ -59,7 +59,7 @@ func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var dps := Party.party_dps(false, false)
-	var per_second := Balance.offline_gold_per_second(Game.stage, dps) * Prestige.gold_multiplier()
+	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Prestige.gold_multiplier()
 	per_second *= Achievements.gold_multiplier() * Equipment.gold_multiplier()
 	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),

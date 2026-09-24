@@ -7,7 +7,7 @@ const PRESTIGE_BASE_CRYSTALS: float = 10.0
 const PRESTIGE_GROWTH: float = 1.1
 
 # 기억의 상점. 비용은 2^현재 레벨. max_level 0은 상한 없음
-enum Memory { SWORD, GOLD, SAND, MEDITATION, NAP, AWAKENING }
+enum Memory { SWORD, GOLD, SAND, MEDITATION, NAP, AWAKENING, WIND }
 const MEMORIES: Array[Dictionary] = [
 	{"name": "검술의 기억", "max_level": 0},
 	{"name": "황금의 기억", "max_level": 0},
@@ -15,6 +15,7 @@ const MEMORIES: Array[Dictionary] = [
 	{"name": "명상", "max_level": 5},
 	{"name": "단잠", "max_level": 5},
 	{"name": "용사의 각성", "max_level": 10},
+	{"name": "바람의 걸음", "max_level": 5},
 ]
 const MEMORY_COST_BASE: float = 2.0
 const SWORD_MULTIPLIER: float = 1.5          # 레벨당 모든 피해 ×1.5 (복리)
@@ -22,6 +23,7 @@ const GOLD_MEMORY_MULTIPLIER: float = 1.25   # 레벨당 처치 골드 ×1.25 (�
 const SAND_SECONDS_PER_LEVEL: float = 3.0    # 레벨당 보스 제한 시간 +3초
 const AWAKENING_SHARE_PER_LEVEL: float = 0.01  # 레벨당 클릭 피해에 동료 DPS 합계의 1% 추가
 const OFFLINE_RATE_PER_NAP_LEVEL: float = 0.1  # 단잠: 레벨당 오프라인 보상 +10%p
+const WIND_RESPAWN_CUT_PER_LEVEL: float = 0.03  # 바람의 걸음: 레벨당 재등장 대기 −0.03초 (5레벨이면 0.3초 → 0.15초)
 # 명상(MEDITATION_COOLDOWN_CUT)은 skills.gd에 있다
 
 
@@ -65,6 +67,10 @@ func awakening_share(level: int) -> float:
 	return AWAKENING_SHARE_PER_LEVEL * level
 
 
+func wind_respawn_cut(level: int) -> float:
+	return WIND_RESPAWN_CUT_PER_LEVEL * level
+
+
 ## 상점에 보여줄 레벨당 효과. 숫자는 위 상수에서 가져온다
 func memory_note(index: int) -> String:
 	match index:
@@ -78,4 +84,6 @@ func memory_note(index: int) -> String:
 			return "스킬 쿨타임 −%d%%" % roundi(MEDITATION_COOLDOWN_CUT * 100.0)
 		Memory.NAP:
 			return "오프라인 보상 +%d%%p" % roundi(OFFLINE_RATE_PER_NAP_LEVEL * 100.0)
-	return "클릭 피해에 동료 DPS 합계의 %d%% 추가" % roundi(AWAKENING_SHARE_PER_LEVEL * 100.0)
+		Memory.AWAKENING:
+			return "클릭 피해에 동료 DPS 합계의 %d%% 추가" % roundi(AWAKENING_SHARE_PER_LEVEL * 100.0)
+	return "재등장 대기 −%.2f초" % WIND_RESPAWN_CUT_PER_LEVEL

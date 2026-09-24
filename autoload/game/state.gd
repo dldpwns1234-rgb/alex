@@ -104,9 +104,10 @@ func is_boss_stage() -> bool:
 	return Balance.is_boss_stage(stage)
 
 
-## 다음 몬스터가 나오기까지. 도발 단련이 줄인다
+## 다음 몬스터가 나오기까지: 0.3초에서 도발 단련과 바람의 걸음(기억의 상점)을 뺀 값. 최소 0.05초
 func respawn_delay() -> float:
-	return maxf(Balance.RESPAWN_DELAY + Training.value(Balance.Effect.RESPAWN_DELAY), 0.0)
+	var delay := Balance.RESPAWN_DELAY + Training.value(Balance.Effect.RESPAWN_DELAY) - Prestige.wind_respawn_cut()
+	return maxf(delay, Balance.MIN_RESPAWN_DELAY)
 
 
 func add_gold(amount: float) -> void:

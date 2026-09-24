@@ -9,7 +9,8 @@ const MONSTER_BASE_HP: float = 10.0
 const MONSTER_HP_GROWTH: float = 1.17   # 단련에서 1.15→1.16, 업적·승급·장비(M8)에서 1.17로 올렸다. docs/BALANCE_SIM.md
 const MONSTERS_PER_STAGE: int = 10
 const GOLD_PER_HP: float = 1.0 / 15.0
-const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오기까지 (초)
+const RESPAWN_DELAY: float = 0.3         # 처치 후 다음 몬스터가 나오기까지 (초). 도발 단련과 바람의 걸음이 줄인다
+const MIN_RESPAWN_DELAY: float = 0.05    # 아무리 줄여도 이 아래로는 안 간다 (0이면 재등장이 걸리지 않는다)
 
 # 보스: 5의 배수 스테이지에 1마리, 체력 ×10, 제한 시간 30초
 const BOSS_STAGE_INTERVAL: int = 5
@@ -70,12 +71,12 @@ func offline_stage(stage: int) -> int:
 	return stage - 1 if is_boss_stage(stage) else stage
 
 
-## 오프라인 초당 골드: 처치 골드 ÷ (체력 ÷ 동료 DPS 합계 + 0.3). 동료가 없으면 0
-func offline_gold_per_second(stage: int, party_dps: float) -> float:
+## 오프라인 초당 골드: 처치 골드 ÷ (체력 ÷ 동료 DPS 합계 + 재등장 대기). 동료가 없으면 0. respawn은 실제 대기(Game.respawn_delay())
+func offline_gold_per_second(stage: int, party_dps: float, respawn: float = RESPAWN_DELAY) -> float:
 	if party_dps <= 0.0:
 		return 0.0
 	var hp := monster_hp(offline_stage(stage))
-	return kill_gold(hp) / (hp / party_dps + RESPAWN_DELAY)
+	return kill_gold(hp) / (hp / party_dps + respawn)
 
 
 ## 오프라인 보상: 초당 골드 × 경과 초(최대 12시간) × (0.5 + 단잠 레벨 × 0.1 + 안식 단련)

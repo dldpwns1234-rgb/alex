@@ -23,6 +23,9 @@ func _test_balance() -> void:
 	_close(Balance.awakening_share(3), 0.03, "각성 3레벨 3%")
 	_equal(Balance.memory_max_level(Balance.Memory.SWORD), 0, "검술은 상한 없음")
 	_equal(Balance.memory_max_level(Balance.Memory.SAND), 10, "시간의 모래 상한 10")
+	_equal(Balance.memory_max_level(Balance.Memory.WIND), 5, "바람의 걸음 상한 5")
+	_close(Balance.wind_respawn_cut(5), 0.15, "바람의 걸음 5레벨: −0.15초")
+	_equal(Balance.memory_note(Balance.Memory.WIND), "재등장 대기 −0.03초", "바람의 걸음 설명")
 
 
 func _test_prestige() -> void:
@@ -109,6 +112,23 @@ func _test_effects() -> void:
 	Save.grant_offline(100.0)
 	var per_second := Balance.offline_gold_per_second(1, 4.5) * 1.25
 	_close(Game.gold, before + per_second * 100.0 * 0.6, "단잠 1레벨: 오프라인 0.6배, 검술·황금 반영")
+
+	Prestige.memory_levels[Balance.Memory.WIND] = 5
+	_close(Game.respawn_delay(), 0.15, "바람의 걸음 5레벨: 재등장 0.15초")
+	Game._damage_monster(Game.monster_max_hp)
+	_close(Game.respawn_left, 0.15, "처치 뒤 대기 0.15초")
+	_advance(0.16)
+	_equal(Game.is_monster_alive(), true, "0.16초 뒤 재등장")
+	Training.levels[6] = 5  # 도발 5레벨 (−0.1초)
+	_close(Game.respawn_delay(), 0.05, "도발과 함께 0.05초")
+	Prestige.memory_levels[Balance.Memory.WIND] = 20
+	_close(Game.respawn_delay(), 0.05, "최소 0.05초 아래로는 안 내려간다")
+	Prestige.memory_levels[Balance.Memory.WIND] = 5
+	Training.levels[6] = 0
+	before = Game.gold
+	Save.grant_offline(100.0)
+	per_second = Balance.offline_gold_per_second(1, 4.5, 0.15) * 1.25
+	_close(Game.gold, before + per_second * 100.0 * 0.6, "오프라인 보상에도 줄어든 재등장 대기")
 
 
 func _test_save() -> void:

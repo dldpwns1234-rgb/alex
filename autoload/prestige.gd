@@ -122,6 +122,11 @@ func awakening_share() -> float:
 	return Balance.awakening_share(level(Balance.Memory.AWAKENING))
 
 
+## 바람의 걸음: 재등장 대기에서 빼는 초
+func wind_respawn_cut() -> float:
+	return Balance.wind_respawn_cut(level(Balance.Memory.WIND))
+
+
 ## 저장 데이터의 레벨 상한. 0(무한)이면 그대로
 func _cap(index: int) -> int:
 	var cap := Balance.memory_max_level(index)

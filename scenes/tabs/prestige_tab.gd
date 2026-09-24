@@ -1,5 +1,5 @@
 extends MarginContainer
-## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 기억의 상점 6종, 그 아래 환생(rebirth_panel.gd). 줄은 코드로 생성한다.
+## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 기억의 상점 7종, 그 아래 환생(rebirth_panel.gd). 줄은 코드로 생성한다.
 ## Prestige의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
