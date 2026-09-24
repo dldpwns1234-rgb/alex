@@ -15,7 +15,7 @@
 autoload/   Balance(수치·공식, balance/ 부분 스크립트를 상속으로 연결) · Num(한국식 숫자 표기) · Game(골드·스테이지·몬스터·보스) · Party(용사·동료 레벨과 구매) · Skills(스킬) · Training(단련) · Promotions(동료 승급) · Prestige(회귀·기억의 상점) · Rebirth(환생·운명의 상점) · Achievements(누적 통계·업적·영구 보너스) · Equipment(보스 드롭 장비·강화) · Save(저장·불러오기·오프라인 보상)
 scenes/     main.tscn 세로 화면 전체 · top_bar · battle/ 전투 화면 · skill_bar · nav_bar 탭 버튼 · toast 달성 알림 · tabs/ 탭 패널과 구매 배수
 tests/      헤드리스 테스트 러너와 스위트 (공식, 진행, 보스, 저장, 오프라인, 스킬, 회귀, 단련, 승급, 업적, 장비, 환생)
-tools/      밸런스 시뮬레이션, 테마 생성기 (익스포트에서 제외)
+tools/      밸런스 시뮬레이션과 가장 빠른 루트 탐색, 테마·검격 프레임 생성기 (익스포트에서 제외)
 assets/     한글 폰트 · sprites/ 손으로 짠 SVG 캐릭터·몬스터·효과·아이콘 · shaders/ 피격 번쩍임 · ui/ 테마
 docs/       기획서
 ```
@@ -34,6 +34,11 @@ godot --headless --path . res://tests/run_tests.tscn
 
 # 밸런스 시뮬레이션 — 실제 게임 코드로 회귀 12번까지 돌려 GDD 13절 목표와 비교한다 (결과: docs/BALANCE_SIM.md)
 godot --headless --path . res://tools/balance_sim.tscn
+# 정책 인자를 주면 목표 스테이지까지 걸리는 시간을 잰다 (회귀 배수, 스킬 사용, 결정 사용 계획, 정체 기준)
+godot --headless --path . res://tools/balance_sim.tscn -- --goal=500 --ratio=2 --skills=1 --plan=all --stall=60
+
+# 가장 빠른 루트 찾기 — 정책 조합마다 시뮬레이션을 나란히 돌려 목표 도달 시간 순으로 표를 찍는다
+python3 tools/route_search.py --godot godot --goal 500 --jobs 3
 
 # 웹 익스포트 — build/ 를 Godot이 스캔하지 않도록 .gdignore를 먼저 만든다
 mkdir -p build/web && touch build/.gdignore

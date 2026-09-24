@@ -5,6 +5,7 @@ extends Node
 signal skill_activated(index: int)
 
 var activated_at: Array[float] = []  # 스킬별 마지막 발동 시각 (유닉스 초). 0이면 아직 쓴 적 없음
+var clock_override: float = -1.0     # 시뮬레이션이 켠다: 0 이상이면 유닉스 시각 대신 이 값을 지금 시각으로 쓴다
 var _storm_clicks: float = 0.0       # 폭풍 베기 자동 클릭 누적
 
 
@@ -110,4 +111,4 @@ func gold_multiplier() -> float:
 
 
 func _now() -> float:
-	return Time.get_unix_time_from_system()
+	return clock_override if clock_override >= 0.0 else Time.get_unix_time_from_system()

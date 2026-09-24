@@ -63,7 +63,8 @@ res://
   assets/shaders/ flash.gdshader (피격 번쩍임)
   assets/ui/theme.tres 전체 테마. 손으로 고치지 않는다: tools/make_theme.gd의 상수를 고치고 다시 만든다
   tools/make_theme.gd  테마 생성기. `<GODOT 경로> --headless --path . --script tools/make_theme.gd`
-  tools/balance_sim.gd 밸런스 시뮬레이션 (구매 정책은 sim_purchases.gd, 상속). 결과는 docs/BALANCE_SIM.md
+  tools/balance_sim.gd 밸런스 시뮬레이션 (구매 정책은 sim_purchases.gd, 상속). `-- --goal=500 --ratio=2 --skills=1 …` 정책 인자로 목표 도달 시간을 잰다. 결과는 docs/BALANCE_SIM.md
+  tools/route_search.py 정책 조합을 바꿔 가며 시뮬레이션을 나란히 돌려 가장 빠른 루트를 찾는다 (개발 도구라 파이썬)
   tests/
     run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
