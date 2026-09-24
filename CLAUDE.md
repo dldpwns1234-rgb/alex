@@ -69,6 +69,7 @@ res://
     run_tests.tscn 헤드리스 테스트 러너. test_case.gd(도우미)를 상속한 스위트를 돌린다
 docs/GDD.md      기획서
 docs/VFX_REFERENCES.md  검격 연출 레퍼런스와 그로부터 뽑은 형태·타격 원칙. 연출을 고치기 전에 읽는다
+docs/LATEGAME_REFERENCES.md  다른 게임의 후반 구조(층·자동화·별도 모드·도전)와 UI 패턴, 우리 게임에 적용할 순서. 환생 뒤 콘텐츠를 짓기 전에 읽는다
 ```
 
 ## 아키텍처 원칙
