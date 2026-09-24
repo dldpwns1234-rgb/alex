@@ -36,7 +36,7 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 res://
   autoload/
     balance.gd   (Balance) 모든 수치와 공식. 200줄 규칙 때문에 balance/ 아래 부분 스크립트를 상속으로 이어 붙인다
-    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생) → balance.gd(몬스터·보스·오프라인). 바깥에서는 Balance.만 쓴다
+    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → balance.gd(몬스터·보스·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
     game.gd      (Game) 전투 흐름: 피해, 처치, 보스 타이머, 파밍과 도전. 상태 변경은 오토로드에서만
     game/state.gd  Game 1부: 시그널, 상태, 저장, 골드, 진행과 등장. game.gd가 상속한다
     party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
@@ -47,6 +47,7 @@ res://
     promotions.gd (Promotions) 동료 승급 단계, 구매, DPS 배율. 한 판 안의 강화. Party가 동료 공식에 배율을 넘긴다
     achievements.gd (Achievements) 누적 통계와 업적 달성, 영구 보너스 배율. 회귀해도 남는다. 통계는 Game·Party·Prestige·Skills의 시그널로 모은다
     equipment.gd (Equipment) 장비 3칸, 보스 드롭(Game 시그널), 자동 장착·분해, 강화석과 강화, 효과 배율. 회귀해도 남는다
+    automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용. 운명의 상점에서 해금하면 동작하고 토글은 저장된다
     save.gd      (Save) 저장, 불러오기, 오프라인 보상
     num.gd       (Num) 한국식 숫자 표기
   scenes/
@@ -56,7 +57,7 @@ res://
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경), zones(스테이지→몬스터 종류·색조·팔레트)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
-    tabs/        hero(레벨업과 장비 3칸), party, training, prestige(+rebirth_panel 환생), achievements, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
+    tabs/        hero(레벨업과 장비 3칸), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생), achievements, settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 4), monsters/(6종), fx/(왕관, 파편, 검격 프레임 slash_0~5), ui/(아이콘). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
   tools/make_slash_frames.gd  검격 프레임 생성기. slash_N.svg는 손으로 고치지 않는다: 상수를 고치고 다시 만든다 (`--script tools/make_slash_frames.gd`)

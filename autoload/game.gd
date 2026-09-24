@@ -99,8 +99,7 @@ func _damage_monster(amount: float) -> void:
 
 ## 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금)
 func _kill_monster() -> void:
-	var reward := Balance.kill_gold(monster_max_hp) * Prestige.gold_multiplier() * Achievements.gold_multiplier()
-	reward *= Equipment.gold_multiplier() * Skills.gold_multiplier()
+	var reward := Balance.kill_gold(monster_max_hp) * gold_multiplier() * Skills.gold_multiplier()
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)

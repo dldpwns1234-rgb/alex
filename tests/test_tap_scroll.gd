@@ -9,6 +9,35 @@ var _presses: int = 0
 func run() -> void:
 	await _test_tap()
 	_test_dialog_buttons()
+	await _test_toggle()
+
+
+## 토글 버튼(자동화 켬·끔)은 탭할 때마다 상태가 바뀌고 toggled 시그널이 난다
+func _test_toggle() -> void:
+	var scroll: ScrollContainer = TapScroll.new()
+	scroll.size = Vector2(400, 300)
+	add_child(scroll)
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(400, 300)
+	scroll.add_child(holder)
+	var toggle := Button.new()
+	toggle.toggle_mode = true
+	toggle.position = Vector2(100, 100)
+	toggle.size = Vector2(150, 60)
+	var seen: Array[bool] = []
+	toggle.toggled.connect(func(on: bool) -> void: seen.append(on))
+	holder.add_child(toggle)
+	scroll.release_buttons()
+	await get_tree().process_frame
+	var inside := toggle.get_global_rect().get_center()
+	scroll._on_gui_input(_mouse(true, inside))
+	scroll._on_gui_input(_mouse(false, inside))
+	_equal(toggle.button_pressed, true, "탭하면 켜진다")
+	scroll._on_gui_input(_mouse(true, inside))
+	scroll._on_gui_input(_mouse(false, inside))
+	_equal(toggle.button_pressed, false, "다시 탭하면 꺼진다")
+	_equal(seen, [true, false], "toggled 시그널이 두 번 난다")
+	scroll.queue_free()
 
 
 ## 목록 안에 둔 확인 창의 버튼은 창이 직접 입력을 받아야 하므로 건드리지 않는다 (환생 확인 창이 안 눌리던 버그)

@@ -58,7 +58,10 @@ func _tap(global_point: Vector2) -> bool:
 		if not target.get_global_rect().has_point(global_point):
 			continue
 		_flash(target)
-		target.pressed.emit()
+		if target.toggle_mode:
+			target.button_pressed = not target.button_pressed  # toggled 시그널이 난다
+		else:
+			target.pressed.emit()
 		return true
 	return false
 

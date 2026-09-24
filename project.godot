@@ -27,6 +27,8 @@ Game="*res://autoload/game.gd"
 ; 업적은 Game·Party·Prestige·Skills의 시그널을 받으므로 그 뒤에, 불러올 때 부르는 Save보다는 앞에
 Achievements="*res://autoload/achievements.gd"
 Equipment="*res://autoload/equipment.gd"
+; 자동화는 Game·Prestige·Rebirth의 시그널을 받고 Save가 불러온다
+Automation="*res://autoload/automation.gd"
 Save="*res://autoload/save.gd"
 
 [display]

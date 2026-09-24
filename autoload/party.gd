@@ -26,12 +26,17 @@ func _ready() -> void:
 	reset()
 
 
-## 새 판 시작 상태로 되돌린다. 회귀(M5)에서도 쓴다
+## 새 판 시작 상태로 되돌린다. 회귀와 환생에서도 쓴다.
+## 동료 기억(운명의 상점)이 있으면 동료는 지난 판 레벨의 일부를 가지고 시작한다 (데이터 초기화는 Rebirth를 먼저 지워 0이 된다)
 func reset() -> void:
 	hero_level = Balance.HERO_START_LEVEL
+	var previous := companion_levels.duplicate()
+	var ratio := Rebirth.companion_memory_ratio()
 	companion_levels.clear()
 	companion_levels.resize(Balance.COMPANIONS.size())
 	companion_levels.fill(0)
+	for i in mini(previous.size(), companion_levels.size()):
+		companion_levels[i] = Balance.remembered_level(previous[i], ratio)
 	hero_changed.emit(hero_level)
 	for i in companion_levels.size():
 		companion_changed.emit(i, 0)
@@ -109,9 +114,9 @@ func is_companion_hired(index: int) -> bool:
 	return companion_levels[index] > 0
 
 
-## 이번 판에서 합류 스테이지에 도달했으면 고용할 수 있다
+## 이번 판에서 합류 스테이지에 도달했으면 고용할 수 있다. 동료 기억으로 이미 레벨이 있으면 합류 제한이 없다
 func is_companion_unlocked(index: int) -> bool:
-	return Game.highest_stage >= Balance.companion_unlock_stage(index)
+	return is_companion_hired(index) or Game.highest_stage >= Balance.companion_unlock_stage(index)
 
 
 func set_buy_mode(mode: BuyMode) -> void:

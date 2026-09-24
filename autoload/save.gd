@@ -59,8 +59,7 @@ func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var dps := Party.party_dps(false, false)
-	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Prestige.gold_multiplier()
-	per_second *= Achievements.gold_multiplier() * Equipment.gold_multiplier()
+	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Game.gold_multiplier()
 	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),
 		Training.value(Balance.Effect.OFFLINE_RATE))
@@ -93,6 +92,7 @@ func to_dict() -> Dictionary:
 		"prestige": Prestige.to_dict(),
 		"achievements": Achievements.to_dict(),
 		"equipment": Equipment.to_dict(),
+		"automation": Automation.to_dict(),
 	}
 
 
@@ -108,6 +108,7 @@ func from_dict(data: Dictionary) -> void:
 	Skills.from_dict(_section(data, "skills"))
 	Training.from_dict(_section(data, "training"))
 	Game.from_dict(_section(data, "game"))
+	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
 
 
 ## 저장 데이터의 한 부분. 없거나 딕셔너리가 아니면 빈 딕셔너리 (각 오토로드가 기본값으로 채운다)
@@ -150,8 +151,7 @@ func export_string() -> String:
 	return Marshalls.utf8_to_base64(JSON.stringify(to_dict()))
 
 
-## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false를 주고 상태는 그대로 둔다.
-## 같은 문자열을 되풀이해 넣어 오프라인 보상을 여러 번 받지 못하도록, 가져오기는 보상을 주지 않는다
+## 내보내기 문자열을 적용하고 저장한다. 잘못된 문자열이면 false. 되풀이해 넣어 보상을 여러 번 받지 못하도록 가져오기는 오프라인 보상을 주지 않는다
 func import_string(text: String) -> bool:
 	var compact := text.replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "")
 	# base64가 아닌 문자열을 풀려고 하면 엔진이 오류를 찍으므로 먼저 거른다 (글자 종류와 4의 배수 길이)
@@ -175,6 +175,7 @@ func reset_data() -> void:
 	Training.reset()
 	Promotions.reset()
 	Game.reset()
+	Automation.reset()
 	save_game()
 
 
@@ -187,8 +188,7 @@ func apply_json(text: String) -> bool:
 	return true
 
 
-## 저장 JSON을 딕셔너리로. 딕셔너리가 아니거나 save_version이 없으면 빈 딕셔너리
-## JSON.parse_string()은 실패할 때 엔진 오류를 찍으므로, 조용히 거부하려고 인스턴스의 parse()를 쓴다
+## 저장 JSON을 딕셔너리로. 딕셔너리가 아니거나 save_version이 없으면 빈 딕셔너리 (인스턴스의 parse()는 실패해도 엔진 오류를 안 찍는다)
 func _parse(text: String) -> Dictionary:
 	var json := JSON.new()
 	if json.parse(text) != OK or not json.data is Dictionary:

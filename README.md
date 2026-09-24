@@ -12,9 +12,9 @@
 ## 구조
 
 ```
-autoload/   Balance(수치·공식, balance/ 부분 스크립트를 상속으로 연결) · Num(한국식 숫자 표기) · Game(골드·스테이지·몬스터·보스) · Party(용사·동료 레벨과 구매) · Skills(스킬) · Training(단련) · Promotions(동료 승급) · Prestige(회귀·기억의 상점) · Rebirth(환생·운명의 상점) · Achievements(누적 통계·업적·영구 보너스) · Equipment(보스 드롭 장비·강화) · Save(저장·불러오기·오프라인 보상)
+autoload/   Balance(수치·공식, balance/ 부분 스크립트를 상속으로 연결) · Num(한국식 숫자 표기) · Game(골드·스테이지·몬스터·보스) · Party(용사·동료 레벨과 구매) · Skills(스킬) · Training(단련) · Promotions(동료 승급) · Prestige(회귀·기억의 상점) · Rebirth(환생·운명의 상점) · Achievements(누적 통계·업적·영구 보너스) · Equipment(보스 드롭 장비·강화) · Automation(자동 회귀·결정 자동 구매·스킬 자동 사용) · Save(저장·불러오기·오프라인 보상)
 scenes/     main.tscn 세로 화면 전체 · top_bar · battle/ 전투 화면 · skill_bar · nav_bar 탭 버튼 · toast 달성 알림 · tabs/ 탭 패널과 구매 배수
-tests/      헤드리스 테스트 러너와 스위트 (공식, 진행, 보스, 저장, 오프라인, 스킬, 회귀, 단련, 승급, 업적, 장비, 환생)
+tests/      헤드리스 테스트 러너와 스위트 (공식, 진행, 보스, 저장, 오프라인, 스킬, 회귀, 단련, 승급, 업적, 장비, 환생, 자동화)
 tools/      밸런스 시뮬레이션과 가장 빠른 루트 탐색, 테마·검격 프레임 생성기 (익스포트에서 제외)
 assets/     한글 폰트 · sprites/ 손으로 짠 SVG 캐릭터·몬스터·효과·아이콘 · shaders/ 피격 번쩍임 · ui/ 테마
 docs/       기획서

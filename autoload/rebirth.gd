@@ -122,6 +122,23 @@ func start_stage() -> int:
 	return Balance.start_stage(level(Balance.Fate.FORESIGHT))
 
 
+## 유산: 예지가 건너뛴 스테이지의 골드. 시작이 1이면 0이라 배율을 묻지 않는다 (Game이 준비되기 전에도 불린다)
+func inheritance() -> float:
+	var start := start_stage()
+	if start <= 1:
+		return 0.0
+	return Balance.inheritance_gold(start, Game.gold_multiplier())
+
+
+func companion_memory_ratio() -> float:
+	return Balance.companion_memory_ratio(level(Balance.Fate.COMPANION_MEMORY))
+
+
+## 해금형 운명(자동 회귀, 자동 스킬)을 샀는지
+func has_fate(index: int) -> bool:
+	return fate_levels[index] > 0
+
+
 ## 저장 데이터의 레벨 상한. 0(무한)이면 그대로
 func _cap(index: int) -> int:
 	var cap := Balance.fate_max_level(index)

@@ -83,3 +83,12 @@ func offline_gold_per_second(stage: int, party_dps: float, respawn: float = RESP
 func offline_reward(gold_per_second: float, seconds: float, nap_level: int, extra_rate: float = 0.0) -> float:
 	var counted := minf(seconds, OFFLINE_MAX_SECONDS)
 	return gold_per_second * counted * (OFFLINE_BASE_RATE + OFFLINE_RATE_PER_NAP_LEVEL * nap_level + extra_rate)
+
+
+## 유산: 예지가 건너뛴 스테이지(1 ~ 시작 − 1)에서 얻었을 골드. 스테이지마다 일반 몬스터 10마리 처치 골드 × 골드 배율.
+## 환생 직후 기억 없이 101스테이지에 서면 첫 몬스터에 한 시간이 걸리던 함정을 막는다 (docs/BALANCE_SIM.md 2026-09-24)
+func inheritance_gold(start: int, gold_multiplier: float) -> float:
+	var total := 0.0
+	for stage in range(1, start):
+		total += MONSTERS_PER_STAGE * kill_gold(monster_hp(stage))
+	return total * gold_multiplier

@@ -1,9 +1,10 @@
 extends MarginContainer
-## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 기억의 상점 7종, 그 아래 환생(rebirth_panel.gd). 줄은 코드로 생성한다.
+## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 자동화(automation_panel.gd), 기억의 상점 7종, 그 아래 환생(rebirth_panel.gd).
 ## Prestige의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const RebirthPanel := preload("res://scenes/tabs/rebirth_panel.gd")
+const AutomationPanel := preload("res://scenes/tabs/automation_panel.gd")
 
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
@@ -51,6 +52,7 @@ func _ready() -> void:
 	shop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop.add_theme_constant_override("separation", GAP)
 	scroll.add_child(shop)
+	shop.add_child(AutomationPanel.new())  # 운명의 상점에서 해금하면 목록 맨 위에 나타난다
 	for i in Balance.MEMORIES.size():
 		shop.add_child(_make_row(i))
 	shop.add_child(RebirthPanel.new())  # 환생은 상점 아래에 이어진다 (GDD 7.7절)

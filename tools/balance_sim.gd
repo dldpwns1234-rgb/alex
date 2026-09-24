@@ -48,6 +48,8 @@ func _ready() -> void:
 	Training.reset()
 	Promotions.reset()
 	Game.reset()
+	Automation.reset()
+	Automation.enabled.fill(false)  # 회귀·결정·스킬은 시뮬레이션의 정책이 직접 돌린다
 	Game.stage_changed.connect(_on_stage_changed)
 	Party.companion_changed.connect(_on_companion_changed)
 	print("")

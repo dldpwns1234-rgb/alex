@@ -46,3 +46,4 @@ func _fresh_run() -> void:
 	Training.reset()
 	Promotions.reset()
 	Game.reset()
+	Automation.reset()

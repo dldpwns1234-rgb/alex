@@ -25,6 +25,14 @@ func _test_balance() -> void:
 	_equal(Balance.start_stage(2), 51, "예지 2레벨: 51스테이지")
 	_equal(Balance.fate_max_level(Balance.Fate.FORESIGHT), 4, "예지 상한 4")
 	_equal(Balance.fate_max_level(Balance.Fate.DESTINY), 0, "숙명은 상한 없음")
+	_equal(Balance.fate_max_level(Balance.Fate.AUTO_PRESTIGE), 1, "자동 회귀는 해금 한 번")
+	_equal(Balance.fate_max_level(Balance.Fate.COMPANION_MEMORY), 5, "동료 기억 상한 5")
+	_close(Balance.inheritance_gold(1, 1.0), 0.0, "1스테이지 시작이면 유산 없음")
+	_close(Balance.inheritance_gold(2, 1.0), 10.0 * Balance.kill_gold(Balance.monster_hp(1)), "2스테이지 시작: 1스테이지 10마리 몫")
+	_close(Balance.inheritance_gold(3, 2.0), 20.0 * (Balance.kill_gold(Balance.monster_hp(1)) + Balance.kill_gold(Balance.monster_hp(2))), "골드 배율이 곱해진다")
+	_close(Balance.companion_memory_ratio(3), 0.3, "동료 기억 3레벨: 30%")
+	_equal(Balance.remembered_level(250, 0.3), 75, "250레벨의 30%는 75")
+	_equal(Balance.remembered_level(7, 0.0), 0, "기억이 없으면 0")
 
 
 func _test_perform() -> void:
@@ -93,11 +101,33 @@ func _test_shop_and_effects() -> void:
 	_equal(Rebirth.buy(F), false, "최대는 못 산다")
 	_close(Rebirth.threads, 10.0, "비용 1+2+3+4 = 10")
 	_equal(Rebirth.start_stage(), 101, "예지 4레벨: 시작 101스테이지")
+	var gold_multiplier := Game.gold_multiplier()  # 유산은 회귀 업적이 열리기 전(Game.reset 시점)의 배율로 센다
 	_equal(Prestige.perform(), true, "회귀")
 	_equal(Game.stage, 101, "회귀 후 101스테이지에서 시작")
 	_equal(Game.highest_stage, 101, "이번 판 최고도 101")
 	_equal(Party.is_companion_unlocked(Balance.Companion.CLERIC), true, "성직자가 바로 합류한다")
 	_close(Game.monster_max_hp, Balance.monster_hp(101), "101스테이지 몬스터가 나온다")
+	_close(Game.gold, Balance.inheritance_gold(101, gold_multiplier), "건너뛴 100스테이지의 골드를 유산으로 받는다")
+	_equal(Game.gold > Balance.kill_gold(Balance.monster_hp(101)) * gold_multiplier * 50.0, true, "유산은 시작 스테이지 몬스터 50마리 몫보다 크다 (등비 합 ≈ 59마리)")
+	Rebirth.threads = 3.0
+	_equal(Rebirth.buy(Balance.Fate.COMPANION_MEMORY), true, "동료 기억 구매")
+	_equal(Rebirth.buy(Balance.Fate.COMPANION_MEMORY), true, "동료 기억 2레벨")
+	Party.companion_levels[Balance.Companion.WARRIOR] = 250
+	Party.companion_levels[Balance.Companion.CLERIC] = 7
+	Game.highest_stage = 130
+	_equal(Prestige.perform(), true, "회귀")
+	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 50, "전사는 250의 20%인 50레벨로 시작")
+	_equal(Party.companion_levels[Balance.Companion.CLERIC], 1, "성직자는 7의 20%를 내림한 1레벨")
+	_equal(Party.companion_levels[Balance.Companion.ARCHER], 0, "없던 동료는 그대로 0")
+	_equal(Party.hero_level, 1, "용사는 기억하지 않는다")
+	Rebirth.fate_levels[Balance.Fate.FORESIGHT] = 0
+	Game.reset()
+	_equal(Party.is_companion_unlocked(Balance.Companion.CLERIC), true, "기억으로 레벨이 있는 동료는 합류 제한이 없다")
+	_equal(Party.is_companion_unlocked(Balance.Companion.ARCHER), false, "레벨 없는 동료는 합류 스테이지를 기다린다")
+	_equal(Rebirth.perform(), false, "환생 조건 미달")
+	Game.highest_stage = 500
+	_equal(Rebirth.perform(), true, "환생")
+	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 10, "환생 뒤에도 동료 기억 (50의 20%)")
 
 
 func _test_save() -> void:
@@ -112,16 +142,16 @@ func _test_save() -> void:
 	_close(Rebirth.threads, 0.0, "초기화 확인")
 	Save.from_dict(data)
 	_close(Rebirth.threads, 5.0, "실 복원")
-	_equal(Rebirth.fate_levels, [1, 0, 2], "운명의 상점 복원")
+	_equal(Rebirth.fate_levels, [1, 0, 2, 0, 0, 0], "운명의 상점 복원")
 	_equal(Rebirth.rebirth_count, 2, "환생 횟수 복원")
 	_equal(Save.apply_json(JSON.stringify(data)), true, "JSON 적용")
-	_equal(Rebirth.fate_levels, [1, 0, 2], "JSON을 거친 상점 레벨")
+	_equal(Rebirth.fate_levels, [1, 0, 2, 0, 0, 0], "JSON을 거친 상점 레벨")
 	_equal(typeof(Rebirth.fate_levels[0]), TYPE_INT, "레벨은 int로 돌아온다")
 	Save.from_dict({"save_version": 1})
 	_close(Rebirth.threads, 0.0, "필드가 없으면 실 0")
-	_equal(Rebirth.fate_levels, [0, 0, 0], "필드가 없으면 0레벨")
+	_equal(Rebirth.fate_levels, [0, 0, 0, 0, 0, 0], "필드가 없으면 0레벨")
 	Save.from_dict({"save_version": 1, "rebirth": {"fate_levels": [3, 1, 99], "threads": -2, "rebirth_count": -1}})
-	_equal(Rebirth.fate_levels, [3, 1, 4], "상한을 넘는 예지는 잘라낸다")
+	_equal(Rebirth.fate_levels, [3, 1, 4, 0, 0, 0], "상한을 넘는 예지는 잘라내고 옛 저장의 새 운명은 0")
 	_close(Rebirth.threads, 0.0, "음수 실은 0")
 	_equal(Rebirth.rebirth_count, 0, "음수 횟수는 0")
 	Rebirth.threads = 9.0
