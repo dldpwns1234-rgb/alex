@@ -23,14 +23,19 @@ func _ready() -> void:
 	_auto.toggled.connect(Game.set_auto_retry)
 	add_child(_auto)
 	Game.farming_changed.connect(_on_farming_changed)
+	Game.tower_changed.connect(_on_tower_changed)
 	Game.boss_queued_changed.connect(_refresh.unbind(1))
 	Game.auto_retry_changed.connect(_refresh.unbind(1))
 	_on_farming_changed(Game.farming)
 
 
 func _on_farming_changed(farming: bool) -> void:
-	visible = farming
+	visible = farming and not Game.in_tower
 	_refresh()
+
+
+func _on_tower_changed(_inside: bool) -> void:
+	_on_farming_changed(Game.farming)
 
 
 func _refresh() -> void:

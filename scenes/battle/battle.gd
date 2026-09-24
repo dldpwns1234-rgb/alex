@@ -7,6 +7,7 @@ const Backdrop := preload("res://scenes/battle/backdrop.gd")
 const MonsterView := preload("res://scenes/battle/monster_view.gd")
 const PartyView := preload("res://scenes/battle/party_view.gd")
 const BossControls := preload("res://scenes/battle/boss_controls.gd")
+const TowerControls := preload("res://scenes/battle/tower_controls.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
 
 const TAP_TEXT_COLOR := Color("ffe66d")
@@ -35,6 +36,7 @@ var _last_tap_msec: int = 0
 var _party_view: PartyView
 var _kill_label: Label
 var _boss_controls: BossControls
+var _tower_controls: TowerControls
 var _attack_clocks: Array[float] = []
 
 
@@ -111,6 +113,8 @@ func _build() -> void:
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
 	_boss_controls = BossControls.new()
 	add_child(_boss_controls)
+	_tower_controls = TowerControls.new()  # 왼쪽 위. 역대 최고 100부터 보인다
+	add_child(_tower_controls)
 
 	_attack_clocks.resize(Balance.COMPANIONS.size())
 	for i in _attack_clocks.size():
@@ -126,12 +130,14 @@ func _layout() -> void:
 	_kill_label.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	_kill_label.size = Vector2(size.x - EDGE_MARGIN * 2.0, LABEL_HEIGHT)
 	_boss_controls.position = Vector2((size.x - BossControls.CHALLENGE_SIZE.x) * 0.5, EDGE_MARGIN)
+	_tower_controls.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 
 
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
-	_monster_view.spawn(max_hp, boss, Game.stage)
-	_backdrop.set_palette(Zones.palette(Game.stage))
-	_backdrop.set_castle(Zones.is_castle(Game.stage))
+	var stage := Game.visual_stage()
+	_monster_view.spawn(max_hp, boss, stage)
+	_backdrop.set_palette(Zones.TOWER_PALETTE if Game.in_tower else Zones.palette(stage))
+	_backdrop.set_castle(Game.in_tower or Zones.is_castle(stage))
 
 
 func _on_tap_hit(amount: float, crit: bool) -> void:

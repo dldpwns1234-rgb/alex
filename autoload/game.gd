@@ -10,7 +10,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var dt := minf(delta, Balance.MAX_DELTA)
 	_tick_tap_rate(dt)
-	if farming:
+	if in_tower:
+		Tower.tick(dt)  # 층 제한 시간. 끝나면 Tower가 본편으로 돌려보낸다
+		if not in_tower:
+			return
+	elif farming:
 		_farm_seconds += dt
 		_auto_retry()
 	if respawn_left > 0.0:
@@ -69,7 +73,7 @@ func tap_attack(auto: bool = false) -> void:
 
 ## 파밍 중 보스 도전: 지금 몬스터를 잡은 뒤 보스가 나온다 (다시 누르면 취소). 재등장 대기 중이면 바로 간다
 func challenge_boss() -> void:
-	if not farming:
+	if not farming or in_tower:
 		return
 	if is_monster_alive():
 		boss_queued = not boss_queued
@@ -97,8 +101,17 @@ func _damage_monster(amount: float) -> void:
 		_kill_monster()
 
 
-## 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금)
+## 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금). 탑에서는 골드 없이 처치 수만 센다
 func _kill_monster() -> void:
+	if in_tower:
+		kills += 1
+		respawn_left = respawn_delay()
+		monster_killed.emit(0.0)
+		if kills >= Balance.MONSTERS_PER_STAGE:
+			kills = 0
+			Tower.clear_floor()
+		kills_changed.emit(kills)
+		return
 	var reward := Balance.kill_gold(monster_max_hp) * gold_multiplier() * Skills.gold_multiplier()
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():

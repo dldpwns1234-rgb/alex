@@ -48,3 +48,4 @@ func _fresh_run() -> void:
 	Game.reset()
 	Automation.reset()
 	Challenges.reset()
+	Tower.reset()

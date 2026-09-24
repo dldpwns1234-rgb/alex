@@ -28,6 +28,15 @@ const DEMON_KING_INTERVAL: int = 1000
 const DEMON_KING_HP_MULTIPLIER: float = 3.0   # 마왕 체력 = 보스 체력 × 3
 const DEMON_KING_EXTRA_TIME: float = 30.0     # 마왕전 제한 시간에 더하는 초
 
+# 시련의 탑 (GDD 7.10절): 역대 최고 100부터, 입장권 하루 3장, 한 층은 60초 안에 10마리
+const TOWER_UNLOCK_STAGE: int = 100
+const TOWER_TICKETS_PER_DAY: int = 3
+const TOWER_TIME_LIMIT: float = 60.0
+const TOWER_STAGE_BASE: int = 100          # f층 몬스터 = 스테이지 (100 + 10f)의 일반 몬스터
+const TOWER_STAGE_STEP: int = 10
+const TOWER_STONES_PER_FLOOR: float = 1.0  # 첫 돌파 보상 강화석 = 층 × 1
+const TOWER_THREAD_FLOOR_STEP: int = 10    # 10층마다 운명의 실 (층 ÷ 10)
+
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
 
@@ -109,3 +118,22 @@ func inheritance_gold(start: int, gold_multiplier: float) -> float:
 	for stage in range(1, start):
 		total += MONSTERS_PER_STAGE * kill_gold(monster_hp(stage))
 	return total * gold_multiplier
+
+
+## 시련의 탑 f층에 해당하는 스테이지 (몬스터 체력과 그림에 쓴다)
+func tower_stage(floor: int) -> int:
+	return TOWER_STAGE_BASE + TOWER_STAGE_STEP * floor
+
+
+func tower_monster_hp(floor: int) -> float:
+	return monster_hp(tower_stage(floor))
+
+
+## 첫 돌파 보상: 강화석은 층마다, 운명의 실은 10층마다 (층 ÷ 10)
+func tower_stones(floor: int) -> float:
+	return TOWER_STONES_PER_FLOOR * floor
+
+
+func tower_threads(floor: int) -> float:
+	@warning_ignore("integer_division")
+	return float(floor / TOWER_THREAD_FLOOR_STEP) if floor % TOWER_THREAD_FLOOR_STEP == 0 else 0.0

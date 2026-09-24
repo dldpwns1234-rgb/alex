@@ -36,7 +36,7 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 res://
   autoload/
     balance.gd   (Balance) 모든 수치와 공식. 200줄 규칙 때문에 balance/ 아래 부분 스크립트를 상속으로 이어 붙인다
-    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → challenges(도전 판) → balance.gd(몬스터·보스·마왕성·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
+    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → challenges(도전 판) → balance.gd(몬스터·보스·마왕성·시련의 탑·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
     game.gd      (Game) 전투 흐름: 피해, 처치, 보스 타이머, 파밍과 도전. 상태 변경은 오토로드에서만
     game/state.gd  Game 1부: 시그널, 상태, 저장, 골드, 진행과 등장. game.gd가 상속한다
     party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
@@ -49,13 +49,14 @@ res://
     equipment.gd (Equipment) 장비 3칸, 보스 드롭(Game 시그널), 자동 장착·분해, 강화석과 강화, 효과 배율. 회귀해도 남는다
     automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용. 운명의 상점에서 해금하면 동작하고 토글은 저장된다
     challenges.gd (Challenges) 도전 판: 시작(회귀로 판 끝내기), 제한 조회(Party·Skills·Game·Equipment·Prestige가 묻는다), 달성과 영구 보너스. 환생 1회부터
-    save.gd      (Save) 저장, 불러오기, 오프라인 보상
+    tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
+    save.gd      (Save) 저장, 불러오기, 오프라인 보상. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
     num.gd       (Num) 한국식 숫자 표기
   scenes/
     main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 내비게이션, 패널)
     main.gd      내비게이션이 고른 패널만 보이고 용사(강화)·동료(승급)·단련·업적 탭 점을 갱신하며, 업적·승급·장비 알림(toast.gd)과 마왕 엔딩 창을 띄운다
-    top_bar.gd(보스 시간 또는 도전 이름), skill_bar.gd(쿨타임·지속 시간 막, 봉인), nav_bar.gd(탭 버튼 6개와 점), toast.gd(잠깐 뜨는 알림), tabs/buy_bar.gd
-    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전)
+    top_bar.gd(보스 시간·도전 이름·탑 층과 시간), skill_bar.gd(쿨타임·지속 시간 막, 봉인), nav_bar.gd(탭 버튼 6개와 점), toast.gd(잠깐 뜨는 알림), tabs/buy_bar.gd
+    battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전), tower_controls(시련의 탑 입구)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경, 마왕성 성벽), zones(스테이지→몬스터 종류·색조·팔레트, 마왕성과 마왕)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
     tabs/        hero(레벨업과 장비 3칸), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생), achievements(+challenge_panel 도전), settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다

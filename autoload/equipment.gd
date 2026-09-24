@@ -89,6 +89,14 @@ func gold_multiplier() -> float:
 	return 1.0 if Challenges.blocks_equipment() else 1.0 + effect(Balance.Slot.CHARM)
 
 
+## 시련의 탑 보상 등 밖에서 주는 강화석
+func add_stones(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	stones += amount
+	stones_changed.emit(stones)
+
+
 ## 장비가 떨어졌다. 지금 것보다 좋으면(같아도) 장착하고 옛것을 분해하며, 아니면 새것을 분해한다. 장착했으면 true
 func drop(slot: int, grade: int, stage: int) -> bool:
 	var better := not has_item(slot) \

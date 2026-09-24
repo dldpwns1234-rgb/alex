@@ -36,6 +36,8 @@ func _ready() -> void:
 	_battle.add_child(_toast)
 	Game.demon_king_defeated.connect(_on_demon_king_defeated)
 	Challenges.completed.connect(_on_challenge_completed)
+	Tower.floor_cleared.connect(_on_floor_cleared)
+	Tower.failed.connect(_on_tower_failed)
 	Save.offline_reward.connect(_on_offline_reward)
 	_nav.tab_selected.connect(_show_panel)
 	_nav.select(0)
@@ -102,6 +104,20 @@ func _on_reborn(reward: float) -> void:
 
 func _on_challenge_completed(index: int) -> void:
 	_toast.show_message("도전 달성 · %s" % Balance.challenge_name(index))
+
+
+## 탑: 첫 돌파면 보상을, 다시 오른 층이면 돌파만 알린다
+func _on_floor_cleared(floor: int, stones: float, threads: float) -> void:
+	var reward := ""
+	if stones > 0.0:
+		reward += " · 강화석 +%s" % Num.format(stones)
+	if threads > 0.0:
+		reward += " · 운명의 실 +%s" % Num.format(threads)
+	_toast.show_message("시련의 탑 %d층 돌파%s" % [floor, reward])
+
+
+func _on_tower_failed(floor: int) -> void:
+	_toast.show_message("시련의 탑 %d층 실패" % floor)
 
 
 ## 마왕을 처음 잡았을 때만 엔딩: 기록을 보이고 무한 모드로 이어진다 (통계는 Achievements가 먼저 올린다)

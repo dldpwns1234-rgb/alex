@@ -10,6 +10,7 @@ signal monster_damaged(hp: float)         # 체력바 갱신용. 탭 피해와 �
 signal tap_hit(amount: float, crit: bool)  # 탭 피해 숫자 연출용. crit는 클릭 치명타
 signal monster_killed(reward: float)
 signal demon_king_defeated()          # 마왕(1000의 배수 스테이지 보스)을 잡았다. 엔딩과 통계에 쓴다
+signal tower_changed(in_tower: bool)  # 시련의 탑에 들어가거나 나왔다
 signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
 signal farming_changed(farming: bool)
@@ -27,6 +28,7 @@ var monster_hp: float = 0.0
 var monster_max_hp: float = 0.0
 var respawn_left: float = 0.0       # 0보다 크면 다음 몬스터를 기다리는 중 (초)
 var auto_retry: bool = true         # 파밍 중 잡을 수 있을 것 같으면 스스로 보스에 도전 (저장됨)
+var in_tower: bool = false          # 시련의 탑 안. 저장하지 않는다 (불러오면 본편)
 var tap_rate: float = 0.0           # 최근 창의 초당 탭 수. 자동 재도전의 예상 DPS에 쓴다
 var _taps_in_window: int = 0
 var _tap_window_left: float = 0.0
@@ -35,6 +37,7 @@ var _farm_seconds: float = 0.0      # 파밍 시작(또는 취소) 뒤 흐른 �
 
 ## 새 판 시작 상태로 되돌린다. 회귀(M5)에서도 쓴다
 func reset() -> void:
+	_drop_tower()
 	stage = Rebirth.start_stage()  # 예지(운명의 상점)가 있으면 앞 스테이지를 건너뛰고 그만큼의 골드를 유산으로 받는다
 	gold = Rebirth.inheritance()
 	highest_stage = stage
@@ -58,7 +61,7 @@ func to_dict() -> Dictionary:
 		"gold": gold,
 		"stage": stage,
 		"highest_stage": highest_stage,
-		"kills": kills,
+		"kills": 0 if in_tower else kills,  # 탑의 처치 수는 본편 것이 아니다
 		"farming": farming,
 		"auto_retry": auto_retry,
 	}
@@ -66,6 +69,7 @@ func to_dict() -> Dictionary:
 
 ## 저장 데이터를 적용한다. 없는 필드는 기본값으로 채운다 (옛 저장 호환)
 func from_dict(data: Dictionary) -> void:
+	_drop_tower()
 	gold = maxf(float(data.get("gold", 0.0)), 0.0)
 	stage = maxi(int(data.get("stage", 1)), 1)
 	highest_stage = maxi(int(data.get("highest_stage", stage)), stage)
@@ -103,8 +107,40 @@ func is_monster_alive() -> bool:
 	return respawn_left <= 0.0 and monster_hp > 0.0
 
 
+## 탑 안에서는 보스가 없다 (마법사 보스 배율, 보스 타이머, 파밍 조작이 본편 스테이지를 따르지 않게)
 func is_boss_stage() -> bool:
-	return Balance.is_boss_stage(stage)
+	return Balance.is_boss_stage(stage) and not in_tower
+
+
+## 그림과 배경에 쓰는 스테이지. 탑 안이면 층에 해당하는 스테이지
+func visual_stage() -> int:
+	return Balance.tower_stage(Tower.floor) if in_tower else stage
+
+
+## 시련의 탑에 들어간다·나온다 (Tower가 부른다). 본편의 몬스터는 다시 나온다
+func enter_tower() -> void:
+	_switch_tower(true)
+
+
+func exit_tower() -> void:
+	_switch_tower(false)
+
+
+## 판을 새로 시작하거나 불러오면 탑 밖이다 (Tower는 회귀·환생 시그널로 층을 지운다)
+func _drop_tower() -> void:
+	if in_tower:
+		in_tower = false
+		tower_changed.emit(false)
+
+
+func _switch_tower(inside: bool) -> void:
+	in_tower = inside
+	kills = 0
+	boss_queued = false
+	tower_changed.emit(inside)
+	boss_queued_changed.emit(boss_queued)
+	_spawn_monster()
+	kills_changed.emit(kills)
 
 
 ## 다음 몬스터가 나오기까지: 0.3초에서 도발 단련과 바람의 걸음(기억의 상점)을 뺀 값. 최소 0.05초
@@ -141,7 +177,7 @@ func _advance_stage() -> void:
 func _spawn_monster() -> void:
 	respawn_left = 0.0
 	var boss := is_boss_stage()
-	monster_max_hp = Balance.enemy_hp(stage)
+	monster_max_hp = Tower.monster_hp() if in_tower else Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp
 	boss_time_left = boss_limit(stage) if boss else 0.0
 	monster_spawned.emit(monster_max_hp, boss)

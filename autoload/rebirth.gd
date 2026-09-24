@@ -80,6 +80,14 @@ func perform() -> bool:
 	return true
 
 
+## 시련의 탑 보상 등 환생 밖에서 주는 실
+func add_threads(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	threads += amount
+	threads_changed.emit(threads)
+
+
 func level(index: int) -> int:
 	return fate_levels[index]
 

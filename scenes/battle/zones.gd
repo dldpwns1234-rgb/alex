@@ -50,6 +50,8 @@ const CASTLE_NAMES: Array[String] = ["임프", "가고일", "흑기사"]
 const CASTLE_HEAD_TOPS: Array[float] = [0.2, 0.16, 0.1]
 const CASTLE_PALETTE: Array = [Color("1a0b1e"), Color("5a1030"), Color("120810"), Color("261426"), Color("e0403a")]
 const DEMON_KING_TEXTURE: Texture2D = preload("res://assets/sprites/monsters/demon_king.svg")
+# 시련의 탑: 잿빛 돌탑. 몬스터는 층에 해당하는 스테이지의 것이 나온다
+const TOWER_PALETTE: Array = [Color("2a2a3a"), Color("55566a"), Color("1e1e2a"), Color("3a3a4a"), Color("d0d4e0")]
 const DEMON_KING_NAME: String = "마왕"
 
 

@@ -58,6 +58,8 @@ func _ready() -> void:
 	Game.monster_killed.connect(_refresh_timer.unbind(1))
 	Game.boss_failed.connect(_refresh_timer)
 	Challenges.challenge_changed.connect(_refresh_timer)
+	Tower.timer_changed.connect(_on_tower_timer_changed)
+	Game.tower_changed.connect(_on_tower_changed)
 	# Game은 오토로드라 이미 준비돼 있으므로 현재 값을 직접 읽어 채운다
 	_on_gold_changed(Game.gold)
 	_on_crystals_changed(Prestige.crystals)
@@ -93,19 +95,31 @@ func _on_crystals_changed(crystals: float) -> void:
 
 
 func _on_stage_changed(stage: int) -> void:
-	_stage_label.text = "스테이지 %d" % stage
+	_stage_label.text = "탑 %d층" % Tower.floor if Game.in_tower else "스테이지 %d" % stage
+
+
+func _on_tower_changed(_inside: bool) -> void:
+	_on_stage_changed(Game.stage)
+	_refresh_timer()
+
+
+func _on_tower_timer_changed(seconds_left: float) -> void:
+	_timer_label.text = "탑 %d초" % ceili(seconds_left)
+	_on_stage_changed(Game.stage)  # 층이 오르면 라벨도 따라간다
 
 
 func _on_boss_timer_changed(seconds_left: float) -> void:
 	_timer_label.text = "보스 %d초" % ceili(seconds_left)
 
 
-## 보스가 살아 있는 동안은 남은 시간을, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다 (배치가 변하지 않게)
+## 탑 안이면 층 남은 시간, 보스가 살아 있으면 남은 시간, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다
 func _refresh_timer() -> void:
 	var boss := Game.is_boss_stage() and Game.is_monster_alive()
 	var challenge := Challenges.active >= 0
-	_timer_label.modulate.a = 1.0 if boss or challenge else 0.0
-	if boss:
+	_timer_label.modulate.a = 1.0 if boss or challenge or Game.in_tower else 0.0
+	if Game.in_tower:
+		_on_tower_timer_changed(Tower.time_left)
+	elif boss:
 		_on_boss_timer_changed(Game.boss_time_left)
 	elif challenge:
 		_timer_label.text = Balance.challenge_name(Challenges.active)

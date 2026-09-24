@@ -9,6 +9,7 @@ const SAVE_VERSION: int = 1
 const DEFAULT_SAVE_PATH: String = "user://save.json"
 const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 주기
 const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
+const WebHooks := preload("res://autoload/save/web_hooks.gd")
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
 ## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막는다 (시뮬레이션은 _ready 한 번에 수십 초를 써서 공백으로 잡힌다)
@@ -16,26 +17,13 @@ var blocked: bool = false
 var _autosave_left: float = AUTOSAVE_INTERVAL
 var _last_unix: float = Time.get_unix_time_from_system()
 var _base64_regex := RegEx.create_from_string(BASE64_PATTERN)
-var _web_callback: JavaScriptObject  # 브라우저 이벤트 콜백. 참조를 잃으면 수거된다
+var _web_hooks: WebHooks  # 브라우저 이벤트로 저장 (웹). 참조를 잃으면 콜백이 수거된다
 
 
 func _ready() -> void:
 	_last_unix = Time.get_unix_time_from_system()
-	_hook_browser_events()
+	_web_hooks = WebHooks.new(save_game)
 	load_game()
-
-
-## 웹에서는 창 blur가 포커스 아웃 알림으로 오지 않는다 (M3 검사). 탭이 숨겨지거나 닫힐 때의 브라우저 이벤트를 직접 받아 저장한다
-func _hook_browser_events() -> void:
-	if not OS.has_feature("web"):
-		return
-	_web_callback = JavaScriptBridge.create_callback(_on_browser_event)
-	JavaScriptBridge.get_interface("document").addEventListener("visibilitychange", _web_callback)
-	JavaScriptBridge.get_interface("window").addEventListener("pagehide", _web_callback)
-
-
-func _on_browser_event(_args: Array) -> void:
-	save_game()
 
 
 func _process(delta: float) -> void:
@@ -92,6 +80,7 @@ func to_dict() -> Dictionary:
 		"equipment": Equipment.to_dict(),
 		"automation": Automation.to_dict(),
 		"challenges": Challenges.to_dict(),
+		"tower": Tower.to_dict(),
 	}
 
 
@@ -108,6 +97,7 @@ func from_dict(data: Dictionary) -> void:
 	Game.from_dict(_section(data, "game"))
 	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
 	Challenges.from_dict(_section(data, "challenges"))
+	Tower.from_dict(_section(data, "tower"))
 
 
 ## 저장 데이터의 한 부분. 없거나 딕셔너리가 아니면 빈 딕셔너리 (각 오토로드가 기본값으로 채운다)
@@ -176,6 +166,7 @@ func reset_data() -> void:
 	Game.reset()
 	Automation.reset()
 	Challenges.reset()
+	Tower.reset()
 	save_game()
 
 

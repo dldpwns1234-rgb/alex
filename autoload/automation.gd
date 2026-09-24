@@ -14,13 +14,14 @@ func _ready() -> void:
 	Game.stage_changed.connect(_on_stage_changed)
 	Prestige.prestiged.connect(_on_new_run)
 	Rebirth.reborn.connect(_on_new_run)
+	Game.tower_changed.connect(_restart_clock.unbind(1))  # 탑에 다녀온 시간은 정체가 아니다
 
 
-## 정체 시계를 재고, 자동 회귀와 자동 스킬을 돌린다. 보스와 싸우는 중이거나 도전 판이면 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
+## 정체 시계를 재고, 자동 회귀와 자동 스킬을 돌린다. 보스와 싸우는 중, 도전 판, 탑 안에서는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
 func _process(delta: float) -> void:
 	_stall += minf(delta, Balance.MAX_DELTA)
 	if is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige() and _stall >= Balance.AUTO_PRESTIGE_STALL \
-			and not _boss_alive() and Challenges.active < 0:
+			and not _boss_alive() and Challenges.active < 0 and not Game.in_tower:
 		Prestige.perform()
 	if is_active(Balance.Auto.SKILLS):
 		use_skills()

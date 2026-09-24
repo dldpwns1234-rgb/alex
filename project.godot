@@ -31,6 +31,8 @@ Equipment="*res://autoload/equipment.gd"
 Automation="*res://autoload/automation.gd"
 ; 도전 판은 Game·Prestige·Rebirth의 시그널을 받고 Party·Skills·Game·Equipment·Prestige가 제한을 묻는다
 Challenges="*res://autoload/challenges.gd"
+; 시련의 탑은 Game·Equipment·Rebirth·Achievements를 쓰고 Save가 불러온다
+Tower="*res://autoload/tower.gd"
 Save="*res://autoload/save.gd"
 
 [display]
