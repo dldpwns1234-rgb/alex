@@ -116,10 +116,15 @@ func _test_shop_and_effects() -> void:
 	Party.companion_levels[Balance.Companion.CLERIC] = 7
 	Game.highest_stage = 130
 	_equal(Prestige.perform(), true, "회귀")
-	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 50, "전사는 250의 20%인 50레벨로 시작")
-	_equal(Party.companion_levels[Balance.Companion.CLERIC], 1, "성직자는 7의 20%를 내림한 1레벨")
-	_equal(Party.companion_levels[Balance.Companion.ARCHER], 0, "없던 동료는 그대로 0")
+	_equal(Party.companion_level(Balance.Companion.WARRIOR), 50, "전사는 250의 20%인 50레벨로 시작")
+	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 0, "산 레벨은 0이라 레벨업 비용이 처음부터다")
+	_equal(Party.companion_memory[Balance.Companion.WARRIOR], 50, "기억 레벨 50")
+	_close(Party.companion_purchase(Balance.Companion.WARRIOR).cost, Balance.companion_base_cost(Balance.Companion.WARRIOR), "다음 레벨 비용은 기본 비용")
+	_equal(Party.companion_level(Balance.Companion.CLERIC), 1, "성직자는 7의 20%를 내림한 1레벨")
+	_equal(Party.companion_level(Balance.Companion.ARCHER), 0, "없던 동료는 그대로 0")
 	_equal(Party.hero_level, 1, "용사는 기억하지 않는다")
+	_equal(Promotions.is_unlocked(Balance.Companion.WARRIOR), true, "기억 레벨 50으로 승급 1단계가 열린다")
+	_close(Party.party_dps(false), Balance.party_dps([50, 0, 0, 1], false, Party._mods()) * Party._party_bonus(false), "DPS는 기억 레벨로 센다")
 	Rebirth.fate_levels[Balance.Fate.FORESIGHT] = 0
 	Game.reset()
 	_equal(Party.is_companion_unlocked(Balance.Companion.CLERIC), true, "기억으로 레벨이 있는 동료는 합류 제한이 없다")
@@ -127,7 +132,14 @@ func _test_shop_and_effects() -> void:
 	_equal(Rebirth.perform(), false, "환생 조건 미달")
 	Game.highest_stage = 500
 	_equal(Rebirth.perform(), true, "환생")
-	_equal(Party.companion_levels[Balance.Companion.WARRIOR], 10, "환생 뒤에도 동료 기억 (50의 20%)")
+	_equal(Party.companion_level(Balance.Companion.WARRIOR), 10, "환생 뒤에도 동료 기억 (50의 20%)")
+	var data := Save.to_dict()
+	Party.reset()
+	_equal(data["party"].has("companion_memory"), true, "기억 레벨이 저장된다")
+	Save.from_dict(data)
+	_equal(Party.companion_memory[Balance.Companion.WARRIOR], 10, "기억 레벨 복원")
+	Save.from_dict({"save_version": 1, "party": {"companion_levels": [3, 0, 0, 0]}})
+	_equal(Party.companion_level(Balance.Companion.WARRIOR), 3, "옛 저장은 기억 레벨 0")
 
 
 func _test_save() -> void:

@@ -135,7 +135,7 @@ func _on_promote_pressed(index: int) -> void:
 func _refresh() -> void:
 	for i in _buttons.size():
 		var name := Balance.companion_name(i)
-		var level := Party.companion_levels[i]
+		var level := Party.companion_level(i)
 		_portraits[i].self_modulate = Color.WHITE if level > 0 else LOCKED_PORTRAIT_COLOR
 		_note_labels[i].text = Balance.companion_note(i)
 		_refresh_promote(i)

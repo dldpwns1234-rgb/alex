@@ -52,7 +52,7 @@ func next_level(index: int) -> int:
 
 ## 동료 레벨이 다음 승급 레벨에 닿았는지 (최고 단계면 false)
 func is_unlocked(index: int) -> bool:
-	return not is_maxed(index) and Party.companion_levels[index] >= next_level(index)
+	return not is_maxed(index) and Party.companion_level(index) >= next_level(index)
 
 
 ## 다음 승급 비용

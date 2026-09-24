@@ -18,7 +18,8 @@ class Purchase:
 
 
 var hero_level: int = Balance.HERO_START_LEVEL
-var companion_levels: Array[int] = []  # 0 = 미고용
+var companion_levels: Array[int] = []  # 산 레벨. 0 = 미고용 (기억 레벨이 있으면 고용 상태)
+var companion_memory: Array[int] = []  # 동료 기억(운명의 상점)이 얹는 기억 레벨. DPS·승급·단련에는 들고 레벨업 비용에는 안 든다
 var buy_mode: BuyMode = BuyMode.ONE
 
 
@@ -27,19 +28,21 @@ func _ready() -> void:
 
 
 ## 새 판 시작 상태로 되돌린다. 회귀와 환생에서도 쓴다.
-## 동료 기억(운명의 상점)이 있으면 동료는 지난 판 레벨의 일부를 가지고 시작한다 (데이터 초기화는 Rebirth를 먼저 지워 0이 된다)
+## 동료 기억(운명의 상점)이 있으면 지난 판 레벨(산 레벨 + 기억 레벨)의 일부를 기억 레벨로 얹고 시작한다.
+## 산 레벨로 남기면 다음 레벨 비용이 감당 못 할 만큼 뛰어 동료가 굳는다 (docs/BALANCE_SIM.md). 데이터 초기화는 Rebirth를 먼저 지워 0이 된다
 func reset() -> void:
 	hero_level = Balance.HERO_START_LEVEL
-	var previous := companion_levels.duplicate()
 	var ratio := Rebirth.companion_memory_ratio()
+	var remembered: Array[int] = []
+	for i in Balance.COMPANIONS.size():
+		remembered.append(Balance.remembered_level(companion_level(i), ratio) if i < companion_levels.size() else 0)
 	companion_levels.clear()
 	companion_levels.resize(Balance.COMPANIONS.size())
 	companion_levels.fill(0)
-	for i in mini(previous.size(), companion_levels.size()):
-		companion_levels[i] = Balance.remembered_level(previous[i], ratio)
+	companion_memory = remembered
 	hero_changed.emit(hero_level)
 	for i in companion_levels.size():
-		companion_changed.emit(i, 0)
+		companion_changed.emit(i, companion_level(i))
 
 
 ## 저장할 상태 (Save가 부른다)
@@ -47,6 +50,7 @@ func to_dict() -> Dictionary:
 	return {
 		"hero_level": hero_level,
 		"companion_levels": companion_levels.duplicate(),
+		"companion_memory": companion_memory.duplicate(),
 		"buy_mode": buy_mode,
 	}
 
@@ -57,15 +61,34 @@ func from_dict(data: Dictionary) -> void:
 	companion_levels.clear()
 	companion_levels.resize(Balance.COMPANIONS.size())
 	companion_levels.fill(0)
-	var saved: Variant = data.get("companion_levels", [])
-	if saved is Array:
-		for i in mini(saved.size(), companion_levels.size()):
-			companion_levels[i] = maxi(int(saved[i]), 0)
+	companion_memory.clear()
+	companion_memory.resize(Balance.COMPANIONS.size())
+	companion_memory.fill(0)
+	_read_levels(data.get("companion_levels", []), companion_levels)
+	_read_levels(data.get("companion_memory", []), companion_memory)
 	buy_mode = clampi(int(data.get("buy_mode", BuyMode.ONE)), BuyMode.ONE, BuyMode.MAX) as BuyMode
 	hero_changed.emit(hero_level)
 	for i in companion_levels.size():
-		companion_changed.emit(i, companion_levels[i])
+		companion_changed.emit(i, companion_level(i))
 	buy_mode_changed.emit(buy_mode)
+
+
+func _read_levels(saved: Variant, into: Array[int]) -> void:
+	if saved is Array:
+		for i in mini(saved.size(), into.size()):
+			into[i] = maxi(int(saved[i]), 0)
+
+
+## 동료의 실제 레벨 = 산 레벨 + 기억 레벨. DPS, 승급, 단련 해금, 표시에 쓴다
+func companion_level(index: int) -> int:
+	return companion_levels[index] + companion_memory[index]
+
+
+func companion_level_list() -> Array[int]:
+	var levels: Array[int] = []
+	for i in companion_levels.size():
+		levels.append(companion_level(i))
+	return levels
 
 
 ## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
@@ -80,15 +103,15 @@ func click_damage() -> float:
 ## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
 ## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다
 func party_dps(boss: bool, with_skills: bool = true) -> float:
-	var dps := Balance.party_dps(companion_levels, boss, _mods()) * _party_bonus(boss)
+	var dps := Balance.party_dps(companion_level_list(), boss, _mods()) * _party_bonus(boss)
 	return dps * Skills.party_multiplier() if with_skills else dps
 
 
 ## 동료 한 명이 실제로 내는 DPS (성직자 버프, 승급, 검술의 기억, 단련, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
 func companion_dps(index: int, boss: bool) -> float:
 	var mods := _mods()
-	var cleric := Balance.cleric_multiplier(companion_levels[Balance.Companion.CLERIC], mods["cleric_buff"])
-	var dps := Balance.companion_dps(index, companion_levels[index], boss, mods) * cleric
+	var cleric := Balance.cleric_multiplier(companion_level(Balance.Companion.CLERIC), mods["cleric_buff"])
+	var dps := Balance.companion_dps(index, companion_level(index), boss, mods) * cleric
 	return dps * _party_bonus(boss) * Skills.party_multiplier()
 
 
@@ -111,7 +134,7 @@ func _boss_bonus(boss: bool) -> float:
 
 
 func is_companion_hired(index: int) -> bool:
-	return companion_levels[index] > 0
+	return companion_level(index) > 0
 
 
 ## 이번 판에서 합류 스테이지에 도달했으면 고용할 수 있다. 동료 기억으로 이미 레벨이 있으면 합류 제한이 없다
@@ -143,7 +166,7 @@ func buy_hero() -> bool:
 	return true
 
 
-## 레벨 0이면 고용, 아니면 레벨업. 합류 전이거나 골드가 모자라면 false
+## 산 레벨 0이면 고용, 아니면 레벨업 (비용은 산 레벨 기준). 합류 전이거나 골드가 모자라면 false
 func buy_companion(index: int) -> bool:
 	if not is_companion_unlocked(index):
 		return false
@@ -151,7 +174,7 @@ func buy_companion(index: int) -> bool:
 	if not Game.spend(purchase.cost):
 		return false
 	companion_levels[index] += purchase.count
-	companion_changed.emit(index, companion_levels[index])
+	companion_changed.emit(index, companion_level(index))
 	return true
 
 

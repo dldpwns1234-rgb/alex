@@ -156,7 +156,7 @@ func _on_hero_changed(level: int) -> void:
 ## 동시에 고용한 동료 수
 func _on_companion_changed(_index: int, _level: int) -> void:
 	var hired := 0
-	for level in Party.companion_levels:
+	for level in Party.companion_level_list():
 		if level > 0:
 			hired += 1
 	raise(Balance.Stat.PARTY, float(hired))

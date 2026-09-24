@@ -164,7 +164,7 @@ func _on_stage_changed(stage: int) -> void:
 		for level in Training.levels:
 			trained += level
 		_report("%s  스테이지 %3d  용사 Lv %d  동료 %s  단련 %d  골드 %s" % [
-			_clock(_t), stage, Party.hero_level, str(Party.companion_levels), trained, Num.format(Game.gold)])
+			_clock(_t), stage, Party.hero_level, str(Party.companion_level_list()), trained, Num.format(Game.gold)])
 
 
 func _on_companion_changed(index: int, level: int) -> void:

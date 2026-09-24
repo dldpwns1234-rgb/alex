@@ -60,7 +60,7 @@ func _ready() -> void:
 	_refresh_progress()
 	_on_farming_changed(Game.farming)
 	for i in Party.companion_levels.size():
-		_on_companion_changed(i, Party.companion_levels[i])
+		_on_companion_changed(i, Party.companion_level(i))
 
 
 ## 동료 공격 연출: 고용한 동료마다 약 1초에 한 번 튀어나가며 그동안 준 피해를 숫자로 띄운다

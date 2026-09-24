@@ -37,7 +37,7 @@ func from_dict(data: Dictionary) -> void:
 ## 주인(용사 또는 동료)의 현재 레벨
 func owner_level(index: int) -> int:
 	var owner := Balance.training_owner(index)
-	return Party.hero_level if owner == Balance.OWNER_HERO else Party.companion_levels[owner]
+	return Party.hero_level if owner == Balance.OWNER_HERO else Party.companion_level(owner)
 
 
 func is_unlocked(index: int) -> bool:

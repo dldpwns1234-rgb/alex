@@ -22,7 +22,7 @@ const FORESIGHT_STAGES: int = 25          # 예지: 레벨당 회귀 후 시작 
 enum Auto { PRESTIGE, MEMORIES, SKILLS }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬 운명이 셋째를 연다
 const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용"]
 const AUTO_PRESTIGE_STALL: float = 30.0   # 자동 회귀: 최고 스테이지가 이만큼(초) 오르지 않으면 회귀 (13절의 사람 정책)
-const COMPANION_MEMORY_PER_LEVEL: float = 0.1  # 동료 기억: 레벨당 지난 판 동료 레벨의 10%를 가지고 시작
+const COMPANION_MEMORY_PER_LEVEL: float = 0.1  # 동료 기억: 레벨당 지난 판 동료 레벨의 10%를 기억 레벨로 얹고 시작 (비용에는 안 든다)
 
 
 func can_rebirth(best_stage: int) -> bool:
@@ -84,7 +84,7 @@ func fate_note(index: int) -> String:
 			return "최고 스테이지가 %d초 동안 오르지 않으면 스스로 회귀하고 결정을 싼 것부터 산다" % roundi(AUTO_PRESTIGE_STALL)
 		Fate.AUTO_SKILLS:
 			return "쿨타임이 끝나면 스킬을 바로 쓴다"
-	return "회귀 뒤 동료가 지난 판 레벨의 %d%%로 시작" % roundi(COMPANION_MEMORY_PER_LEVEL * 100.0)
+	return "회귀 뒤 동료 레벨의 %d%%를 기억으로 얹고 시작" % roundi(COMPANION_MEMORY_PER_LEVEL * 100.0)
 
 
 ## 토글을 여는 운명
