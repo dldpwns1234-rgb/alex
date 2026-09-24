@@ -57,9 +57,9 @@ func can_prestige() -> bool:
 	return Balance.can_prestige(Game.highest_stage)
 
 
-## 지금 회귀하면 받을 결정 (인연이 곱해진다)
+## 지금 회귀하면 받을 결정 (인연과 맨몸의 회귀 보너스가 곱해진다)
 func crystal_reward() -> float:
-	return Balance.crystal_reward(Game.highest_stage) * Rebirth.crystal_multiplier()
+	return Balance.crystal_reward(Game.highest_stage) * Rebirth.crystal_multiplier() * Challenges.crystal_multiplier()
 
 
 ## 회귀: 결정을 받고 새 판을 시작한다. 결정, 상점 레벨, 통계, 업적, 장비는 남는다
@@ -108,23 +108,27 @@ func buy(index: int) -> bool:
 	return true
 
 
-# 효과. 각 오토로드가 공식에 곱하거나 더한다
+# 효과. 각 오토로드가 공식에 곱하거나 더한다. 맨몸의 회귀 도전 중에는 효과 레벨이 0이다 (상점 표시는 level()로 그대로)
+
+func effect_level(index: int) -> int:
+	return 0 if Challenges.blocks_memories() else memory_levels[index]
+
 
 func sword_multiplier() -> float:
-	return Balance.sword_multiplier(level(Balance.Memory.SWORD))
+	return Balance.sword_multiplier(effect_level(Balance.Memory.SWORD))
 
 
 func gold_multiplier() -> float:
-	return Balance.gold_memory_multiplier(level(Balance.Memory.GOLD))
+	return Balance.gold_memory_multiplier(effect_level(Balance.Memory.GOLD))
 
 
 func awakening_share() -> float:
-	return Balance.awakening_share(level(Balance.Memory.AWAKENING))
+	return Balance.awakening_share(effect_level(Balance.Memory.AWAKENING))
 
 
 ## 바람의 걸음: 재등장 대기에서 빼는 초
 func wind_respawn_cut() -> float:
-	return Balance.wind_respawn_cut(level(Balance.Memory.WIND))
+	return Balance.wind_respawn_cut(effect_level(Balance.Memory.WIND))
 
 
 ## 저장 데이터의 레벨 상한. 0(무한)이면 그대로

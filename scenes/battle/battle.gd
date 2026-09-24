@@ -68,7 +68,7 @@ func _process(delta: float) -> void:
 	if not Game.is_monster_alive():
 		return
 	for i in _attack_clocks.size():
-		if not Party.is_companion_hired(i):
+		if not Party.is_companion_hired(i) or Challenges.blocks_companions():  # 홀로 서기 도전 중에는 동료가 싸우지 않는다
 			continue
 		_attack_clocks[i] += delta
 		if _attack_clocks[i] < ATTACK_INTERVAL:

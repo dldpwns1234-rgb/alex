@@ -86,10 +86,11 @@ func set_auto_retry(on: bool) -> void:
 	auto_retry_changed.emit(auto_retry)
 
 
-## 보스전의 제한 시간: 기본 + 시간의 모래 + 화염 폭발 단련 (마왕이면 +30초). at_stage는 기본이 지금 스테이지
+## 보스전의 제한 시간: (기본 + 시간의 모래 + 화염 폭발 단련 + 도전 보너스, 마왕이면 +30초) × 시간의 채찍. at_stage는 기본이 지금 스테이지
 func boss_limit(at_stage: int = stage) -> float:
-	var limit := Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND), at_stage)
-	return limit + Training.value(Balance.Effect.BOSS_TIME)
+	var limit := Balance.boss_time_limit(Prestige.effect_level(Balance.Memory.SAND), at_stage)
+	limit += Training.value(Balance.Effect.BOSS_TIME) + Challenges.boss_time_bonus()
+	return limit * Challenges.boss_time_scale()
 
 
 ## 파밍 중인 스테이지 다음의 보스(마왕 포함)를 지금 DPS(동료 + 클릭 × 최근 탭 빈도)로 제한 시간 안에 잡을 것 같은지

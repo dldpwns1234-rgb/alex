@@ -91,24 +91,28 @@ func companion_level_list() -> Array[int]:
 	return levels
 
 
-## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
+## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 도전 보너스 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
 func click_damage() -> float:
 	var boss := Game.is_boss_stage()
 	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier() * Achievements.damage_multiplier()
-	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier()
+	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier() * Challenges.click_multiplier()
 	base *= (1.0 + Training.value(Balance.Effect.CLICK_DAMAGE)) * _boss_bonus(boss)
 	return base + party_dps(boss) * Prestige.awakening_share()
 
 
 ## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
-## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다
+## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다. 홀로 서기 도전 중에는 0
 func party_dps(boss: bool, with_skills: bool = true) -> float:
+	if Challenges.blocks_companions():
+		return 0.0
 	var dps := Balance.party_dps(companion_level_list(), boss, _mods()) * _party_bonus(boss)
 	return dps * Skills.party_multiplier() if with_skills else dps
 
 
 ## 동료 한 명이 실제로 내는 DPS (성직자 버프, 승급, 검술의 기억, 단련, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
 func companion_dps(index: int, boss: bool) -> float:
+	if Challenges.blocks_companions():
+		return 0.0
 	var mods := _mods()
 	var cleric := Balance.cleric_multiplier(companion_level(Balance.Companion.CLERIC), mods["cleric_buff"])
 	var dps := Balance.companion_dps(index, companion_level(index), boss, mods) * cleric
@@ -168,7 +172,7 @@ func buy_hero() -> bool:
 
 ## 산 레벨 0이면 고용, 아니면 레벨업 (비용은 산 레벨 기준). 합류 전이거나 골드가 모자라면 false
 func buy_companion(index: int) -> bool:
-	if not is_companion_unlocked(index):
+	if not is_companion_unlocked(index) or Challenges.blocks_companions():
 		return false
 	var purchase := companion_purchase(index)
 	if not Game.spend(purchase.cost):

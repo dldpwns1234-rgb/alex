@@ -16,10 +16,11 @@ func _ready() -> void:
 	Rebirth.reborn.connect(_on_new_run)
 
 
-## 정체 시계를 재고, 자동 회귀와 자동 스킬을 돌린다. 보스와 싸우는 중에는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
+## 정체 시계를 재고, 자동 회귀와 자동 스킬을 돌린다. 보스와 싸우는 중이거나 도전 판이면 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
 func _process(delta: float) -> void:
 	_stall += minf(delta, Balance.MAX_DELTA)
-	if is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige() and _stall >= Balance.AUTO_PRESTIGE_STALL and not _boss_alive():
+	if is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige() and _stall >= Balance.AUTO_PRESTIGE_STALL \
+			and not _boss_alive() and Challenges.active < 0:
 		Prestige.perform()
 	if is_active(Balance.Auto.SKILLS):
 		use_skills()

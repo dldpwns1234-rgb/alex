@@ -57,6 +57,7 @@ func _ready() -> void:
 	Game.monster_spawned.connect(_refresh_timer.unbind(2))
 	Game.monster_killed.connect(_refresh_timer.unbind(1))
 	Game.boss_failed.connect(_refresh_timer)
+	Challenges.challenge_changed.connect(_refresh_timer)
 	# Game은 오토로드라 이미 준비돼 있으므로 현재 값을 직접 읽어 채운다
 	_on_gold_changed(Game.gold)
 	_on_crystals_changed(Prestige.crystals)
@@ -99,9 +100,12 @@ func _on_boss_timer_changed(seconds_left: float) -> void:
 	_timer_label.text = "보스 %d초" % ceili(seconds_left)
 
 
-## 보스가 살아 있는 동안만 남은 시간을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다 (배치가 변하지 않게)
+## 보스가 살아 있는 동안은 남은 시간을, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다 (배치가 변하지 않게)
 func _refresh_timer() -> void:
-	var shown := Game.is_boss_stage() and Game.is_monster_alive()
-	_timer_label.modulate.a = 1.0 if shown else 0.0
-	if shown:
+	var boss := Game.is_boss_stage() and Game.is_monster_alive()
+	var challenge := Challenges.active >= 0
+	_timer_label.modulate.a = 1.0 if boss or challenge else 0.0
+	if boss:
 		_on_boss_timer_changed(Game.boss_time_left)
+	elif challenge:
+		_timer_label.text = Balance.challenge_name(Challenges.active)

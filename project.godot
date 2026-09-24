@@ -29,6 +29,8 @@ Achievements="*res://autoload/achievements.gd"
 Equipment="*res://autoload/equipment.gd"
 ; 자동화는 Game·Prestige·Rebirth의 시그널을 받고 Save가 불러온다
 Automation="*res://autoload/automation.gd"
+; 도전 판은 Game·Prestige·Rebirth의 시그널을 받고 Party·Skills·Game·Equipment·Prestige가 제한을 묻는다
+Challenges="*res://autoload/challenges.gd"
 Save="*res://autoload/save.gd"
 
 [display]

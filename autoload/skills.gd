@@ -59,10 +59,10 @@ func duration() -> float:
 	return Balance.SKILL_DURATION + Training.value(Balance.Effect.SKILL_DURATION)
 
 
-## 쿨타임: 5분 × 명상 × 마나 순환 단련
+## 쿨타임: 5분 × 명상 × 마나 순환 단련 × 침묵의 검 보너스
 func cooldown() -> float:
-	var base := Balance.skill_cooldown(Prestige.level(Balance.Memory.MEDITATION))
-	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN))
+	var base := Balance.skill_cooldown(Prestige.effect_level(Balance.Memory.MEDITATION))
+	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN)) * Challenges.cooldown_multiplier()
 
 
 ## 남은 지속 시간 (초)
@@ -83,8 +83,13 @@ func is_ready(index: int) -> bool:
 	return cooldown_left(index) <= 0.0
 
 
+## 침묵의 검 도전 중에는 봉인된다
+func is_sealed() -> bool:
+	return Challenges.blocks_skills()
+
+
 func can_activate(index: int) -> bool:
-	return is_unlocked(index) and is_ready(index)
+	return is_unlocked(index) and is_ready(index) and not is_sealed()
 
 
 ## 발동. 해금 전이거나 쿨타임 중이면 false

@@ -52,6 +52,11 @@ func _refresh() -> void:
 			button.disabled = true
 			button.theme_type_variation = ""
 			_shades[i].visible = false
+		elif Skills.is_sealed():
+			button.text = "%s\n봉인" % name
+			button.disabled = true
+			button.theme_type_variation = ""
+			_shades[i].visible = false
 		elif Skills.is_active(i):
 			button.text = "%s\n%d초" % [name, ceili(Skills.active_left(i))]
 			button.disabled = true

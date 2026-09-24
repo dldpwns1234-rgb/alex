@@ -1,7 +1,6 @@
 extends Node
-## 저장, 불러오기, 오프라인 보상 (CLAUDE.md 저장 규칙과 시간 규칙, GDD 8절).
-## user://save.json에 JSON으로 저장한다. 30초마다, 그리고 창이나 탭의 포커스를 잃을 때 저장한다.
-## 매 프레임 유닉스 시각을 기록해서 10초 이상 비면 그 시간을 오프라인 보상으로 바꾼다.
+## 저장, 불러오기, 오프라인 보상 (CLAUDE.md 저장 규칙과 시간 규칙, GDD 8절). user://save.json에 JSON으로 저장한다.
+## 30초마다, 그리고 창이나 탭의 포커스를 잃을 때 저장한다. 매 프레임 유닉스 시각을 기록해서 10초 이상 비면 오프라인 보상으로 바꾼다.
 
 signal saved()
 signal offline_reward(seconds: float, gold: float)  # 인정된 시간과 받은 골드. 팝업용
@@ -53,15 +52,14 @@ func _process(delta: float) -> void:
 		save_game()
 
 
-## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다.
-## 동료 DPS와 처치 골드에 기억의 상점, 업적, 장비 효과는 넣고 스킬은 뺀다
+## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다. 동료 DPS와 처치 골드에 기억·업적·장비 효과는 넣고 스킬은 뺀다
 func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var dps := Party.party_dps(false, false)
 	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Game.gold_multiplier()
 	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
-	var gold := Balance.offline_reward(per_second, seconds, Prestige.level(Balance.Memory.NAP),
+	var gold := Balance.offline_reward(per_second, seconds, Prestige.effect_level(Balance.Memory.NAP),
 		Training.value(Balance.Effect.OFFLINE_RATE))
 	if gold > 0.0:
 		Game.add_gold(gold)
@@ -93,11 +91,11 @@ func to_dict() -> Dictionary:
 		"achievements": Achievements.to_dict(),
 		"equipment": Equipment.to_dict(),
 		"automation": Automation.to_dict(),
+		"challenges": Challenges.to_dict(),
 	}
 
 
-## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다.
-## 업적은 회귀 기록(Prestige)을 본 뒤, 통계를 시그널로 받는 Party·Game보다 먼저 불러온다
+## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다. 업적은 회귀 기록(Prestige) 뒤, 통계를 시그널로 받는 Party·Game 앞
 func from_dict(data: Dictionary) -> void:
 	Rebirth.from_dict(_section(data, "rebirth"))
 	Prestige.from_dict(_section(data, "prestige"))
@@ -109,6 +107,7 @@ func from_dict(data: Dictionary) -> void:
 	Training.from_dict(_section(data, "training"))
 	Game.from_dict(_section(data, "game"))
 	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
+	Challenges.from_dict(_section(data, "challenges"))
 
 
 ## 저장 데이터의 한 부분. 없거나 딕셔너리가 아니면 빈 딕셔너리 (각 오토로드가 기본값으로 채운다)
@@ -176,6 +175,7 @@ func reset_data() -> void:
 	Promotions.reset()
 	Game.reset()
 	Automation.reset()
+	Challenges.reset()
 	save_game()
 
 

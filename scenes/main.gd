@@ -35,6 +35,7 @@ func _ready() -> void:
 	_toast = Toast.new()
 	_battle.add_child(_toast)
 	Game.demon_king_defeated.connect(_on_demon_king_defeated)
+	Challenges.completed.connect(_on_challenge_completed)
 	Save.offline_reward.connect(_on_offline_reward)
 	_nav.tab_selected.connect(_show_panel)
 	_nav.select(0)
@@ -95,7 +96,12 @@ func _on_offline_reward(seconds: float, gold: float) -> void:
 
 
 func _on_reborn(reward: float) -> void:
-	_toast.show_message("환생 · 운명의 실 +%s" % Num.format(reward))
+	var opened := " · 도전 판이 열렸다" if Rebirth.rebirth_count == Balance.CHALLENGE_UNLOCK_REBIRTHS else ""
+	_toast.show_message("환생 · 운명의 실 +%s%s" % [Num.format(reward), opened])
+
+
+func _on_challenge_completed(index: int) -> void:
+	_toast.show_message("도전 달성 · %s" % Balance.challenge_name(index))
 
 
 ## 마왕을 처음 잡았을 때만 엔딩: 기록을 보이고 무한 모드로 이어진다 (통계는 Achievements가 먼저 올린다)

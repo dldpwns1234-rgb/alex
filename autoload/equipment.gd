@@ -76,16 +76,17 @@ func effect(slot: int) -> float:
 	return Balance.item_effect(item_grade(slot), item_stage(slot), enhance_levels[slot])
 
 
+## 빈손 도전 중에는 세 칸 모두 효과가 없다
 func click_multiplier() -> float:
-	return 1.0 + effect(Balance.Slot.WEAPON)
+	return 1.0 if Challenges.blocks_equipment() else 1.0 + effect(Balance.Slot.WEAPON)
 
 
 func party_multiplier() -> float:
-	return 1.0 + effect(Balance.Slot.BANNER)
+	return 1.0 if Challenges.blocks_equipment() else 1.0 + effect(Balance.Slot.BANNER)
 
 
 func gold_multiplier() -> float:
-	return 1.0 + effect(Balance.Slot.CHARM)
+	return 1.0 if Challenges.blocks_equipment() else 1.0 + effect(Balance.Slot.CHARM)
 
 
 ## 장비가 떨어졌다. 지금 것보다 좋으면(같아도) 장착하고 옛것을 분해하며, 아니면 새것을 분해한다. 장착했으면 true
@@ -94,11 +95,11 @@ func drop(slot: int, grade: int, stage: int) -> bool:
 		or Balance.item_power(grade, stage) >= Balance.item_power(item_grade(slot), item_stage(slot))
 	if better:
 		if has_item(slot):
-			stones += Balance.dismantle_stones(item_grade(slot))
+			stones += Balance.dismantle_stones(item_grade(slot)) * Challenges.stone_multiplier()
 		slots[slot] = {"grade": grade, "stage": stage}
 		equipment_changed.emit(slot)
 	else:
-		stones += Balance.dismantle_stones(grade)
+		stones += Balance.dismantle_stones(grade) * Challenges.stone_multiplier()
 	stones_changed.emit(stones)
 	item_dropped.emit(slot, grade, stage, better)
 	return better

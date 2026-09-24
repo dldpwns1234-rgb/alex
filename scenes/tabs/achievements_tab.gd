@@ -1,8 +1,9 @@
 extends MarginContainer
-## 업적 탭 (GDD 7.5절): 통계별로 묶은 업적 목록과 진행 막, 위에는 달성 수와 보너스 합계. 줄은 코드로 생성한다.
+## 업적 탭 (GDD 7.5절): 통계별로 묶은 업적 목록과 진행 막, 위에는 달성 수와 보너스 합계, 목록 맨 위에 도전 판(challenge_panel.gd). 줄은 코드로 생성한다.
 ## Achievements의 함수만 부르고 표시만 한다. 탭이 보이면 달성을 본 것으로 표시해 내비게이션의 점을 지운다. 상수는 배치용이다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const ChallengePanel := preload("res://scenes/tabs/challenge_panel.gd")
 
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
@@ -44,6 +45,7 @@ func _ready() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", GAP)
 	scroll.add_child(list)
+	list.add_child(ChallengePanel.new())  # 도전 판은 환생 1회부터 목록 맨 위에 (GDD 7.9절)
 	var last_stat := -1
 	for i in Balance.ACHIEVEMENTS.size():
 		var stat := Balance.achievement_stat(i)
