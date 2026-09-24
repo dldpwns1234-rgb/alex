@@ -12,6 +12,7 @@ const NOTE_COLOR := Color("b8b4c8")
 const LOCKED_COLOR := Color("7a7690")
 const HEADER_COLOR := Color("ffe66d")
 const BUTTON_SIZE := Vector2(230, 64)
+const ROW_HEIGHT: float = 128.0  # 설명이 두 줄이 되어도 줄 높이가 변하지 않게 (버튼 자리가 움직이면 누르기 불편하다)
 
 var _titles: Array[Label] = []
 var _notes: Array[Label] = []
@@ -54,6 +55,7 @@ func _make_header(text: String) -> Label:
 
 func _make_row(index: int) -> PanelContainer:
 	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0.0, ROW_HEIGHT)
 	var margin := MarginContainer.new()
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, ROW_PADDING)

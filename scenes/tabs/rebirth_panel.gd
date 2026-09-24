@@ -2,6 +2,7 @@ extends VBoxContainer
 ## 회귀 탭 아래쪽의 환생 (GDD 7.7절): 운명의 실과 환생 횟수, 환생 버튼과 확인 창, 운명의 상점 3종. 줄은 코드로 생성한다.
 ## Rebirth의 함수만 부르고 표시만 한다. 상수는 배치용이다.
 
+const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const GAP: int = 10
 const ROW_PADDING: int = 10
 const NOTE_FONT_SIZE: int = 22
@@ -28,6 +29,8 @@ func _ready() -> void:
 
 	_summary = Label.new()
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.custom_minimum_size = Vector2(0.0, TEXT_BLOCK_HEIGHT)  # 두 줄로 접혀도 아래가 밀리지 않게
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_summary.add_theme_color_override("font_color", THREAD_COLOR)
 	add_child(_summary)
 

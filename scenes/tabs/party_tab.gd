@@ -18,11 +18,13 @@ const NOTE_COLOR := Color("b8b4c8")
 const BUTTON_SIZE := Vector2(250, 72)
 const PROMOTE_SIZE := Vector2(250, 56)
 const BUTTON_GAP: int = 6
+const ROW_HEIGHT: float = 158.0  # 버튼 두 개 높이. 글이 바뀌어도 줄 높이와 버튼 자리가 변하지 않는다
 const PORTRAIT_SIZE := Vector2(72, 72)
 const LOCKED_PORTRAIT_COLOR := Color(0.5, 0.48, 0.6)
 
 var _portraits: Array[TextureRect] = []
 var _title_labels: Array[Label] = []
+var _dps_labels: Array[Label] = []
 var _note_labels: Array[Label] = []
 var _buttons: Array[Button] = []
 var _promote_buttons: Array[Button] = []
@@ -52,6 +54,7 @@ func _ready() -> void:
 
 func _make_row(index: int) -> PanelContainer:
 	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0.0, ROW_HEIGHT)
 	var margin := MarginContainer.new()
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, ROW_PADDING)
@@ -69,20 +72,19 @@ func _make_row(index: int) -> PanelContainer:
 	portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(portrait)
 
+	# 이름과 별, 레벨과 DPS, 특수 효과를 각각 한 줄에 둔다. 숫자가 길어져도 접히지 않고(말줄임) DPS 자리가 고정된다
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(text)
-	var title := Label.new()
-	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var title := _make_line(0, Color.WHITE)
 	text.add_child(title)
-	var note := Label.new()
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
-	note.add_theme_color_override("font_color", NOTE_COLOR)
+	var dps := _make_line(0, Color.WHITE)
+	text.add_child(dps)
+	var note := _make_line(NOTE_FONT_SIZE, NOTE_COLOR)
 	text.add_child(note)
 
-	# 레벨업 버튼 아래에 승급 버튼 (고용한 동료만 보인다)
+	# 레벨업 버튼 아래에 승급 버튼. 고용 전에도 자리를 차지해 줄 안의 배치가 변하지 않는다
 	var buttons := VBoxContainer.new()
 	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	buttons.add_theme_constant_override("separation", BUTTON_GAP)
@@ -94,10 +96,23 @@ func _make_row(index: int) -> PanelContainer:
 
 	_portraits.append(portrait)
 	_title_labels.append(title)
+	_dps_labels.append(dps)
 	_note_labels.append(note)
 	_buttons.append(button)
 	_promote_buttons.append(promote)
 	return panel
+
+
+## 한 줄 라벨. font_size 0이면 기본 크기, 색이 흰색이면 테마 색
+func _make_line(font_size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.clip_text = true
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	if font_size > 0:
+		label.add_theme_font_size_override("font_size", font_size)
+	if color != Color.WHITE:
+		label.add_theme_color_override("font_color", color)
+	return label
 
 
 func _make_button(size: Vector2, callback: Callable) -> Button:
@@ -122,22 +137,18 @@ func _refresh() -> void:
 		var name := Balance.companion_name(i)
 		var level := Party.companion_levels[i]
 		_portraits[i].self_modulate = Color.WHITE if level > 0 else LOCKED_PORTRAIT_COLOR
-		_promote_buttons[i].visible = level > 0
+		_note_labels[i].text = Balance.companion_note(i)
+		_refresh_promote(i)
 		if not Party.is_companion_unlocked(i):
-			_title_labels[i].text = "%s  (스테이지 %d에 합류)" % [name, Balance.companion_unlock_stage(i)]
-			_note_labels[i].text = Balance.companion_note(i)
+			_title_labels[i].text = name
+			_dps_labels[i].text = "스테이지 %d에 합류" % Balance.companion_unlock_stage(i)
 			_buttons[i].text = "잠김"
 			_buttons[i].disabled = true
 			continue
 		var purchase := Party.companion_purchase(i)
-		if level > 0:
-			var stars := Balance.promotion_stars(Promotions.rank(i))
-			_title_labels[i].text = "%s%s Lv %d  ·  DPS %s" % [
-				name, " " + stars if not stars.is_empty() else "", level, Num.format(Party.companion_dps(i, false))]
-			_refresh_promote(i)
-		else:
-			_title_labels[i].text = "%s  (미고용)" % name
-		_note_labels[i].text = Balance.companion_note(i)
+		var stars := Balance.promotion_stars(Promotions.rank(i))
+		_title_labels[i].text = name + (" " + stars if not stars.is_empty() else "")
+		_dps_labels[i].text = "Lv %d · DPS %s" % [level, Num.format(Party.companion_dps(i, false))]
 		var verb := "고용" if level == 0 else "레벨업"
 		_buttons[i].text = "%s ×%d (%s 골드)" % [verb, purchase.count, Num.format(purchase.cost)]
 		_buttons[i].disabled = not purchase.affordable

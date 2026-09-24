@@ -2,9 +2,10 @@ extends MarginContainer
 ## 설정 탭 (GDD 9절): 저장 문자열 내보내기(TextEdit와 복사 버튼), 가져오기, 데이터 초기화(두 번 확인).
 ## Save의 함수만 부르고 결과를 표시한다. 아래 상수는 배치용이다.
 
+const TEXT_BLOCK_HEIGHT: float = 40.0  # 상태 글 한 줄 높이. 비어 있을 때도 자리를 잡아 아래 버튼이 밀리지 않는다
 const MARGIN: int = 16
 const GAP: int = 12
-const TEXT_HEIGHT: float = 180.0
+const TEXT_HEIGHT: float = 170.0  # 탭 전체가 패널 최소 높이(440) 안에 들어가야 화면이 흔들리지 않는다
 const BUTTON_HEIGHT: float = 72.0
 const RESET_ARM_SECONDS: float = 6.0   # 확인을 기다리는 시간. 지나면 처음으로 돌아간다
 const RESET_STEPS: PackedStringArray = ["데이터 초기화", "정말 초기화할까요?", "마지막 확인: 한 번 더"]
@@ -40,6 +41,8 @@ func _ready() -> void:
 
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status.custom_minimum_size = Vector2(0.0, TEXT_BLOCK_HEIGHT)
+	_status.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_status.add_theme_color_override("font_color", STATUS_COLOR)
 	column.add_child(_status)
 	column.add_child(HSeparator.new())

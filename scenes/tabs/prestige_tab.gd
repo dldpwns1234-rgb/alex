@@ -5,6 +5,7 @@ extends MarginContainer
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const RebirthPanel := preload("res://scenes/tabs/rebirth_panel.gd")
 
+const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
 const GAP: int = 10
 const ROW_PADDING: int = 10
@@ -31,6 +32,8 @@ func _ready() -> void:
 
 	_summary = Label.new()
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.custom_minimum_size = Vector2(0.0, TEXT_BLOCK_HEIGHT)  # 두 줄로 접혀도 아래가 밀리지 않게
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_summary.add_theme_color_override("font_color", CRYSTAL_COLOR)
 	column.add_child(_summary)
 

@@ -9,6 +9,8 @@ const MARGIN: int = 20
 const GAP: int = 16
 const ICON_SIZE := Vector2(36, 36)
 const CRYSTAL_COLOR := Color("7fd1f0")
+const TIMER_WIDTH: float = 150.0   # 보스 시간 알림 자리. 보스전이 아닐 때도 비워 두어 결정 아이콘이 움직이지 않는다
+const STAGE_WIDTH: float = 190.0   # "스테이지 999"까지 자릿수가 늘어도 다른 것이 밀리지 않는 폭
 
 var _gold_label: Label
 var _crystal_label: Label
@@ -38,11 +40,14 @@ func _ready() -> void:
 
 	_timer_label = Label.new()
 	_timer_label.theme_type_variation = "DangerPill"
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_timer_label.custom_minimum_size = Vector2(TIMER_WIDTH, 0.0)
 	_timer_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_timer_label)
 
 	_stage_label = Label.new()
 	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_stage_label.custom_minimum_size = Vector2(STAGE_WIDTH, 0.0)
 	row.add_child(_stage_label)
 
 	Game.gold_changed.connect(_on_gold_changed)
@@ -94,8 +99,9 @@ func _on_boss_timer_changed(seconds_left: float) -> void:
 	_timer_label.text = "보스 %d초" % ceili(seconds_left)
 
 
-## 보스가 살아 있는 동안만 남은 시간을 보인다
+## 보스가 살아 있는 동안만 남은 시간을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다 (배치가 변하지 않게)
 func _refresh_timer() -> void:
-	_timer_label.visible = Game.is_boss_stage() and Game.is_monster_alive()
-	if _timer_label.visible:
+	var shown := Game.is_boss_stage() and Game.is_monster_alive()
+	_timer_label.modulate.a = 1.0 if shown else 0.0
+	if shown:
 		_on_boss_timer_changed(Game.boss_time_left)

@@ -15,6 +15,7 @@ const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const EMPTY_COLOR := Color("7a7690")
 const ENHANCE_BUTTON_SIZE := Vector2(230, 64)
+const ROW_HEIGHT: float = 128.0  # 장비 설명이 두 줄이 되어도 줄 높이가 변하지 않게
 
 var _level_label: Label
 var _damage_label: Label
@@ -89,6 +90,7 @@ func _make_label(text: String, color: Color) -> Label:
 
 func _make_slot_row(slot: int) -> PanelContainer:
 	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0.0, ROW_HEIGHT)
 	var margin := MarginContainer.new()
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		margin.add_theme_constant_override(side, ROW_PADDING)
