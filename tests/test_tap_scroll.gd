@@ -8,6 +8,23 @@ var _presses: int = 0
 
 func run() -> void:
 	await _test_tap()
+	_test_dialog_buttons()
+
+
+## 목록 안에 둔 확인 창의 버튼은 창이 직접 입력을 받아야 하므로 건드리지 않는다 (환생 확인 창이 안 눌리던 버그)
+func _test_dialog_buttons() -> void:
+	var scroll: ScrollContainer = TapScroll.new()
+	add_child(scroll)
+	var holder := VBoxContainer.new()
+	scroll.add_child(holder)
+	var button := Button.new()
+	holder.add_child(button)
+	var dialog := ConfirmationDialog.new()
+	holder.add_child(dialog)
+	scroll.release_buttons()
+	_equal(button.mouse_filter, Control.MOUSE_FILTER_IGNORE, "목록의 버튼은 입력을 무시한다")
+	_equal(dialog.get_ok_button().mouse_filter, Control.MOUSE_FILTER_STOP, "확인 창의 버튼은 그대로 눌린다")
+	scroll.queue_free()
 
 
 func _on_pressed() -> void:

@@ -61,6 +61,7 @@ func _ready() -> void:
 	_confirm.title = "회귀"
 	_confirm.ok_button_text = "회귀한다"
 	_confirm.cancel_button_text = "취소"
+	_confirm.dialog_autowrap = true  # 긴 설명이 창 밖으로 잘리지 않게
 	_confirm.confirmed.connect(Prestige.perform)
 	add_child(_confirm)
 

@@ -17,14 +17,22 @@ func _ready() -> void:
 
 
 ## 안의 버튼이 터치를 삼키지 않게 하고, 줄 배경(PanelContainer)이 마우스 이벤트를 막지 않게 한다.
-## PanelContainer는 기본이 STOP이라 탭 판정에 쓰는 마우스 이벤트가 여기까지 오지 못한다. 줄을 다 만든 뒤 한 번 부른다
+## PanelContainer는 기본이 STOP이라 탭 판정에 쓰는 마우스 이벤트가 여기까지 오지 못한다. 줄을 다 만든 뒤 한 번 부른다.
+## 확인 창(Window) 안의 버튼은 창이 직접 입력을 받으므로 건드리지 않는다 (건드리면 창의 버튼이 안 눌린다)
 func release_buttons() -> void:
 	for node in find_children("*", "Button", true, false):
 		var button := node as Control
-		button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if _in_own_window(button):
+			button.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for node in find_children("*", "PanelContainer", true, false):
 		var panel := node as Control
-		panel.mouse_filter = Control.MOUSE_FILTER_PASS
+		if _in_own_window(panel):
+			panel.mouse_filter = Control.MOUSE_FILTER_PASS
+
+
+## 이 목록과 같은 창에 있는지 (확인 창 같은 자식 Window 안이 아닌지)
+func _in_own_window(control: Control) -> bool:
+	return control.get_window() == get_window()
 
 
 ## 마우스 버튼 이벤트만 본다. 터치는 엔진이 마우스로도 흉내 내 주므로 폰과 PC를 같은 길로 처리한다
@@ -45,7 +53,7 @@ func _on_gui_input(event: InputEvent) -> void:
 func _tap(global_point: Vector2) -> bool:
 	for node in find_children("*", "Button", true, false):
 		var target := node as Button
-		if target.disabled or not target.is_visible_in_tree():
+		if target.disabled or not target.is_visible_in_tree() or not _in_own_window(target):
 			continue
 		if not target.get_global_rect().has_point(global_point):
 			continue
