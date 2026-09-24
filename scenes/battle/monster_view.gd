@@ -10,6 +10,7 @@ const SPARK := preload("res://assets/sprites/fx/spark.svg")
 
 const FIGURE_SIZE := Vector2(220, 220)
 const BOSS_SCALE: float = 1.3
+const DEMON_KING_SCALE: float = 1.4  # 1.5면 뿔이 전투 화면 위에 걸린다
 const CROWN_SIZE := Vector2(90, 45)
 const HP_BAR_HEIGHT: float = 24.0
 const HP_BAR_COLOR := Color("5fd36a")
@@ -120,8 +121,9 @@ func _make_sparks() -> CPUParticles2D:
 func spawn(max_hp: float, boss: bool, stage: int) -> void:
 	_actor.sprite().texture = Zones.monster_texture(stage)
 	_actor.sprite().self_modulate = Zones.monster_tint(stage)
-	_actor.scale = Vector2.ONE * (BOSS_SCALE if boss else 1.0)
-	_crown.visible = boss
+	var king := Zones.is_demon_king(stage)
+	_actor.scale = Vector2.ONE * (DEMON_KING_SCALE if king else BOSS_SCALE if boss else 1.0)
+	_crown.visible = boss and not king  # 마왕은 뿔이 왕관이다
 	_crown.position = Vector2((FIGURE_SIZE.x - CROWN_SIZE.x) * 0.5,
 		Zones.head_top(stage) * FIGURE_SIZE.y - CROWN_SIZE.y * 0.85)
 	_name = Zones.monster_name(stage, boss)

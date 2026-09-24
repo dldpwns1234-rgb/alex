@@ -27,6 +27,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_achievements.gd"),
 	preload("res://tests/test_tap_scroll.gd"),
 	preload("res://tests/test_zones.gd"),
+	preload("res://tests/test_castle.gd"),
 ]
 
 

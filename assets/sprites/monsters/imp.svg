@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 임프: 붉은 작은 악마. 박쥐 날개, 작은 뿔, 화살촉 꼬리, 노란 눈 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 150 L232 100 L214 150 L236 160 L206 176 L186 174 Z" fill="#6b2438"/>
+    <path d="M78 176 L34 160 L54 148 L30 110 L100 150 Z" fill="#6b2438"/>
+    <path d="M140 200 q60 10 74 -50" fill="none" stroke="#d94a4a" stroke-width="10"/>
+    <path d="M214 150 L236 132 L240 158 Z" fill="#d94a4a"/>
+    <rect x="88" y="130" width="80" height="94" rx="28" fill="#d94a4a"/>
+    <ellipse cx="112" cy="232" rx="20" ry="9" fill="#a83535"/>
+    <ellipse cx="146" cy="232" rx="20" ry="9" fill="#a83535"/>
+    <path d="M92 66 L74 26 L108 56 Z M164 66 L182 26 L148 56 Z" fill="#f0d070"/>
+    <circle cx="128" cy="92" r="50" fill="#d94a4a"/>
+  </g>
+  <circle cx="104" cy="92" r="12" fill="#ffd75e"/>
+  <circle cx="140" cy="92" r="12" fill="#ffd75e"/>
+  <circle cx="101" cy="94" r="5" fill="#2b2438"/>
+  <circle cx="137" cy="94" r="5" fill="#2b2438"/>
+  <path d="M90 76 L114 82 M132 82 L156 76" fill="none" stroke="#2b2438" stroke-width="5" stroke-linecap="round"/>
+  <path d="M96 116 q26 20 52 0" fill="none" stroke="#2b2438" stroke-width="5" stroke-linecap="round"/>
+  <path d="M104 118 L108 130 L114 118 Z M132 118 L138 130 L142 118 Z" fill="#fff"/>
+</svg>

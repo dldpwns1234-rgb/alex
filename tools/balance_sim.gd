@@ -1,7 +1,7 @@
 extends "res://tools/sim_purchases.gd"
 ## 밸런스 시뮬레이션 (GDD 13절). 실제 Balance·Party·Game·Prestige·Rebirth 코드를 그대로 돌린다. 구매 정책은 sim_purchases.gd에 있다.
 ##
-##   godot --headless --path . res://tools/balance_sim.tscn [-- --goal=500 --ratio=2 --skills=1 --plan=all --stall=180 --extra=0 --taps=4]
+##   godot --headless --path . res://tools/balance_sim.tscn [-- --goal=500 --ratio=2 --skills=1 --plan=all --stall=180 --extra=0 --taps=4 --hours=10]
 ##
 ## 가정: 초당 4클릭(taps), 보스 재도전은 게임의 자동 재도전에 맡긴다, 장비 드롭은 고정 시드로 굴린다. 회귀 횟수는 환생을 넘어 센다.
 ## 정책 인자 (tools/route_search.py가 조합을 바꿔 가며 목표 도달 시간을 잰다). 인자가 없으면 스킬 없이 정체로만 회귀한다:
@@ -12,12 +12,12 @@ extends "res://tools/sim_purchases.gd"
 ##   stall  이만큼(초) 최고 스테이지가 안 오르면 회귀
 ##   extra  환생은 역대 최고가 500 + extra 이상일 때 (회귀 대신)
 ##   taps   초당 클릭 수
+##   hours  시간 상한 (기본 10)
 
 const FRAME: float = 0.25          # 프레임 상한. Game의 delta 상한과 같다
 const MIN_FRAME: float = 1.0 / 60.0  # 프레임 하한. 60fps 브라우저처럼 처치·재등장 순간에 맞춰 진행한다
 const BUY_INTERVAL: float = 2.0    # 이만큼(초)마다 구매를 따진다
 const MAX_PRESTIGES: int = 12
-const MAX_HOURS: float = 10.0
 const REPORT_STAGES: PackedStringArray = ["10", "20", "40", "60", "80", "100", "120", "150", "200"]
 const RANDOM_SEED: int = 20260923  # 장비 드롭이 실행마다 같도록
 
@@ -56,7 +56,7 @@ func _ready() -> void:
 	print("=== 밸런스 시뮬레이션: 초당 %d클릭, 목표 %d, 회귀 배수 %s, 스킬 %s, 결정 %s, 정체 %d초, 환생 +%d ===" % [
 		roundi(clicks_per_second), _goal, _ratio, "사용" if _skills else "없음", _plan, roundi(_stall), _extra])
 	# 목표가 있으면 시간 상한만 둔다 (일찍 회귀하는 정책은 회귀 12번을 금방 채운다)
-	while _t < MAX_HOURS * 3600.0 and (_goal > 0 or _prestiges < MAX_PRESTIGES) and not _goal_reached():
+	while _t < _hours * 3600.0 and (_goal > 0 or _prestiges < MAX_PRESTIGES) and not _goal_reached():
 		_second()
 	if _goal_reached():
 		_report("목표 %d 도달: %s (회귀 %d회, 환생 %d회)  SCORE=%d" % [_goal, _clock(_t), _prestiges, Rebirth.rebirth_count, roundi(_t)])

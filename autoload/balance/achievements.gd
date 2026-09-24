@@ -2,7 +2,7 @@ extends "res://autoload/balance/training.gd"
 ## Balance 6부: 업적 (GDD 7.5절). 누적 통계가 목표에 닿으면 열리고 영구 보너스(모든 피해 또는 처치 골드)를 준다.
 ## 통계는 Stat 열거형 순서, 업적은 통계별로 목표가 오르는 순서다 (같은 통계끼리 모여 있어 탭이 묶어 보인다)
 
-enum Stat { STAGE, KILLS, BOSS_KILLS, GOLD, TAPS, PRESTIGES, SKILLS, HERO_LEVEL, PARTY, REBIRTHS }
+enum Stat { STAGE, KILLS, BOSS_KILLS, GOLD, TAPS, PRESTIGES, SKILLS, HERO_LEVEL, PARTY, REBIRTHS, DEMON_KING }
 enum Reward { DAMAGE, GOLD }
 const ACHIEVEMENTS: Array[Dictionary] = [
 	{"stat": Stat.STAGE, "goal": 10.0, "name": "첫 발걸음", "reward": Reward.DAMAGE, "amount": 0.01},
@@ -12,6 +12,7 @@ const ACHIEVEMENTS: Array[Dictionary] = [
 	{"stat": Stat.STAGE, "goal": 200.0, "name": "마왕성의 그림자", "reward": Reward.DAMAGE, "amount": 0.03},
 	{"stat": Stat.STAGE, "goal": 300.0, "name": "심연의 문턱", "reward": Reward.DAMAGE, "amount": 0.03},
 	{"stat": Stat.STAGE, "goal": 500.0, "name": "전설의 여정", "reward": Reward.DAMAGE, "amount": 0.03},
+	{"stat": Stat.STAGE, "goal": 600.0, "name": "마왕성 입성", "reward": Reward.DAMAGE, "amount": 0.03},
 	{"stat": Stat.KILLS, "goal": 100.0, "name": "신참 사냥꾼", "reward": Reward.DAMAGE, "amount": 0.01},
 	{"stat": Stat.KILLS, "goal": 1000.0, "name": "숙련된 사냥꾼", "reward": Reward.DAMAGE, "amount": 0.02},
 	{"stat": Stat.KILLS, "goal": 10000.0, "name": "마왕군의 악몽", "reward": Reward.DAMAGE, "amount": 0.03},
@@ -39,17 +40,21 @@ const ACHIEVEMENTS: Array[Dictionary] = [
 	{"stat": Stat.PARTY, "goal": 4.0, "name": "파티 완성", "reward": Reward.GOLD, "amount": 0.02},
 	{"stat": Stat.REBIRTHS, "goal": 1.0, "name": "새로운 삶", "reward": Reward.DAMAGE, "amount": 0.03},
 	{"stat": Stat.REBIRTHS, "goal": 5.0, "name": "윤회를 넘어", "reward": Reward.GOLD, "amount": 0.03},
+	{"stat": Stat.DEMON_KING, "goal": 1.0, "name": "마왕 토벌", "reward": Reward.DAMAGE, "amount": 0.05},
+	{"stat": Stat.DEMON_KING, "goal": 5.0, "name": "어둠의 정복자", "reward": Reward.GOLD, "amount": 0.05},
 ]
 ## 통계별 이름 (업적 탭의 묶음 제목)
 const STAT_LABELS: Dictionary = {
 	Stat.STAGE: "스테이지", Stat.KILLS: "처치", Stat.BOSS_KILLS: "보스", Stat.GOLD: "골드", Stat.TAPS: "탭",
 	Stat.PRESTIGES: "회귀", Stat.SKILLS: "스킬", Stat.HERO_LEVEL: "용사", Stat.PARTY: "동료", Stat.REBIRTHS: "환생",
+	Stat.DEMON_KING: "마왕",
 }
 ## 목표 설명. %s 자리에 목표 수치(Num.format)가 들어간다
 const STAT_GOAL_FORMATS: Dictionary = {
 	Stat.STAGE: "스테이지 %s 도달", Stat.KILLS: "몬스터 %s마리 처치", Stat.BOSS_KILLS: "보스 %s마리 처치",
 	Stat.GOLD: "골드 %s 획득", Stat.TAPS: "%s번 탭", Stat.PRESTIGES: "회귀 %s회", Stat.SKILLS: "스킬 %s회 사용",
 	Stat.HERO_LEVEL: "용사 Lv %s 도달", Stat.PARTY: "동료 %s명 고용", Stat.REBIRTHS: "환생 %s회",
+	Stat.DEMON_KING: "마왕 %s번 처치",
 }
 const REWARD_LABELS: Dictionary = {Reward.DAMAGE: "모든 피해", Reward.GOLD: "처치 골드"}
 

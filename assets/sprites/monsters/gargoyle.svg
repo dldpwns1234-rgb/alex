@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 가고일: 회청색 돌 괴수. 넓은 돌 날개, 굽은 뿔, 뾰족한 귀, 붉게 빛나는 눈, 받침돌 위에 웅크림 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 140 L244 76 L226 132 L250 150 L204 166 Z" fill="#6c7088"/>
+    <path d="M106 140 L12 76 L30 132 L6 150 L52 166 Z" fill="#6c7088"/>
+    <rect x="52" y="214" width="152" height="26" rx="6" fill="#5a5e74"/>
+    <rect x="80" y="126" width="96" height="96" rx="30" fill="#8a8fa3"/>
+    <path d="M70 196 L44 212 L64 224 Z M186 196 L212 212 L192 224 Z" fill="#8a8fa3"/>
+    <path d="M86 70 L60 30 L74 80 Z M170 70 L196 30 L182 80 Z" fill="#6c7088"/>
+    <path d="M84 96 L54 84 L82 116 Z M172 96 L202 84 L174 116 Z" fill="#8a8fa3"/>
+    <circle cx="128" cy="96" r="48" fill="#8a8fa3"/>
+  </g>
+  <path d="M100 92 L120 100 L100 106 Z" fill="#ff5a4a"/>
+  <path d="M156 92 L136 100 L156 106 Z" fill="#ff5a4a"/>
+  <path d="M96 78 L118 88 M138 88 L160 78" fill="none" stroke="#2b2438" stroke-width="5" stroke-linecap="round"/>
+  <path d="M104 122 L152 122" fill="none" stroke="#2b2438" stroke-width="5" stroke-linecap="round"/>
+  <path d="M110 122 L114 134 L120 122 Z M136 122 L142 134 L146 122 Z" fill="#fff"/>
+  <path d="M100 150 q28 -14 56 0" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+</svg>

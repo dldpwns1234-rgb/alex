@@ -131,6 +131,7 @@ func _layout() -> void:
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 	_monster_view.spawn(max_hp, boss, Game.stage)
 	_backdrop.set_palette(Zones.palette(Game.stage))
+	_backdrop.set_castle(Zones.is_castle(Game.stage))
 
 
 func _on_tap_hit(amount: float, crit: bool) -> void:

@@ -109,6 +109,8 @@ func _kill_monster() -> void:
 	respawn_left = respawn_delay()
 	gold_changed.emit(gold)
 	monster_killed.emit(reward)
+	if Balance.is_demon_king_stage(stage):
+		demon_king_defeated.emit()
 	# 보스는 1마리, 일반 스테이지는 10마리. 파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로 간다
 	if farming and boss_queued:
 		_start_boss_challenge()

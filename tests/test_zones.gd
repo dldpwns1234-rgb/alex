@@ -30,8 +30,33 @@ func _zones() -> void:
 	_equal(Zones.PALETTES.size(), Zones.MONSTER_NAMES.size(), "몬스터마다 배경")
 	for stage: int in [1, 11, 21, 31, 41, 51]:
 		_equal(Zones.monster_texture(stage) != null, true, "%d스테이지 그림이 있다" % stage)
-		_equal(Zones.palette(stage).size(), 4, "%d스테이지 배경 색 4개" % stage)
+		_equal(Zones.palette(stage).size(), 5, "%d스테이지 배경 색 5개" % stage)
 		_equal(Zones.head_top(stage) > 0.0 and Zones.head_top(stage) < 1.0, true, "%d스테이지 왕관 자리" % stage)
+
+
+	# 마왕성 (GDD 7.8절): 600부터 몬스터 3종이 10 스테이지마다 바뀌고, 1000의 배수는 마왕
+	var castle: int = Balance.CASTLE_STAGE
+	_equal(Zones.is_castle(castle - 1), false, "599는 아직 마왕성이 아니다")
+	_equal(Zones.is_castle(castle), true, "600부터 마왕성")
+	_equal(Zones.castle_zone(castle), 0, "600은 첫 마왕성 몬스터")
+	_equal(Zones.castle_zone(castle + 10), 1, "610은 둘째")
+	_equal(Zones.castle_zone(castle + 30), 0, "셋을 돌면 처음으로")
+	_equal(Zones.castle_lap(castle + 30), 1, "둘째 바퀴")
+	_equal(Zones.monster_name(castle, false), "임프", "마왕성 첫 몬스터")
+	_equal(Zones.monster_name(castle + 25, true), "흑기사 두목", "마왕성 보스 이름")
+	_equal(Zones.monster_name(1000, true), "마왕", "마왕은 두목을 붙이지 않는다")
+	_equal(Zones.is_demon_king(2000), true, "2000도 마왕")
+	_equal(Zones.is_demon_king(1500), false, "1500은 보통 보스")
+	_equal(Zones.monster_texture(1000) == Zones.DEMON_KING_TEXTURE, true, "마왕 그림")
+	_equal(Zones.monster_texture(castle) == Zones.CASTLE_TEXTURES[0], true, "임프 그림")
+	_equal(Zones.monster_tint(castle), Color.WHITE, "마왕성 첫 바퀴는 원래 색")
+	_equal(Zones.monster_tint(castle + 30) != Color.WHITE, true, "둘째 바퀴는 색이 다르다")
+	_equal(Zones.monster_tint(1000), Color.WHITE, "마왕은 원래 색")
+	_equal(Zones.palette(castle) == Zones.CASTLE_PALETTE, true, "마왕성 팔레트")
+	_equal(Zones.palette(castle).size(), 5, "마왕성 배경 색 5개")
+	_equal(Zones.head_top(castle + 20) > 0.0, true, "흑기사 왕관 자리")
+	_equal(Zones.CASTLE_TEXTURES.size(), Zones.CASTLE_NAMES.size(), "마왕성 몬스터마다 그림")
+	_equal(Zones.CASTLE_HEAD_TOPS.size(), Zones.CASTLE_NAMES.size(), "마왕성 몬스터마다 왕관 자리")
 
 
 ## 연출 함수들을 차례로 불러도 오류 없이 프레임이 흐르는지 본다

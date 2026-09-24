@@ -1,5 +1,5 @@
 extends Node
-## 업적 (GDD 7.5절). 누적 통계(역대 최고 스테이지, 처치, 보스 처치, 획득 골드, 탭, 회귀, 스킬 사용, 용사 레벨, 동료 수, 환생)는
+## 업적 (GDD 7.5절). 누적 통계(역대 최고 스테이지, 처치, 보스 처치, 획득 골드, 탭, 회귀, 스킬 사용, 용사 레벨, 동료 수, 환생, 마왕 처치)는
 ## 회귀와 환생을 해도 남고 데이터 초기화에서만 지운다. 통계가 목표에 닿으면 업적이 열리고 영구 보너스가 붙는다.
 ## 통계는 Game·Party·Prestige·Skills의 시그널로 모은다 (오토로드 순서상 그 뒤에 있어 _ready에서 연결한다).
 ## 탭 수(Game)와 오프라인 골드(Save)만 직접 add()로 더한다. 효과는 damage_multiplier()·gold_multiplier()로
@@ -24,6 +24,7 @@ func _ready() -> void:
 	Prestige.prestiged.connect(_on_prestiged)
 	Rebirth.reborn.connect(_on_reborn)
 	Skills.skill_activated.connect(_on_skill_activated)
+	Game.demon_king_defeated.connect(add.bind(Balance.Stat.DEMON_KING, 1.0))
 
 
 ## 데이터 초기화에서만 부른다. 회귀는 아무것도 지우지 않는다

@@ -2,7 +2,7 @@ extends Control
 ## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 내비게이션과 패널을 위에서부터 쌓는다.
 ## 내비게이션이 고른 패널만 보이고, 강화할 수 있는 장비가 있으면 용사 탭에, 승급할 수 있는 동료가 있으면 동료 탭에,
 ## 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
-## 업적 달성, 승급, 장비 획득, 환생은 전투 화면 아래에 알림을 띄운다.
+## 업적 달성, 승급, 장비 획득, 환생은 전투 화면 아래에 알림을 띄운다. 마왕을 처음 잡으면 엔딩 창을 띄운다 (GDD 7.8절).
 
 const Toast := preload("res://scenes/toast.gd")
 
@@ -11,12 +11,14 @@ const PARTY_TAB: int = 1
 const TRAINING_TAB: int = 2
 const ACHIEVEMENTS_TAB: int = 4
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
+const ENDING_POPUP_SIZE := Vector2i(600, 420)
 
 @onready var _nav: HBoxContainer = $Layout/Nav
 @onready var _panels: MarginContainer = $Layout/Panels
 @onready var _battle: Control = $Layout/Battle
 
 var _offline_dialog: AcceptDialog
+var _ending_dialog: AcceptDialog
 var _toast: Toast
 
 
@@ -25,8 +27,14 @@ func _ready() -> void:
 	_offline_dialog.title = "오프라인 보상"
 	_offline_dialog.ok_button_text = "확인"
 	add_child(_offline_dialog)
+	_ending_dialog = AcceptDialog.new()
+	_ending_dialog.title = "마왕 토벌"
+	_ending_dialog.ok_button_text = "계속하기"
+	_ending_dialog.dialog_autowrap = true
+	add_child(_ending_dialog)
 	_toast = Toast.new()
 	_battle.add_child(_toast)
+	Game.demon_king_defeated.connect(_on_demon_king_defeated)
 	Save.offline_reward.connect(_on_offline_reward)
 	_nav.tab_selected.connect(_show_panel)
 	_nav.select(0)
@@ -88,3 +96,15 @@ func _on_offline_reward(seconds: float, gold: float) -> void:
 
 func _on_reborn(reward: float) -> void:
 	_toast.show_message("환생 · 운명의 실 +%s" % Num.format(reward))
+
+
+## 마왕을 처음 잡았을 때만 엔딩: 기록을 보이고 무한 모드로 이어진다 (통계는 Achievements가 먼저 올린다)
+func _on_demon_king_defeated() -> void:
+	if Achievements.value(Balance.Stat.DEMON_KING) > 1.0:
+		_toast.show_message("마왕 토벌 · %s번째" % Num.format(Achievements.value(Balance.Stat.DEMON_KING)))
+		return
+	_ending_dialog.dialog_text = "마왕을 쓰러뜨렸다.\n\n회귀 %s회 · 환생 %s회 · 처치 %s마리 · 탭 %s번\n\n그러나 마왕성 너머의 어둠은 끝이 없다.\n스테이지는 계속되고, 마왕은 %s마다 다시 나타난다." % [
+		Num.format(Achievements.value(Balance.Stat.PRESTIGES)), Num.format(Achievements.value(Balance.Stat.REBIRTHS)),
+		Num.format(Achievements.value(Balance.Stat.KILLS)), Num.format(Achievements.value(Balance.Stat.TAPS)),
+		Num.format(Balance.DEMON_KING_INTERVAL)]
+	_ending_dialog.popup_centered(ENDING_POPUP_SIZE)

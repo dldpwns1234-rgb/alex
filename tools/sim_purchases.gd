@@ -10,6 +10,7 @@ var _skills: bool = false
 var _plan: String = "sword_gold"
 var _stall: float = 180.0
 var _extra: int = 0
+var _hours: float = 10.0
 
 
 ## "--이름=값" 꼴의 사용자 인자 (godot ... -- --goal=500)
@@ -26,6 +27,7 @@ func _parse_args() -> void:
 			"stall": _stall = float(parts[1])
 			"extra": _extra = int(parts[1])
 			"taps": clicks_per_second = float(parts[1])
+			"hours": _hours = float(parts[1])
 
 
 ## 회귀 보상이 결정 재산의 ratio배 이상이면 지금 회귀하는 게 낫다고 본다

@@ -9,6 +9,7 @@ signal monster_spawned(max_hp: float, boss: bool)
 signal monster_damaged(hp: float)         # 체력바 갱신용. 탭 피해와 동료 피해 모두
 signal tap_hit(amount: float, crit: bool)  # 탭 피해 숫자 연출용. crit는 클릭 치명타
 signal monster_killed(reward: float)
+signal demon_king_defeated()          # 마왕(1000의 배수 스테이지 보스)을 잡았다. 엔딩과 통계에 쓴다
 signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
 signal farming_changed(farming: bool)
@@ -85,15 +86,16 @@ func set_auto_retry(on: bool) -> void:
 	auto_retry_changed.emit(auto_retry)
 
 
-## 이번 보스전의 제한 시간: 기본 + 시간의 모래 + 화염 폭발 단련
-func boss_limit() -> float:
-	return Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND)) + Training.value(Balance.Effect.BOSS_TIME)
+## 보스전의 제한 시간: 기본 + 시간의 모래 + 화염 폭발 단련 (마왕이면 +30초). at_stage는 기본이 지금 스테이지
+func boss_limit(at_stage: int = stage) -> float:
+	var limit := Balance.boss_time_limit(Prestige.level(Balance.Memory.SAND), at_stage)
+	return limit + Training.value(Balance.Effect.BOSS_TIME)
 
 
-## 파밍 중인 스테이지 다음의 보스를 지금 DPS(동료 + 클릭 × 최근 탭 빈도)로 제한 시간 안에 잡을 것 같은지
+## 파밍 중인 스테이지 다음의 보스(마왕 포함)를 지금 DPS(동료 + 클릭 × 최근 탭 빈도)로 제한 시간 안에 잡을 것 같은지
 func boss_looks_beatable() -> bool:
 	var dps := Party.party_dps(true) + Party.click_damage() * tap_rate
-	return Balance.boss_beatable(Balance.boss_hp(stage + 1), dps, boss_limit())
+	return Balance.boss_beatable(Balance.enemy_hp(stage + 1), dps, boss_limit(stage + 1))
 
 
 func is_monster_alive() -> bool:
@@ -140,7 +142,7 @@ func _spawn_monster() -> void:
 	var boss := is_boss_stage()
 	monster_max_hp = Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp
-	boss_time_left = boss_limit() if boss else 0.0
+	boss_time_left = boss_limit(stage) if boss else 0.0
 	monster_spawned.emit(monster_max_hp, boss)
 	if boss:
 		boss_timer_changed.emit(boss_time_left)

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 흑기사: 검은 강철 갑옷, 붉은 눈구멍의 투구, 검붉은 망토, 큰 대검 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 90 L212 100 L200 236 L150 224 Z" fill="#5a1020"/>
+    <path d="M40 232 L52 88" fill="none" stroke="#9aa0b8" stroke-width="16"/>
+    <path d="M40 232 L52 88" fill="none" stroke="#dfe3f0" stroke-width="5"/>
+    <path d="M36 92 L68 92 L70 106 L34 106 Z" fill="#c9a544"/>
+    <rect x="84" y="112" width="88" height="90" rx="20" fill="#3c3a4d"/>
+    <path d="M78 116 L64 124 L60 168 L82 176 Z" fill="#4a4860"/>
+    <rect x="94" y="196" width="28" height="40" rx="8" fill="#3c3a4d"/>
+    <rect x="134" y="196" width="28" height="40" rx="8" fill="#3c3a4d"/>
+    <rect x="72" y="58" width="112" height="70" rx="30" fill="#3c3a4d"/>
+    <path d="M128 22 L108 62 L148 62 Z" fill="#c9a544"/>
+    <path d="M78 130 L178 130" fill="none" stroke="#2b2438" stroke-width="6"/>
+    <circle cx="128" cy="164" r="12" fill="#c9a544"/>
+  </g>
+  <rect x="88" y="90" width="80" height="12" rx="6" fill="#1a1622"/>
+  <rect x="96" y="93" width="22" height="6" rx="3" fill="#ff4a3a"/>
+  <rect x="138" y="93" width="22" height="6" rx="3" fill="#ff4a3a"/>
+  <path d="M100 112 L100 124 M128 112 L128 124 M156 112 L156 124" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -22,6 +22,12 @@ const AUTO_RETRY_REST: float = 10.0      # 초. 실패 직후 최소 파밍 시�
 const AUTO_RETRY_INTERVAL: float = 120.0 # 초. 탭하는 중이면 예상과 무관하게 이만큼마다 한 번 더 해 본다
 const TAP_RATE_WINDOW: float = 5.0       # 초. 최근 탭 빈도를 재는 창. 예상 DPS에 클릭 피해 × 빈도를 더한다
 
+# 마왕성 (GDD 7.8절): 600부터 마왕성 지역, 1000(과 그 배수)의 보스는 마왕
+const CASTLE_STAGE: int = 600
+const DEMON_KING_INTERVAL: int = 1000
+const DEMON_KING_HP_MULTIPLIER: float = 3.0   # 마왕 체력 = 보스 체력 × 3
+const DEMON_KING_EXTRA_TIME: float = 30.0     # 마왕전 제한 시간에 더하는 초
+
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
 
@@ -46,14 +52,25 @@ func boss_hp(stage: int) -> float:
 	return monster_hp(stage) * BOSS_HP_MULTIPLIER
 
 
-## 이 스테이지에 나오는 적의 체력
+func is_castle_stage(stage: int) -> bool:
+	return stage >= CASTLE_STAGE
+
+
+func is_demon_king_stage(stage: int) -> bool:
+	return stage > 0 and stage % DEMON_KING_INTERVAL == 0
+
+
+## 이 스테이지에 나오는 적의 체력. 마왕은 보스 체력의 3배
 func enemy_hp(stage: int) -> float:
+	if is_demon_king_stage(stage):
+		return boss_hp(stage) * DEMON_KING_HP_MULTIPLIER
 	return boss_hp(stage) if is_boss_stage(stage) else monster_hp(stage)
 
 
-## 보스 제한 시간: 30초 + 시간의 모래 3초/레벨
-func boss_time_limit(sand_level: int) -> float:
-	return BOSS_TIME_LIMIT + sand_bonus(sand_level)
+## 보스 제한 시간: 30초 + 시간의 모래 3초/레벨 (+ 마왕전 30초)
+func boss_time_limit(sand_level: int, stage: int = 1) -> float:
+	var limit := BOSS_TIME_LIMIT + sand_bonus(sand_level)
+	return limit + DEMON_KING_EXTRA_TIME if is_demon_king_stage(stage) else limit
 
 
 ## 자동 재도전 판단: 체력 hp의 보스를 초당 dps로 제한 시간 limit의 여유 안에 잡을 수 있는지
