@@ -49,3 +49,4 @@ func _fresh_run() -> void:
 	Automation.reset()
 	Challenges.reset()
 	Tower.reset()
+	Prefs.reset()

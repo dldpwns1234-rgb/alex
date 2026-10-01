@@ -1,5 +1,5 @@
 extends Label
-## 화면 위에 잠깐 떠오르는 알림 (업적 달성, 승급, 장비). 부모의 아래쪽 가운데에 나타나 살짝 떠오르며 밝아졌다 사라진다.
+## 화면 위에 잠깐 떠오르는 알림 (업적 달성, 승급, 장비). 부모의 아래쪽 가운데(bottom_inset만큼 위, 하단 메뉴 시트 바로 위)에 나타나 살짝 떠오르며 밝아졌다 사라진다.
 ## 여러 개가 겹치면 차례로 보여준다. 글자색을 따로 줄 수 있다 (장비 등급 색). 상수는 연출용이다.
 
 const FADE_IN: float = 0.15
@@ -11,6 +11,13 @@ const BOTTOM_MARGIN: float = 20.0
 var _queue: Array[Dictionary] = []  # {"text": String, "color": Color}
 var _tween: Tween
 var _resting_y: float = 0.0
+## 아래쪽에 비워 둘 높이. Main이 하단 메뉴 시트의 높이로 맞춰 알림이 시트 바로 위에 뜨게 한다
+var bottom_inset: float = 0.0:
+	set(value):
+		bottom_inset = value
+		_place()
+## 위쪽에 비워 둘 높이 (상단 바). 시트를 끝까지 펼쳐도 알림이 상단 바의 보스 시간을 가리지 않는다
+var top_inset: float = 0.0
 
 
 func _ready() -> void:
@@ -49,8 +56,10 @@ func _next() -> void:
 	_tween.chain().tween_callback(_next)
 
 
-## 부모의 아래쪽 가운데
+## 부모의 아래쪽 가운데, bottom_inset만큼 위. top_inset 아래로는 내려오지 않는다
 func _place() -> void:
 	var parent := get_parent() as Control
-	_resting_y = parent.size.y - size.y - BOTTOM_MARGIN
+	if parent == null:
+		return
+	_resting_y = maxf(parent.size.y - bottom_inset - size.y - BOTTOM_MARGIN, top_inset + BOTTOM_MARGIN)
 	position = Vector2((parent.size.x - size.x) * 0.5, _resting_y)

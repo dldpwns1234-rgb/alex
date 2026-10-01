@@ -6,7 +6,7 @@ extends SceneTree
 ## 색과 모양은 여기 상수가 원본이다. 고친 뒤 다시 돌려서 .tres를 갱신하고 함께 커밋한다.
 ## 타입 변형(theme_type_variation): AccentButton(금색 주요 버튼), NavButton(탭 내비게이션),
 ## SkillReady(쓸 수 있는 스킬), SkillActive(발동 중 스킬), TopBar(상단 바), Pill(둥근 알림 라벨), DangerPill(붉은 알림 라벨),
-## GoalBar(업적 진행 막)
+## GoalBar(업적 진행 막), Sheet(하단 메뉴 시트: 바탕색으로 전투 화면을 가린다)
 
 const OUT_PATH := "res://assets/ui/theme.tres"
 
@@ -18,6 +18,7 @@ const BUTTON_BORDER := Color("574f7a")
 const BUTTON_DISABLED := Color("2a2538")
 const FIELD := Color("1b1826")
 const TOP_BAR := Color("2a2438")
+const BACKGROUND := Color("221e30")  # project.godot의 default_clear_color와 같다
 const TEXT := Color("f2eef8")
 const TEXT_DIM := Color("7a7690")
 const TEXT_ON_ACCENT := Color("2b2438")
@@ -106,6 +107,12 @@ func _panels(theme: Theme) -> void:
 	var top := _flat(TOP_BAR, PANEL_BORDER, 0, 0)
 	top.border_width_bottom = 1
 	theme.set_stylebox("panel", "TopBar", top)
+	# 하단 메뉴 시트: 펼치면 전투 화면 위로 올라오므로 바탕색으로 채우고 위쪽에 가는 선을 긋는다
+	_variation(theme, "Sheet", "PanelContainer")
+	var sheet := _flat(BACKGROUND, PANEL_BORDER, 0, 0, Vector2.ZERO)
+	sheet.border_width_top = 1
+	sheet.content_margin_top = 1
+	theme.set_stylebox("panel", "Sheet", sheet)
 	theme.set_color("font_color", "Label", TEXT)
 	# 둥근 알림 라벨 (상단 바의 보스 시간)
 	_variation(theme, "Pill", "Label")

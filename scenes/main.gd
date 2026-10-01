@@ -1,5 +1,6 @@
 extends Control
-## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 스킬 바, 구매 배수, 탭 내비게이션과 패널을 위에서부터 쌓는다.
+## 세로 화면 전체 (GDD 9절). 상단 바, 전투 화면, 그리고 하단 메뉴 시트(스킬 바, 구매 배수, 탭 내비게이션, 패널)를 위에서부터 쌓는다.
+## 시트(sheet.gd)는 접힌 높이만큼 Layout에 자리를 두고(SheetSpace), 펼치면 전투 화면 위로 올라온다. 알림은 시트 바로 위에 뜬다.
 ## 내비게이션이 고른 패널만 보이고, 강화할 수 있는 장비가 있으면 용사 탭에, 승급할 수 있는 동료가 있으면 동료 탭에,
 ## 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
 ## 업적 달성, 승급, 장비 획득, 환생은 전투 화면 아래에 알림을 띄운다. 마왕을 처음 잡으면 엔딩 창을 띄운다 (GDD 7.8절).
@@ -13,9 +14,11 @@ const ACHIEVEMENTS_TAB: int = 4
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
 const ENDING_POPUP_SIZE := Vector2i(600, 420)
 
-@onready var _nav: HBoxContainer = $Layout/Nav
-@onready var _panels: MarginContainer = $Layout/Panels
-@onready var _battle: Control = $Layout/Battle
+@onready var _top_bar: Control = $Layout/TopBar
+@onready var _sheet_space: Control = $Layout/SheetSpace
+@onready var _sheet: PanelContainer = $Sheet
+@onready var _nav: HBoxContainer = $Sheet/Column/Nav
+@onready var _panels: MarginContainer = $Sheet/Column/Panels
 
 var _offline_dialog: AcceptDialog
 var _ending_dialog: AcceptDialog
@@ -33,7 +36,12 @@ func _ready() -> void:
 	_ending_dialog.dialog_autowrap = true
 	add_child(_ending_dialog)
 	_toast = Toast.new()
-	_battle.add_child(_toast)
+	add_child(_toast)  # 시트보다 뒤에 더해 펼친 시트 위에도 그려진다
+	_sheet_space.custom_minimum_size = Vector2(0.0, _sheet.collapsed_height())
+	_sheet.height_changed.connect(_on_sheet_height_changed)
+	_sheet.set_top_inset(_top_bar.get_combined_minimum_size().y)
+	_toast.top_inset = _top_bar.get_combined_minimum_size().y
+	_on_sheet_height_changed(_sheet.current_height())
 	Game.demon_king_defeated.connect(_on_demon_king_defeated)
 	Challenges.completed.connect(_on_challenge_completed)
 	Tower.floor_cleared.connect(_on_floor_cleared)
@@ -55,6 +63,11 @@ func _ready() -> void:
 	Achievements.seen_changed.connect(_refresh_achievement_badge)
 	_refresh_badges()
 	_refresh_achievement_badge()
+
+
+## 시트가 늘고 줄면 알림 자리도 따라간다 (시트 바로 위)
+func _on_sheet_height_changed(height: float) -> void:
+	_toast.bottom_inset = height
 
 
 func _show_panel(index: int) -> void:

@@ -50,11 +50,13 @@ res://
     automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용. 운명의 상점에서 해금하면 동작하고 토글은 저장된다
     challenges.gd (Challenges) 도전 판: 시작(회귀로 판 끝내기), 제한 조회(Party·Skills·Game·Equipment·Prestige가 묻는다), 달성과 영구 보너스. 환생 1회부터
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
+    prefs.gd     (Prefs) 화면 설정: 하단 메뉴 시트 높이. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
     save.gd      (Save) 저장, 불러오기, 오프라인 보상. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
     num.gd       (Num) 한국식 숫자 표기
   scenes/
-    main.tscn    세로 화면 전체 (상단 바, 전투, 스킬 바, 구매 배수, 탭 내비게이션, 패널)
-    main.gd      내비게이션이 고른 패널만 보이고 용사(강화)·동료(승급)·단련·업적 탭 점을 갱신하며, 업적·승급·장비 알림(toast.gd)과 마왕 엔딩 창을 띄운다
+    main.tscn    세로 화면 전체 (상단 바, 전투, 하단 메뉴 시트: 스킬 바, 구매 배수, 탭 내비게이션, 패널)
+    sheet.gd     하단 메뉴 시트. 접히면 Layout이 비워 둔 자리에 맞고 펼치면 전투 화면 위로 올라온다. 손잡이 버튼으로 토글·끌기, 높이는 Prefs
+    main.gd      내비게이션이 고른 패널만 보이고 시트 높이에 맞춰 알림 자리를 옮기며 용사(강화)·동료(승급)·단련·업적 탭 점을 갱신하며, 업적·승급·장비 알림(toast.gd)과 마왕 엔딩 창을 띄운다
     top_bar.gd(보스 시간·도전 이름·탑 층과 시간), skill_bar.gd(쿨타임·지속 시간 막, 봉인), nav_bar.gd(탭 버튼 6개와 점), toast.gd(잠깐 뜨는 알림), tabs/buy_bar.gd
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전), tower_controls(시련의 탑 입구)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경, 마왕성 성벽), zones(스테이지→몬스터 종류·색조·팔레트, 마왕성과 마왕)
@@ -82,7 +84,7 @@ docs/LATEGAME_REFERENCES.md  다른 게임의 후반 구조(층·자동화·별�
 3. 스크립트 하나는 200줄 이하로 유지한다. 넘으면 나눈다.
 4. 반복되는 UI(동료 줄, 상점 항목)는 코드로 생성한다. .tscn은 최소 구조로만 작성한다.
 5. 색과 모양은 테마(tools/make_theme.gd)에 둔다. 컨트롤마다 스타일을 덮어쓰지 말고 타입 변형(`theme_type_variation`: AccentButton, NavButton, SkillReady, SkillActive, TopBar, Pill, DangerPill)을 쓴다. 연출용 색(피해 숫자, 체력바)은 예외다.
-6. 글 길이가 바뀌어도 배치가 움직이지 않게 한다. 목록의 줄 높이는 고정하고, 숫자가 든 라벨은 한 줄에 말줄임하거나 폭을 정하고, 요약 글은 접힐 줄 수만큼 자리를 미리 잡는다. 탭 하나의 내용은 패널 최소 높이(440px)를 넘지 않는다 (넘으면 전투 화면이 줄어 화면 전체가 흔들린다).
+6. 글 길이가 바뀌어도 배치가 움직이지 않게 한다. 목록의 줄 높이는 고정하고, 숫자가 든 라벨은 한 줄에 말줄임하거나 폭을 정하고, 요약 글은 접힐 줄 수만큼 자리를 미리 잡는다. 탭 하나의 내용은 접힌 패널 높이(440px)를 넘지 않는다 (넘으면 전투 화면이 줄어 화면 전체가 흔들린다). 더 보여 주고 싶으면 사용자가 하단 메뉴 시트(scenes/sheet.gd)를 펼친다.
 
 ## 숫자 규칙
 

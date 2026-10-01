@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scenes/tabs/training_tab.gd" id="10_training_tab"]
 [ext_resource type="Script" path="res://scenes/nav_bar.gd" id="11_nav_bar"]
 [ext_resource type="Script" path="res://scenes/tabs/achievements_tab.gd" id="12_achievements_tab"]
+[ext_resource type="Script" path="res://scenes/sheet.gd" id="13_sheet"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -42,46 +43,65 @@ layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("3_battle")
 
-[node name="SkillBar" type="HBoxContainer" parent="Layout"]
+[node name="SheetSpace" type="Control" parent="Layout"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Sheet" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("13_sheet")
+
+[node name="Column" type="VBoxContainer" parent="Sheet"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="SkillBar" type="HBoxContainer" parent="Sheet/Column"]
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 script = ExtResource("8_skill_bar")
 
-[node name="BuyBar" type="HBoxContainer" parent="Layout"]
+[node name="BuyBar" type="HBoxContainer" parent="Sheet/Column"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 theme_override_constants/separation = 8
 script = ExtResource("6_buy_bar")
 
-[node name="Nav" type="HBoxContainer" parent="Layout"]
+[node name="Nav" type="HBoxContainer" parent="Sheet/Column"]
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 script = ExtResource("11_nav_bar")
 
-[node name="Panels" type="MarginContainer" parent="Layout"]
+[node name="Panels" type="MarginContainer" parent="Sheet/Column"]
 custom_minimum_size = Vector2(0, 440)
 layout_mode = 2
+size_flags_vertical = 3
 
-[node name="HeroTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="HeroTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("4_hero_tab")
 
-[node name="PartyTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="PartyTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("5_party_tab")
 
-[node name="TrainingTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="TrainingTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("10_training_tab")
 
-[node name="PrestigeTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="PrestigeTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("9_prestige_tab")
 
-[node name="AchievementsTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="AchievementsTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("12_achievements_tab")
 
-[node name="SettingsTab" type="MarginContainer" parent="Layout/Panels"]
+[node name="SettingsTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("7_settings_tab")
