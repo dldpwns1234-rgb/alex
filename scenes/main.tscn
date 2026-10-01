@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scenes/nav_bar.gd" id="11_nav_bar"]
 [ext_resource type="Script" path="res://scenes/tabs/achievements_tab.gd" id="12_achievements_tab"]
 [ext_resource type="Script" path="res://scenes/sheet.gd" id="13_sheet"]
+[ext_resource type="Script" path="res://scenes/battle/tap_hint.gd" id="14_tap_hint"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -42,6 +43,10 @@ script = ExtResource("2_top_bar")
 layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("3_battle")
+
+[node name="TapHint" type="Label" parent="Layout/Battle"]
+layout_mode = 0
+script = ExtResource("14_tap_hint")
 
 [node name="SheetSpace" type="Control" parent="Layout"]
 layout_mode = 2

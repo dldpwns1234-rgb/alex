@@ -48,7 +48,7 @@ func _refresh() -> void:
 		var button := _buttons[i]
 		var name := Balance.skill_name(i)
 		if not Skills.is_unlocked(i):
-			button.text = "%s\n용사 Lv %d" % [name, Balance.skill_unlock_level(i)]
+			button.text = "%s\n잠김 · 용사 Lv %d" % [name, Balance.skill_unlock_level(i)]  # 잠김이 글로 보이게 (UX 점검 12번)
 			button.disabled = true
 			button.theme_type_variation = ""
 			_shades[i].visible = false

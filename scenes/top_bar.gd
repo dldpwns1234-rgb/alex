@@ -50,6 +50,7 @@ func _ready() -> void:
 	_rate_label = _make_value_label()
 	_rate_label.add_theme_font_size_override("font_size", RATE_FONT_SIZE)
 	_rate_label.add_theme_color_override("font_color", RATE_COLOR)
+	_rate_label.visible = false
 	gold_column.add_child(_rate_label)
 	_rate_buckets.resize(int(RATE_WINDOW))
 	_rate_buckets.fill(0.0)
@@ -166,4 +167,5 @@ func _process(delta: float) -> void:
 	_rate_buckets.remove_at(_rate_buckets.size() - 1)
 	_rate_buckets.insert(0, 0.0)
 	var rate := total / maxf(_rate_elapsed, 1.0)
-	_rate_label.text = "+%s/초" % Num.format(rate) if rate > 0.0 and not Game.in_tower else ""
+	_rate_label.text = "+%s/초" % Num.format(rate)
+	_rate_label.visible = rate >= 1.0 and not Game.in_tower  # 없을 때는 줄을 접어 골드가 결정과 같은 높이에 선다
