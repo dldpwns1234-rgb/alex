@@ -56,10 +56,13 @@ func _next() -> void:
 	_tween.chain().tween_callback(_next)
 
 
-## 부모의 아래쪽 가운데, bottom_inset만큼 위. top_inset 아래로는 내려오지 않는다
+## 부모의 아래쪽 가운데, bottom_inset만큼 위. 시트를 펼쳐 그 자리가 상단 바 밑까지 없으면
+## 화면 맨 아래에 띄운다 (상단 바 바로 밑은 펼친 시트의 스킬 바와 겹친다)
 func _place() -> void:
 	var parent := get_parent() as Control
 	if parent == null:
 		return
-	_resting_y = maxf(parent.size.y - bottom_inset - size.y - BOTTOM_MARGIN, top_inset + BOTTOM_MARGIN)
+	_resting_y = parent.size.y - bottom_inset - size.y - BOTTOM_MARGIN
+	if _resting_y < top_inset + BOTTOM_MARGIN:
+		_resting_y = parent.size.y - size.y - BOTTOM_MARGIN
 	position = Vector2((parent.size.x - size.x) * 0.5, _resting_y)
