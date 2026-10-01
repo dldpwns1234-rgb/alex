@@ -31,14 +31,21 @@ const SCROLL_GRABBER := Color("574f7a")
 const RADIUS: int = 12
 const BORDER: int = 2
 const BUTTON_PADDING := Vector2(16, 10)
+# 기본 글꼴 크기. project.godot의 gui/theme/default_font_size는 사용자 테마(gui/theme/custom)를 쓰면 적용되지 않아
+# 테마에 직접 둔다. 없으면 고도의 대체 크기 16이 되어 폰에서 글씨가 너무 작다 (UX 점검 2026-10-02)
+const DEFAULT_FONT_SIZE: int = 22
+const BUTTON_FONT_SIZE: int = 20  # 버튼은 "레벨업 ×10 (1.23경 골드)"가 250px에 들어가야 해서 한 단계 작게
 const NAV_FONT_SIZE: int = 24
 const PILL_FONT_SIZE: int = 24
+const SWITCH_ON := "res://assets/sprites/ui/switch_on.svg"    # 자동화 토글(CheckButton)의 스위치. 켬/끔이 모양으로 보인다
+const SWITCH_OFF := "res://assets/sprites/ui/switch_off.svg"
 
 var _style_count: int = 0  # 저장할 때 서브 리소스 id를 고정해서 다시 만들어도 파일 차이가 없게 한다
 
 
 func _init() -> void:
 	var theme := Theme.new()
+	theme.default_font_size = DEFAULT_FONT_SIZE
 	_buttons(theme)
 	_panels(theme)
 	_fields(theme)
@@ -55,6 +62,7 @@ func _buttons(theme: Theme) -> void:
 	theme.set_stylebox("pressed", "Button", _flat(ACCENT_PRESSED, ACCENT_PRESSED, BORDER))
 	theme.set_stylebox("disabled", "Button", _flat(BUTTON_DISABLED, BUTTON_DISABLED, BORDER))
 	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())  # 웹에서 클릭 뒤 남는 포커스 테두리를 없앤다
+	theme.set_font_size("font_size", "Button", BUTTON_FONT_SIZE)
 	theme.set_color("font_color", "Button", TEXT)
 	theme.set_color("font_hover_color", "Button", TEXT)
 	theme.set_color("font_focus_color", "Button", TEXT)
@@ -98,6 +106,19 @@ func _buttons(theme: Theme) -> void:
 	_variation(theme, "SkillActive", "Button")
 	theme.set_stylebox("disabled", "SkillActive", _flat(BUTTON, ACCENT, BORDER + 1))
 	theme.set_color("font_disabled_color", "SkillActive", ACCENT)
+
+	# 스위치(CheckButton): 상태인지 누르는 버튼인지 헷갈리던 "켬" 버튼을 대신한다 (UX 점검 2026-10-02). 바탕 상자 없이 글과 스위치만
+	var on: Texture2D = load(SWITCH_ON)
+	var off: Texture2D = load(SWITCH_OFF)
+	for state: String in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		theme.set_stylebox(state, "CheckButton", StyleBoxEmpty.new())
+	theme.set_icon("checked", "CheckButton", on)
+	theme.set_icon("checked_disabled", "CheckButton", on)
+	theme.set_icon("unchecked", "CheckButton", off)
+	theme.set_icon("unchecked_disabled", "CheckButton", off)
+	for color: String in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color"]:
+		theme.set_color(color, "CheckButton", TEXT)
+	theme.set_color("font_disabled_color", "CheckButton", TEXT_DIM)
 
 
 func _panels(theme: Theme) -> void:

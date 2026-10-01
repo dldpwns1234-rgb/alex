@@ -5,7 +5,7 @@ extends VBoxContainer
 const GAP: int = 8
 const ROW_PADDING: int = 10
 const ROW_HEIGHT: float = 128.0  # 세 줄. 글이 바뀌어도 줄 높이와 버튼 자리가 변하지 않는다
-const NOTE_FONT_SIZE: int = 22
+const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const DONE_COLOR := Color("ffe66d")
