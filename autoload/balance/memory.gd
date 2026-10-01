@@ -94,3 +94,23 @@ func memory_note(index: int) -> String:
 		Memory.AWAKENING:
 			return "클릭 피해에 동료 DPS 합계의 %d%% 추가 (용사 마일스톤마다 ×%.2f)" % [roundi(AWAKENING_SHARE_PER_LEVEL * 100.0), AWAKENING_MILESTONE_GROWTH]
 	return "재등장 대기 −%.2f초" % WIND_RESPAWN_CUT_PER_LEVEL
+
+
+## 지금 레벨의 누적 효과 (상점 줄의 "지금 ×3.38"). 0레벨이면 빈 글
+func memory_total(index: int, level: int) -> String:
+	if level <= 0:
+		return ""
+	match index:
+		Memory.SWORD:
+			return Num.multiplier(sword_multiplier(level))
+		Memory.GOLD:
+			return Num.multiplier(gold_memory_multiplier(level))
+		Memory.SAND:
+			return "+%d초" % roundi(sand_bonus(level))
+		Memory.MEDITATION:
+			return "−%d%%" % roundi(MEDITATION_COOLDOWN_CUT * level * 100.0)
+		Memory.NAP:
+			return "+%d%%p" % roundi(OFFLINE_RATE_PER_NAP_LEVEL * level * 100.0)
+		Memory.AWAKENING:
+			return "+%d%%" % roundi(awakening_share(level) * 100.0)
+	return "−%.2f초" % wind_respawn_cut(level)

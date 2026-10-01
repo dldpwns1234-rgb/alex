@@ -10,7 +10,7 @@ const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
 const GAP: int = 10
 const ROW_PADDING: int = 10
-const NOTE_FONT_SIZE: int = 22
+const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const CRYSTAL_COLOR := Color("7fd1f0")
 const BUTTON_HEIGHT: float = 72.0
@@ -121,7 +121,13 @@ func _refresh() -> void:
 	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d" % [
 		Num.format(Prestige.crystals), Prestige.prestige_count, Prestige.best_stage]
 	if Prestige.can_prestige():
-		_prestige_button.text = "회귀  (결정 +%s)" % Num.format(Prestige.crystal_reward())
+		# 가진 결정이 몇 배가 되는지 보여 "지금 회귀할까"를 계산할 수 있게 한다 (UX 점검 2026-10-02)
+		var reward := Prestige.crystal_reward()
+		if Prestige.crystals > 0.0:
+			_prestige_button.text = "회귀  ·  결정 %s → %s (%s)" % [Num.format(Prestige.crystals),
+				Num.format(Prestige.crystals + reward), Num.multiplier((Prestige.crystals + reward) / Prestige.crystals)]
+		else:
+			_prestige_button.text = "회귀  (결정 +%s)" % Num.format(reward)
 		_prestige_button.disabled = false
 		_prestige_button.theme_type_variation = "AccentButton"
 	else:
@@ -132,7 +138,8 @@ func _refresh() -> void:
 	for i in _buttons.size():
 		var cap := Balance.memory_max_level(i)
 		var level_text := "Lv %d / %d" % [Prestige.level(i), cap] if cap > 0 else "Lv %d" % Prestige.level(i)
-		_titles[i].text = "%s  %s" % [Balance.memory_name(i), level_text]
+		var total := Balance.memory_total(i, Prestige.level(i))
+		_titles[i].text = "%s  %s" % [Balance.memory_name(i), level_text] + ("  ·  지금 " + total if not total.is_empty() else "")
 		if Prestige.is_maxed(i):
 			_buttons[i].text = "최대"
 			_buttons[i].disabled = true

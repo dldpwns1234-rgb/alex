@@ -111,6 +111,24 @@ func fate_note(index: int) -> String:
 	return "회귀 뒤 동료 레벨의 %d%%를 기억으로 얹고 시작" % roundi(COMPANION_MEMORY_PER_LEVEL * 100.0)
 
 
+## 지금 레벨의 누적 효과 (상점 줄의 "지금 ×9"). 0레벨이거나 토글을 여는 운명이면 빈 글
+func fate_total(index: int, level: int) -> String:
+	if level <= 0:
+		return ""
+	match index:
+		Fate.DESTINY:
+			return Num.multiplier(destiny_multiplier(level))
+		Fate.BOND:
+			return Num.multiplier(bond_multiplier(level))
+		Fate.FORESIGHT:
+			return "시작 %d" % start_stage(level)
+		Fate.COMPANION_MEMORY:
+			return "%d%%" % roundi(companion_memory_ratio(level) * 100.0)
+		Fate.LEAP:
+			return "최고 −%d" % leap_gap(level)
+	return ""
+
+
 ## 토글을 여는 운명
 func auto_fate(kind: int) -> int:
 	match kind:

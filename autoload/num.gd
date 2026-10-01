@@ -84,3 +84,8 @@ func format_clock(seconds: float) -> String:
 	@warning_ignore("integer_division")
 	var minutes := total / 60
 	return "%d:%02d" % [minutes, total % 60]
+
+
+## 배율을 "×3.38"처럼. 1만 이상이면 한국식 단위 ("×1.23억")
+func multiplier(value: float) -> String:
+	return "×" + (_truncated(value) if value < UNIT_BASE - EPSILON else format(value))

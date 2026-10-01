@@ -5,7 +5,7 @@ extends VBoxContainer
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const GAP: int = 10
 const ROW_PADDING: int = 10
-const NOTE_FONT_SIZE: int = 22
+const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const THREAD_COLOR := Color("f0a8ff")
@@ -114,7 +114,8 @@ func _refresh() -> void:
 	for i in _buttons.size():
 		var cap := Balance.fate_max_level(i)
 		var level_text := "Lv %d / %d" % [Rebirth.level(i), cap] if cap > 0 else "Lv %d" % Rebirth.level(i)
-		_titles[i].text = "%s  %s" % [Balance.fate_name(i), level_text]
+		var total := Balance.fate_total(i, Rebirth.level(i))
+		_titles[i].text = "%s  %s" % [Balance.fate_name(i), level_text] + ("  ·  지금 " + total if not total.is_empty() else "")
 		if Rebirth.is_maxed(i):
 			_buttons[i].text = "최대"
 			_buttons[i].disabled = true
