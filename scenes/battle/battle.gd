@@ -115,7 +115,7 @@ func _build() -> void:
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
 	_boss_controls = BossControls.new()
 	add_child(_boss_controls)
-	_tower_controls = TowerControls.new()  # 왼쪽 위. 역대 최고 100부터 보인다
+	_tower_controls = TowerControls.new()  # 오른쪽 아래. 역대 최고 100부터 보인다
 	add_child(_tower_controls)
 
 	_attack_clocks.resize(Balance.COMPANIONS.size())
@@ -132,7 +132,8 @@ func _layout() -> void:
 	_kill_label.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
 	_kill_label.size = Vector2(size.x - EDGE_MARGIN * 2.0, LABEL_HEIGHT)
 	_boss_controls.position = Vector2((size.x - BossControls.CHALLENGE_SIZE.x) * 0.5, EDGE_MARGIN)
-	_tower_controls.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
+	# 오른쪽 아래. 왼쪽 위는 동료 열(전사 머리)과 겹친다
+	_tower_controls.position = size - TowerControls.BUTTON_SIZE - Vector2.ONE * EDGE_MARGIN
 
 
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
