@@ -47,7 +47,7 @@ res://
     promotions.gd (Promotions) 동료 승급 단계, 구매, DPS 배율. 한 판 안의 강화. Party가 동료 공식에 배율을 넘긴다
     achievements.gd (Achievements) 누적 통계와 업적 달성, 영구 보너스 배율. 회귀해도 남는다. 통계는 Game·Party·Prestige·Skills의 시그널로 모은다
     equipment.gd (Equipment) 장비 3칸, 보스 드롭(Game 시그널), 자동 장착·분해, 강화석과 강화, 효과 배율. 회귀해도 남는다
-    automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용. 운명의 상점에서 해금하면 동작하고 토글은 저장된다
+    automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화(골드 효율 최고의 레벨업·승급). 운명의 상점에서 해금하면 동작하고 토글은 저장된다
     challenges.gd (Challenges) 도전 판: 시작(회귀로 판 끝내기), 제한 조회(Party·Skills·Game·Equipment·Prestige가 묻는다), 달성과 영구 보너스. 환생 1회부터
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
     prefs.gd     (Prefs) 화면 설정: 하단 메뉴 시트 높이. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로

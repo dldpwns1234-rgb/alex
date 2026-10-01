@@ -173,3 +173,16 @@ func companion_gain_per_gold(index: int) -> float:
 	var gain := party_dps(false) - before
 	companion_levels[index] -= purchase.count
 	return gain / purchase.cost if purchase.cost > 0.0 else 0.0
+
+
+## 지금 승급하면 파티 DPS(일반 몬스터 기준)가 골드당 얼마나 느는지. 승급할 수 없으면(레벨 부족, 최고 단계, 홀로 서기) 0.
+## 동료 자동 강화가 레벨업과 견준다. 단계를 잠깐 올렸다 되돌려 재므로 시그널은 내지 않는다
+func promotion_gain_per_gold(index: int) -> float:
+	if not Promotions.is_unlocked(index) or Challenges.blocks_companions():
+		return 0.0
+	var cost := Promotions.cost(index)
+	var before := party_dps(false)
+	Promotions.ranks[index] += 1
+	var gain := party_dps(false) - before
+	Promotions.ranks[index] -= 1
+	return gain / cost if cost > 0.0 else 0.0

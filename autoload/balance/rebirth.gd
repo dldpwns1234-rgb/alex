@@ -1,12 +1,12 @@
 extends "res://autoload/balance/equipment.gd"
 ## Balance 8부: 환생 (GDD 7.7절). 회귀를 거듭해 역대 최고 스테이지 500에 닿으면 기억까지 내려놓고 새 삶을 시작한다.
 ## 운명의 실을 받고 운명의 상점에서 회귀해도, 환생해도 남는 강화를 산다. 순서는 Fate 열거형과 같다.
-## 자동 회귀·자동 스킬은 해금(1레벨)이고 켜고 끄는 것은 Automation이 맡는다
+## 자동 회귀·자동 스킬·자동 강화는 해금(1레벨)이고 켜고 끄는 것은 Automation이 맡는다. 새 운명은 저장 순서 때문에 뒤에 붙인다
 
 const REBIRTH_MIN_STAGE: int = 500        # 환생 조건: 역대 최고 스테이지 (이번 판 포함)
 const REBIRTH_BASE_STAGE: int = 450       # 운명의 실 = floor((역대 최고 스테이지 − 450) / 10) → 500에서 5, 600에서 15
 const REBIRTH_STAGE_PER_THREAD: int = 10
-enum Fate { DESTINY, BOND, FORESIGHT, AUTO_PRESTIGE, AUTO_SKILLS, COMPANION_MEMORY }
+enum Fate { DESTINY, BOND, FORESIGHT, AUTO_PRESTIGE, AUTO_SKILLS, COMPANION_MEMORY, AUTO_UPGRADE }
 const FATES: Array[Dictionary] = [
 	{"name": "숙명", "max_level": 0},
 	{"name": "인연", "max_level": 0},
@@ -14,13 +14,15 @@ const FATES: Array[Dictionary] = [
 	{"name": "자동 회귀", "max_level": 1},
 	{"name": "자동 스킬", "max_level": 1},
 	{"name": "동료 기억", "max_level": 5},
+	{"name": "자동 강화", "max_level": 1},
 ]
 const FATE_COST_STEP: int = 1             # 비용 = 현재 레벨 + 1 (1, 2, 3 …)
 const DESTINY_MULTIPLIER: float = 3.0     # 숙명: 레벨당 모든 피해 ×3 (복리)
 const BOND_MULTIPLIER: float = 2.0        # 인연: 레벨당 기억의 결정 ×2 (복리)
 const FORESIGHT_STAGES: int = 25          # 예지: 레벨당 회귀 후 시작 스테이지 +25. 건너뛴 스테이지의 골드는 유산으로 받는다
-enum Auto { PRESTIGE, MEMORIES, SKILLS }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬 운명이 셋째를 연다
-const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용"]
+enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬·자동 강화 운명이 나머지를 하나씩 연다
+const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화"]
+const AUTO_UPGRADE_BUYS_PER_FRAME: int = 10  # 동료 자동 강화: 한 프레임에 사는 횟수 상한 (유산·오프라인 골드를 몇 프레임에 나눠 쓴다)
 const AUTO_PRESTIGE_STALL: float = 30.0   # 자동 회귀: 최고 스테이지가 이만큼(초) 오르지 않으면 회귀 (13절의 사람 정책)
 const COMPANION_MEMORY_PER_LEVEL: float = 0.1  # 동료 기억: 레벨당 지난 판 동료 레벨의 10%를 기억 레벨로 얹고 시작 (비용에는 안 든다)
 
@@ -84,12 +86,19 @@ func fate_note(index: int) -> String:
 			return "최고 스테이지가 %d초 동안 오르지 않으면 스스로 회귀하고 결정을 싼 것부터 산다" % roundi(AUTO_PRESTIGE_STALL)
 		Fate.AUTO_SKILLS:
 			return "쿨타임이 끝나면 스킬을 바로 쓴다"
+		Fate.AUTO_UPGRADE:
+			return "살 수 있는 동료 레벨업·승급 중 골드 효율이 가장 좋은 것을 스스로 산다"
 	return "회귀 뒤 동료 레벨의 %d%%를 기억으로 얹고 시작" % roundi(COMPANION_MEMORY_PER_LEVEL * 100.0)
 
 
 ## 토글을 여는 운명
 func auto_fate(kind: int) -> int:
-	return Fate.AUTO_SKILLS if kind == Auto.SKILLS else Fate.AUTO_PRESTIGE
+	match kind:
+		Auto.SKILLS:
+			return Fate.AUTO_SKILLS
+		Auto.UPGRADE:
+			return Fate.AUTO_UPGRADE
+	return Fate.AUTO_PRESTIGE
 
 
 func auto_note(kind: int) -> String:
@@ -98,4 +107,6 @@ func auto_note(kind: int) -> String:
 			return "최고 스테이지가 %d초 안 오르면 스스로 회귀" % roundi(AUTO_PRESTIGE_STALL)
 		Auto.MEMORIES:
 			return "회귀하면 결정을 싼 것부터 산다"
-	return "쿨타임이 끝나면 스킬을 바로 쓴다"
+		Auto.SKILLS:
+			return "쿨타임이 끝나면 스킬을 바로 쓴다"
+	return "살 수 있는 것 중 골드 효율 최고를 산다"

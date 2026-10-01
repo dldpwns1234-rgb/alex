@@ -32,6 +32,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_tower.gd"),
 	preload("res://tests/test_party_value.gd"),
 	preload("res://tests/test_prefs.gd"),
+	preload("res://tests/test_auto_upgrade.gd"),
 ]
 
 

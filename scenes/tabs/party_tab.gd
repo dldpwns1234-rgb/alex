@@ -51,6 +51,8 @@ func _ready() -> void:
 	Party.companion_changed.connect(_refresh.unbind(2))
 	Party.buy_mode_changed.connect(_refresh.unbind(1))
 	Promotions.promotion_changed.connect(_refresh.unbind(2))
+	Automation.settings_changed.connect(_refresh)  # 동료 자동 강화 표시
+	Rebirth.fate_changed.connect(_refresh.unbind(2))
 	_refresh()
 
 
@@ -151,7 +153,7 @@ func _refresh() -> void:
 		if gains[i] <= 0.0:
 			value.text = ""
 		elif gains[i] >= best:
-			value.text = "골드 효율 최고"
+			value.text = "골드 효율 최고 · 자동" if Automation.is_active(Balance.Auto.UPGRADE) else "골드 효율 최고"
 			value.add_theme_color_override("font_color", BEST_COLOR)
 		else:
 			value.text = "골드 효율 %d%% (최고 대비)" % roundi(gains[i] / best * 100.0)

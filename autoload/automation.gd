@@ -1,6 +1,6 @@
 extends Node
-## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용. 운명의 상점에서 해금했을 때만 동작한다.
-## 켜고 끄는 설정은 저장되고 회귀·환생해도 남는다 (데이터 초기화에서만 기본값으로). 상태 변경은 Prestige·Skills의 함수로만 한다.
+## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화. 운명의 상점에서 해금했을 때만 동작한다.
+## 켜고 끄는 설정은 저장되고 회귀·환생해도 남는다 (데이터 초기화에서만 기본값으로). 상태 변경은 Prestige·Skills·Party·Promotions의 함수로만 한다.
 
 signal settings_changed()
 
@@ -17,7 +17,7 @@ func _ready() -> void:
 	Game.tower_changed.connect(_restart_clock.unbind(1))  # 탑에 다녀온 시간은 정체가 아니다
 
 
-## 정체 시계를 재고, 자동 회귀와 자동 스킬을 돌린다. 보스와 싸우는 중, 도전 판, 탑 안에서는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
+## 정체 시계를 재고, 자동 회귀·자동 스킬·동료 자동 강화를 돌린다. 보스와 싸우는 중, 도전 판, 탑 안에서는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
 func _process(delta: float) -> void:
 	_stall += minf(delta, Balance.MAX_DELTA)
 	if is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige() and _stall >= Balance.AUTO_PRESTIGE_STALL \
@@ -25,6 +25,8 @@ func _process(delta: float) -> void:
 		Prestige.perform()
 	if is_active(Balance.Auto.SKILLS):
 		use_skills()
+	if is_active(Balance.Auto.UPGRADE):
+		upgrade_companions()
 
 
 ## 데이터 초기화에서만 부른다 (회귀·환생은 설정을 남긴다)
@@ -91,6 +93,37 @@ func use_skills() -> void:
 	for i in Balance.SKILLS.size():
 		if Skills.can_activate(i):
 			Skills.activate(i)
+
+
+## 동료 자동 강화: 골드 효율(지금 구매 배수로 샀을 때 파티 DPS 증가 ÷ 비용)이 가장 좋은 레벨업이나 승급을 산다.
+## 살 수 있는 것 중에서 고른다 (시뮬레이션 봇의 구매 정책, tools/sim_purchases.gd). 한 프레임에 상한까지 되풀이한다
+func upgrade_companions() -> void:
+	for _i in Balance.AUTO_UPGRADE_BUYS_PER_FRAME:
+		if not _buy_best_upgrade():
+			return
+
+
+## 살 수 있는 레벨업·승급 중 골드 효율이 가장 좋은 것 하나를 산다. 살 것이 없으면 false
+func _buy_best_upgrade() -> bool:
+	var best := 0.0
+	var pick := -1
+	var promote := false
+	for i in Balance.COMPANIONS.size():
+		if Party.companion_purchase(i).affordable:
+			var level_gain := Party.companion_gain_per_gold(i)
+			if level_gain > best:
+				best = level_gain
+				pick = i
+				promote = false
+		if Promotions.can_promote(i):
+			var rank_gain := Party.promotion_gain_per_gold(i)
+			if rank_gain > best:
+				best = rank_gain
+				pick = i
+				promote = true
+	if pick < 0:
+		return false
+	return Promotions.promote(pick) if promote else Party.buy_companion(pick)
 
 
 ## 새 스테이지에 닿으면 정체 시계를 되돌린다. 보스 실패로 돌아갔다 다시 오른 것은 진행이 아니다
