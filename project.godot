@@ -35,6 +35,8 @@ Challenges="*res://autoload/challenges.gd"
 Tower="*res://autoload/tower.gd"
 ; 보물 요정은 Game·Skills를 쓰고 Game이 축복 배율을 묻는다
 Treasure="*res://autoload/treasure.gd"
+; 기억 조각은 업적 통계로 열리므로 Achievements 뒤에, Save가 불러오므로 그 앞에
+Fragments="*res://autoload/fragments.gd"
 ; 화면 설정(하단 메뉴 시트 높이)은 Save가 불러오므로 그 앞에
 Prefs="*res://autoload/prefs.gd"
 Save="*res://autoload/save.gd"

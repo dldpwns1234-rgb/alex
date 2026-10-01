@@ -82,6 +82,7 @@ func to_dict() -> Dictionary:
 		"challenges": Challenges.to_dict(),
 		"tower": Tower.to_dict(),
 		"treasure": Treasure.to_dict(),
+		"fragments": Fragments.to_dict(),
 		"prefs": Prefs.to_dict(),
 	}
 
@@ -101,6 +102,7 @@ func from_dict(data: Dictionary) -> void:
 	Challenges.from_dict(_section(data, "challenges"))
 	Tower.from_dict(_section(data, "tower"))
 	Treasure.from_dict(_section(data, "treasure"))
+	Fragments.from_dict(_section(data, "fragments"))  # 업적(통계) 뒤에
 	Prefs.from_dict(_section(data, "prefs"))
 
 
@@ -172,6 +174,7 @@ func reset_data() -> void:
 	Challenges.reset()
 	Tower.reset()
 	Treasure.reset()
+	Fragments.reset()
 	Prefs.reset()
 	save_game()
 

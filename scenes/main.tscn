@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/top_bar.gd" id="2_top_bar"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scenes/tabs/achievements_tab.gd" id="12_achievements_tab"]
 [ext_resource type="Script" path="res://scenes/sheet.gd" id="13_sheet"]
 [ext_resource type="Script" path="res://scenes/battle/tap_hint.gd" id="14_tap_hint"]
+[ext_resource type="Script" path="res://scenes/fragment_card.gd" id="15_fragment_card"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -110,3 +111,7 @@ script = ExtResource("12_achievements_tab")
 [node name="SettingsTab" type="MarginContainer" parent="Sheet/Column/Panels"]
 layout_mode = 2
 script = ExtResource("7_settings_tab")
+
+[node name="FragmentCard" type="AcceptDialog" parent="."]
+visible = false
+script = ExtResource("15_fragment_card")
