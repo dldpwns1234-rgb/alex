@@ -27,6 +27,13 @@ func milestones(level: int) -> int:
 	return first + floori(float(level) / MILESTONE_INTERVAL)
 
 
+## 다음 마일스톤이 생기는 레벨: 10, 이후 25의 배수 (용사 탭의 "다음 마일스톤까지")
+func next_milestone_level(level: int) -> int:
+	if level < MILESTONE_FIRST_LEVEL:
+		return MILESTONE_FIRST_LEVEL
+	return (floori(float(level) / MILESTONE_INTERVAL) + 1) * MILESTONE_INTERVAL
+
+
 ## 공격력: 기본 공격력 × L × 2^m(L). 레벨 0(미고용)은 0
 func attack(base_damage: float, level: int) -> float:
 	if level <= 0:

@@ -10,17 +10,20 @@ const ROW_GAP: int = 12
 const ROW_PADDING: int = 10
 const BUTTON_HEIGHT: float = 88.0
 const PORTRAIT_SIZE := Vector2(120, 120)
-const NOTE_FONT_SIZE: int = 22
+const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const EMPTY_COLOR := Color("7a7690")
 const ENHANCE_BUTTON_SIZE := Vector2(230, 56)
 const CRAFT_BUTTON_SIZE := Vector2(230, 56)
 const BUTTON_GAP: int = 6
+const LEVEL_FONT_SIZE: int = 30   # 용사 탭의 핵심 숫자는 크게 (UX 점검 2026-10-02)
+const DAMAGE_FONT_SIZE: int = 26
 const ROW_HEIGHT: float = 140.0  # 버튼 두 개 높이. 장비 설명이 두 줄이 되어도 줄 높이가 변하지 않게
 
 var _level_label: Label
 var _damage_label: Label
+var _milestone_label: Label
 var _buy_button: Button
 var _stones_label: Label
 var _slot_titles: Array[Label] = []
@@ -52,12 +55,17 @@ func _ready() -> void:
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	text.add_theme_constant_override("separation", ROW_GAP)
+	text.add_theme_constant_override("separation", 0)
 	header.add_child(text)
 	_level_label = Label.new()
+	_level_label.add_theme_font_size_override("font_size", LEVEL_FONT_SIZE)
 	text.add_child(_level_label)
 	_damage_label = Label.new()
+	_damage_label.add_theme_font_size_override("font_size", DAMAGE_FONT_SIZE)
 	text.add_child(_damage_label)
+	_milestone_label = _make_label("", NOTE_COLOR)  # 다음 마일스톤(공격력 ×2, 각성 몫 ×1.07)까지 남은 레벨
+	_milestone_label.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
+	text.add_child(_milestone_label)
 
 	_buy_button = Button.new()
 	_buy_button.custom_minimum_size = Vector2(0.0, BUTTON_HEIGHT)
@@ -142,6 +150,8 @@ func _refresh() -> void:
 	var purchase := Party.hero_purchase()
 	_level_label.text = "용사 Lv %d" % Party.hero_level
 	_damage_label.text = "클릭 피해 %s" % Num.format(Party.click_damage())
+	var next := Balance.next_milestone_level(Party.hero_level)
+	_milestone_label.text = "다음 마일스톤 Lv %d (%d 남음)" % [next, next - Party.hero_level]
 	_buy_button.text = "최대 레벨" if purchase.count == 0 else "레벨업 ×%d  (비용 %s 골드)" % [purchase.count, Num.format(purchase.cost)]
 	_buy_button.disabled = not purchase.affordable
 	_stones_label.text = "강화석 %s" % Num.format(Equipment.stones)
