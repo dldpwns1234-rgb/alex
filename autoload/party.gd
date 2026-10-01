@@ -1,26 +1,13 @@
-extends Node
-## 용사와 동료의 레벨과 구매 (GDD 5·6절). 골드는 Game이 갖고 있어 Game.spend()로 치른다.
+extends "res://autoload/party/purchases.gd"
+## 용사와 동료의 레벨과 구매 (GDD 5·6절). 골드는 Game이 갖고 있어 Game.spend()로 치른다. 구매 배수와 구매 계산은 party/purchases.gd에.
 ## Game이 200줄을 넘지 않도록 나눴다. 상태 변경은 Game과 Party의 함수로만 하고 UI는 표시만 한다.
 
 signal hero_changed(level: int)
 signal companion_changed(index: int, level: int)
-signal buy_mode_changed(mode: BuyMode)
-
-## 구매 배수 (GDD 9절): ×1, ×10, 최대. 용사 탭과 동료 탭이 같이 쓴다
-enum BuyMode { ONE, TEN, MAX }
-
-
-## 한 번에 살 레벨 수와 비용. count는 최소 1이라 못 살 때도 비용을 보여줄 수 있다
-class Purchase:
-	var count: int = 1
-	var cost: float = 0.0
-	var affordable: bool = false
-
 
 var hero_level: int = Balance.HERO_START_LEVEL
 var companion_levels: Array[int] = []  # 산 레벨. 0 = 미고용 (기억 레벨이 있으면 고용 상태)
 var companion_memory: Array[int] = []  # 동료 기억(운명의 상점)이 얹는 기억 레벨. DPS·승급·단련에는 들고 레벨업 비용에는 안 든다
-var buy_mode: BuyMode = BuyMode.ONE
 
 
 func _ready() -> void:
@@ -146,13 +133,6 @@ func is_companion_unlocked(index: int) -> bool:
 	return is_companion_hired(index) or Game.highest_stage >= Balance.companion_unlock_stage(index)
 
 
-func set_buy_mode(mode: BuyMode) -> void:
-	if buy_mode == mode:
-		return
-	buy_mode = mode
-	buy_mode_changed.emit(mode)
-
-
 func hero_purchase() -> Purchase:
 	return _purchase(Balance.HERO_BASE_COST, hero_level)
 
@@ -182,19 +162,14 @@ func buy_companion(index: int) -> bool:
 	return true
 
 
-## 현재 구매 배수로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다
-func _purchase(base_cost: float, level: int) -> Purchase:
-	var count := 1
-	match buy_mode:
-		BuyMode.TEN:
-			count = Balance.BULK_COUNT
-		BuyMode.MAX:
-			count = maxi(Balance.max_affordable(base_cost, level, Game.gold), 1)
-			# 닫힌 공식의 부동소수 오차로 한 레벨 넘칠 수 있으니 실제 비용으로 확인한다
-			while count > 1 and Balance.bulk_cost(base_cost, level, count) > Game.gold:
-				count -= 1
-	var purchase := Purchase.new()
-	purchase.count = count
-	purchase.cost = Balance.bulk_cost(base_cost, level, count)
-	purchase.affordable = Game.gold >= purchase.cost
-	return purchase
+## 지금 구매 배수로 이 동료를 사면 파티 DPS(일반 몬스터 기준)가 골드당 얼마나 느는지. 동료 탭의 골드 효율 비교에 쓴다.
+## 합류 전이거나 홀로 서기 도전 중이면 0. 레벨을 잠깐 올렸다 되돌려 재므로 시그널은 내지 않는다
+func companion_gain_per_gold(index: int) -> float:
+	if not is_companion_unlocked(index) or Challenges.blocks_companions():
+		return 0.0
+	var purchase := companion_purchase(index)
+	var before := party_dps(false)
+	companion_levels[index] += purchase.count
+	var gain := party_dps(false) - before
+	companion_levels[index] -= purchase.count
+	return gain / purchase.cost if purchase.cost > 0.0 else 0.0

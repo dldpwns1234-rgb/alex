@@ -1,5 +1,5 @@
 extends MarginContainer
-## 동료 탭: 동료 4명의 고용과 레벨업, 승급 (GDD 6절·6.6절). 줄은 코드로 생성한다.
+## 동료 탭: 동료 4명의 고용과 레벨업, 승급, 골드 효율(지금 구매로 파티 DPS가 골드당 얼마나 느는지, 최고 대비 %) (GDD 6절·6.6절). 줄은 코드로 생성한다.
 ## Game·Party·Promotions의 시그널을 받아 표시만 하고, 구매는 Party.buy_companion()과 Promotions.promote()를 부른다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
@@ -15,6 +15,7 @@ const ROW_GAP: int = 8
 const ROW_PADDING: int = 12
 const NOTE_FONT_SIZE: int = 22
 const NOTE_COLOR := Color("b8b4c8")
+const BEST_COLOR := Color("ffe66d")  # 골드 효율이 가장 좋은 동료
 const BUTTON_SIZE := Vector2(250, 72)
 const PROMOTE_SIZE := Vector2(250, 56)
 const BUTTON_GAP: int = 6
@@ -26,6 +27,7 @@ var _portraits: Array[TextureRect] = []
 var _title_labels: Array[Label] = []
 var _dps_labels: Array[Label] = []
 var _note_labels: Array[Label] = []
+var _value_labels: Array[Label] = []
 var _buttons: Array[Button] = []
 var _promote_buttons: Array[Button] = []
 
@@ -83,6 +85,8 @@ func _make_row(index: int) -> PanelContainer:
 	text.add_child(dps)
 	var note := _make_line(NOTE_FONT_SIZE, NOTE_COLOR)
 	text.add_child(note)
+	var value := _make_line(NOTE_FONT_SIZE, NOTE_COLOR)
+	text.add_child(value)
 
 	# 레벨업 버튼 아래에 승급 버튼. 고용 전에도 자리를 차지해 줄 안의 배치가 변하지 않는다
 	var buttons := VBoxContainer.new()
@@ -98,6 +102,7 @@ func _make_row(index: int) -> PanelContainer:
 	_title_labels.append(title)
 	_dps_labels.append(dps)
 	_note_labels.append(note)
+	_value_labels.append(value)
 	_buttons.append(button)
 	_promote_buttons.append(promote)
 	return panel
@@ -133,6 +138,23 @@ func _on_promote_pressed(index: int) -> void:
 
 
 func _refresh() -> void:
+	# 골드 효율: 지금 구매로 파티 DPS가 골드당 얼마나 느는지, 가장 좋은 동료 대비 %
+	var gains: Array[float] = []
+	var best := 0.0
+	for i in _buttons.size():
+		gains.append(Party.companion_gain_per_gold(i))
+		best = maxf(best, gains[i])
+	for i in _buttons.size():
+		var value := _value_labels[i]
+		value.remove_theme_color_override("font_color")
+		value.add_theme_color_override("font_color", NOTE_COLOR)
+		if gains[i] <= 0.0:
+			value.text = ""
+		elif gains[i] >= best:
+			value.text = "골드 효율 최고"
+			value.add_theme_color_override("font_color", BEST_COLOR)
+		else:
+			value.text = "골드 효율 %d%% (최고 대비)" % roundi(gains[i] / best * 100.0)
 	for i in _buttons.size():
 		var name := Balance.companion_name(i)
 		var level := Party.companion_level(i)

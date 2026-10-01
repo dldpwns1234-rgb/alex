@@ -39,7 +39,7 @@ res://
     balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → challenges(도전 판) → balance.gd(몬스터·보스·마왕성·시련의 탑·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
     game.gd      (Game) 전투 흐름: 피해, 처치, 보스 타이머, 파밍과 도전. 상태 변경은 오토로드에서만
     game/state.gd  Game 1부: 시그널, 상태, 저장, 골드, 진행과 등장. game.gd가 상속한다
-    party.gd     (Party) 용사와 동료의 레벨, 구매 배수, 구매. Game이 200줄을 넘지 않도록 나눔
+    party.gd     (Party) 용사와 동료의 레벨, 구매, 골드 효율 조회. party/purchases.gd(1부: 구매 배수와 구매 계산)를 상속한다
     skills.gd    (Skills) 스킬 발동·지속·쿨타임(유닉스 초 기준)과 효과 배율
     prestige.gd  (Prestige) 기억의 결정, 상점 레벨, 역대 기록, 회귀 실행. 회귀해도 남는 것들
     rebirth.gd   (Rebirth) 환생: 운명의 실, 운명의 상점(숙명·인연·예지), 환생 실행. 회귀 뒤 시작 스테이지도 여기서 정한다
