@@ -1,6 +1,6 @@
 extends "res://autoload/balance/achievements.gd"
 ## Balance 7부: 장비 (GDD 7.6절). 보스가 떨어뜨리고 회귀해도 남는다. 칸(무기·깃발·장신구)마다 효과 종류가 정해져 있고,
-## 효과 크기는 등급과 떨어진 스테이지, 칸의 강화 레벨로 정해진다
+## 효과 크기는 등급과 떨어진 스테이지, 칸의 강화 레벨로 정해진다. 강화석으로 지금 스테이지의 장비를 제작할 수도 있다 (+10 뒤의 소모처)
 
 enum Slot { WEAPON, BANNER, CHARM }
 enum Grade { COMMON, FINE, RARE, EPIC, LEGENDARY }
@@ -26,6 +26,10 @@ const ENHANCE_STEP: float = 0.1
 const ENHANCE_MAX: int = 10
 const ENHANCE_BASE_COST: float = 3.0     # 강화 비용 (n → n+1): 올림(3 × 1.5^n) 강화석 → 3, 5, 7, 11, 16 …
 const ENHANCE_COST_GROWTH: float = 1.5
+# 제작: 강화석을 내고 고른 칸의 장비를 지금 스테이지로 하나 만든다 (등급은 드롭 표 그대로, 더 좋으면 장착·아니면 분해).
+# 세 칸이 +10이면 강화석이 쌓이기만 해서 넣었다 (플레이테스트 2026-10-01). 분해로 평균 2.8개가 돌아오니 실제 비용은 약 7개.
+# 영웅 이상(7%)이어야 지금 장비를 넘기 쉬우니 100개 남짓마다 한 번 갈아입는 셈이다
+const CRAFT_COST: float = 10.0
 
 
 func slot_label(slot: int) -> String:

@@ -1,6 +1,6 @@
 extends MarginContainer
-## 용사 탭: 레벨, 클릭 피해, 레벨업 버튼, 그 아래 장비 3칸(GDD 7.6절)과 강화석. 구매 배수는 탭 패널 위의 BuyBar가 정한다.
-## Game·Party·Equipment의 시그널을 받아 표시만 하고, 구매는 Party.buy_hero()와 Equipment.enhance()를 부른다. 상수는 배치용이다.
+## 용사 탭: 레벨, 클릭 피해, 레벨업 버튼, 그 아래 장비 3칸(GDD 7.6절)과 강화석. 칸마다 강화 버튼과 그 아래 제작 버튼. 구매 배수는 탭 패널 위의 BuyBar가 정한다.
+## Game·Party·Equipment의 시그널을 받아 표시만 하고, 구매는 Party.buy_hero()·Equipment.enhance()·Equipment.craft()를 부른다. 상수는 배치용이다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
@@ -14,8 +14,10 @@ const NOTE_FONT_SIZE: int = 22
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const EMPTY_COLOR := Color("7a7690")
-const ENHANCE_BUTTON_SIZE := Vector2(230, 64)
-const ROW_HEIGHT: float = 128.0  # 장비 설명이 두 줄이 되어도 줄 높이가 변하지 않게
+const ENHANCE_BUTTON_SIZE := Vector2(230, 56)
+const CRAFT_BUTTON_SIZE := Vector2(230, 56)
+const BUTTON_GAP: int = 6
+const ROW_HEIGHT: float = 140.0  # 버튼 두 개 높이. 장비 설명이 두 줄이 되어도 줄 높이가 변하지 않게
 
 var _level_label: Label
 var _damage_label: Label
@@ -24,6 +26,7 @@ var _stones_label: Label
 var _slot_titles: Array[Label] = []
 var _slot_notes: Array[Label] = []
 var _enhance_buttons: Array[Button] = []
+var _craft_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -109,17 +112,29 @@ func _make_slot_row(slot: int) -> PanelContainer:
 	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
 	note.add_theme_color_override("font_color", NOTE_COLOR)
 	text.add_child(note)
-	var button := Button.new()
-	button.custom_minimum_size = ENHANCE_BUTTON_SIZE
-	button.clip_text = true
-	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	button.pressed.connect(Equipment.enhance.bind(slot))
-	row.add_child(button)
+	# 강화 버튼 아래에 제작 버튼. 빈 칸도 제작으로 채울 수 있다
+	var buttons := VBoxContainer.new()
+	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	buttons.add_theme_constant_override("separation", BUTTON_GAP)
+	row.add_child(buttons)
+	var button := _make_button(ENHANCE_BUTTON_SIZE, Equipment.enhance.bind(slot))
+	buttons.add_child(button)
+	var craft := _make_button(CRAFT_BUTTON_SIZE, Equipment.craft.bind(slot))
+	buttons.add_child(craft)
 	_slot_titles.append(title)
 	_slot_notes.append(note)
 	_enhance_buttons.append(button)
+	_craft_buttons.append(craft)
 	return panel
+
+
+func _make_button(size: Vector2, callback: Callable) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = size
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	button.pressed.connect(callback)
+	return button
 
 
 func _refresh() -> void:
@@ -133,13 +148,15 @@ func _refresh() -> void:
 		_refresh_slot(slot)
 
 
-## 칸 하나: 빈 칸, 장비(등급 색 이름, 효과, 떨어진 스테이지, 강화), 강화 버튼(최대·비용·부족)
+## 칸 하나: 빈 칸, 장비(등급 색 이름, 효과, 떨어진 스테이지, 강화), 강화 버튼(최대·비용·부족), 제작 버튼(비용·부족)
 func _refresh_slot(slot: int) -> void:
 	var button := _enhance_buttons[slot]
+	_craft_buttons[slot].text = "제작 (%s 강화석)" % Num.format(Balance.CRAFT_COST)
+	_craft_buttons[slot].disabled = not Equipment.can_craft()
 	if not Equipment.has_item(slot):
 		_slot_titles[slot].text = "%s  ·  비어 있음" % Balance.slot_label(slot)
 		_slot_titles[slot].add_theme_color_override("font_color", EMPTY_COLOR)
-		_slot_notes[slot].text = "보스가 떨어뜨린다  ·  %s" % Balance.slot_effect_label(slot)
+		_slot_notes[slot].text = "보스가 떨어뜨리거나 제작  ·  %s" % Balance.slot_effect_label(slot)
 		button.text = "강화"
 		button.disabled = true
 		return

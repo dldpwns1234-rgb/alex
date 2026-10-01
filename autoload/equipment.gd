@@ -1,5 +1,6 @@
 extends Node
 ## 장비 (GDD 7.6절). 보스를 잡으면 확률로 장비가 떨어진다. 지금 것보다 좋으면 바로 장착하고 나머지는 분해해 강화석이 된다.
+## 강화석으로 고른 칸의 장비를 지금 스테이지로 제작할 수도 있다 (강화가 다 찬 뒤의 소모처). 제작한 장비도 같은 규칙으로 장착·분해한다.
 ## 칸(무기·깃발·장신구)마다 효과 종류가 정해져 있고, 강화는 칸에 붙어 새 장비에도 이어진다. 장비와 강화석은 회귀해도 남는다.
 ## 효과는 click_multiplier()·party_multiplier()·gold_multiplier()로 Party·Game·Save가 곱한다.
 ## 상태 변경은 이 오토로드의 함수로만 하고 UI는 표시만 한다.
@@ -7,6 +8,7 @@ extends Node
 signal equipment_changed(slot: int)
 signal stones_changed(stones: float)
 signal item_dropped(slot: int, grade: int, stage: int, equipped: bool)  # 알림용. equipped가 false면 분해했다
+signal item_crafted(slot: int, grade: int, stage: int, equipped: bool)  # 제작 알림. 뜻은 item_dropped와 같다
 
 var slots: Array[Dictionary] = []    # 칸마다 {"grade": int, "stage": int}. 비어 있으면 빈 딕셔너리
 var enhance_levels: Array[int] = []  # 칸의 강화 레벨. 장비를 바꿔도 남는다
@@ -99,6 +101,29 @@ func add_stones(amount: float) -> void:
 
 ## 장비가 떨어졌다. 지금 것보다 좋으면(같아도) 장착하고 옛것을 분해하며, 아니면 새것을 분해한다. 장착했으면 true
 func drop(slot: int, grade: int, stage: int) -> bool:
+	var better := _receive(slot, grade, stage)
+	item_dropped.emit(slot, grade, stage, better)
+	return better
+
+
+## 제작: 강화석 CRAFT_COST개로 고른 칸의 장비를 지금 스테이지로 하나 만든다. 등급은 드롭 표로 굴린다 (grade_roll이 0 이상이면 그 값으로,
+## 테스트용). 떨어진 장비처럼 더 좋으면 장착하고 아니면 분해해 강화석 일부가 돌아온다. 강화석이 모자라면 false
+func craft(slot: int, grade_roll: float = -1.0) -> bool:
+	if not can_craft():
+		return false
+	stones -= Balance.CRAFT_COST
+	var grade := Balance.roll_grade(randf() if grade_roll < 0.0 else grade_roll)
+	var better := _receive(slot, grade, Game.stage)
+	item_crafted.emit(slot, grade, Game.stage, better)
+	return better
+
+
+func can_craft() -> bool:
+	return stones >= Balance.CRAFT_COST
+
+
+## 새 장비를 받는다: 지금 것보다 좋으면(같아도) 장착하고 옛것을 분해, 아니면 새것을 분해. 장착했으면 true
+func _receive(slot: int, grade: int, stage: int) -> bool:
 	var better := not has_item(slot) \
 		or Balance.item_power(grade, stage) >= Balance.item_power(item_grade(slot), item_stage(slot))
 	if better:
@@ -109,7 +134,6 @@ func drop(slot: int, grade: int, stage: int) -> bool:
 	else:
 		stones += Balance.dismantle_stones(grade) * Challenges.stone_multiplier()
 	stones_changed.emit(stones)
-	item_dropped.emit(slot, grade, stage, better)
 	return better
 
 

@@ -57,7 +57,8 @@ func _ready() -> void:
 	Promotions.promoted.connect(_on_promoted)
 	Equipment.equipment_changed.connect(_refresh_badges.unbind(1))
 	Equipment.stones_changed.connect(_refresh_badges.unbind(1))
-	Equipment.item_dropped.connect(_on_item_dropped)
+	Equipment.item_dropped.connect(_on_item_received.bind("획득"))
+	Equipment.item_crafted.connect(_on_item_received.bind("제작"))
 	Rebirth.reborn.connect(_on_reborn)
 	Achievements.unlocked.connect(_on_achievement_unlocked)
 	Achievements.seen_changed.connect(_refresh_achievement_badge)
@@ -95,10 +96,10 @@ func _on_promoted(index: int, rank: int) -> void:
 	_toast.show_message("%s 승급 · %s" % [Balance.companion_name(index), Balance.promotion_stars(rank)])
 
 
-## 장비 알림: 등급 색으로 이름을 보이고, 장착했는지 분해했는지 적는다
-func _on_item_dropped(slot: int, grade: int, _stage: int, equipped: bool) -> void:
-	var outcome := "장착" if equipped else "분해 · 강화석 +%s" % Num.format(Balance.dismantle_stones(grade))
-	_toast.show_message("%s 획득 · %s" % [Balance.item_name(slot, grade), outcome], Balance.grade_color(grade))
+## 장비 알림: 등급 색으로 이름을 보이고, 획득(드롭)인지 제작인지, 장착했는지 분해했는지 적는다
+func _on_item_received(slot: int, grade: int, _stage: int, equipped: bool, verb: String) -> void:
+	var outcome := "장착" if equipped else "분해 · 강화석 +%s" % Num.format(Balance.dismantle_stones(grade) * Challenges.stone_multiplier())
+	_toast.show_message("%s %s · %s" % [Balance.item_name(slot, grade), verb, outcome], Balance.grade_color(grade))
 
 
 ## 돌아오면 비운 시간과 받은 골드를 먼저 보여준다 (GDD 8·9절). 동료가 없어 받을 게 없으면 띄우지 않는다

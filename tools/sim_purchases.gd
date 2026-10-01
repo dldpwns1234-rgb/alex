@@ -1,7 +1,7 @@
 extends Node
 ## 밸런스 시뮬레이션 1부: 정책. balance_sim.gd가 상속한다. 정책 인자(--이름=값)를 읽고, 언제 회귀할지, 무엇을 살지 정한다.
 ## 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급. 진행 속도에 안 잡히는
-## 단련은 골드의 2% 이하일 때). 강화석은 생기는 대로 강화에, 결정은 계획(plan)대로, 운명의 실은 셋 중 싼 것에 쓴다.
+## 단련은 골드의 2% 이하일 때). 강화석은 생기는 대로 강화에, 강화가 다 차면 가장 약한 칸의 제작에 쓴다. 결정은 계획(plan)대로, 운명의 실은 싼 것에 쓴다.
 
 var clicks_per_second: float = 4.0  # 정책 인자 taps (GDD 13절은 3~5)
 var _goal: int = 0
@@ -46,6 +46,8 @@ func _buy_everything() -> void:
 	for slot in Balance.SLOT_LABELS.size():
 		while Equipment.enhance(slot):
 			pass
+	while _all_enhanced() and Equipment.craft(_weakest_slot()):
+		pass
 	while true:
 		var current := _progress_rate()
 		var best_ratio := 0.0
@@ -105,6 +107,23 @@ func _buy_everything() -> void:
 				Promotions.promote(best_index)
 			_:
 				return
+
+
+## 장비가 든 칸이 모두 +10인지. 그때부터 남는 강화석을 제작에 쓴다 (강화가 남았으면 모은다)
+func _all_enhanced() -> bool:
+	for slot in Balance.SLOT_LABELS.size():
+		if Equipment.has_item(slot) and not Equipment.is_enhance_maxed(slot):
+			return false
+	return true
+
+
+## 효과가 가장 작은 칸 (빈 칸이 먼저). 제작으로 채울 자리
+func _weakest_slot() -> int:
+	var weakest := 0
+	for slot in Balance.SLOT_LABELS.size():
+		if Equipment.effect(slot) < Equipment.effect(weakest):
+			weakest = slot
+	return weakest
 
 
 ## 결정 사용 계획: sword(검술만), sword_gold(검술·황금 중 싼 것), all(일곱 개 중 싼 것. 같으면 앞의 것)
