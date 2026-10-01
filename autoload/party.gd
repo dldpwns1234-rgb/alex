@@ -44,7 +44,7 @@ func to_dict() -> Dictionary:
 
 ## 저장 데이터를 적용한다. 없는 필드는 기본값으로, 동료가 늘어나면 새 동료는 미고용으로
 func from_dict(data: Dictionary) -> void:
-	hero_level = maxi(int(data.get("hero_level", Balance.HERO_START_LEVEL)), Balance.HERO_START_LEVEL)
+	hero_level = _read_level(data.get("hero_level", Balance.HERO_START_LEVEL), Balance.HERO_START_LEVEL)
 	companion_levels.clear()
 	companion_levels.resize(Balance.COMPANIONS.size())
 	companion_levels.fill(0)
@@ -63,7 +63,12 @@ func from_dict(data: Dictionary) -> void:
 func _read_levels(saved: Variant, into: Array[int]) -> void:
 	if saved is Array:
 		for i in mini(saved.size(), into.size()):
-			into[i] = maxi(int(saved[i]), 0)
+			into[i] = _read_level(saved[i], 0)
+
+
+## 저장된 레벨을 상한 안으로. 무한대나 int 범위 밖의 값(망가진 저장)도 float으로 받아 자른다
+func _read_level(saved: Variant, minimum: int) -> int:
+	return int(clampf(float(saved), float(minimum), float(Balance.MAX_LEVEL)))
 
 
 ## 동료의 실제 레벨 = 산 레벨 + 기억 레벨. DPS, 승급, 단련 해금, 표시에 쓴다
@@ -84,7 +89,7 @@ func click_damage() -> float:
 	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier() * Achievements.damage_multiplier()
 	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier() * Challenges.click_multiplier()
 	base *= (1.0 + Training.value(Balance.Effect.CLICK_DAMAGE)) * _boss_bonus(boss)
-	return base + party_dps(boss) * Prestige.awakening_share() * Balance.awakening_factor(hero_level)
+	return minf(base + party_dps(boss) * Prestige.awakening_share() * Balance.awakening_factor(hero_level), Balance.MAX_NUMBER)
 
 
 ## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
@@ -93,7 +98,7 @@ func party_dps(boss: bool, with_skills: bool = true) -> float:
 	if Challenges.blocks_companions():
 		return 0.0
 	var dps := Balance.party_dps(companion_level_list(), boss, _mods()) * _party_bonus(boss)
-	return dps * Skills.party_multiplier() if with_skills else dps
+	return minf(dps * Skills.party_multiplier() if with_skills else dps, Balance.MAX_NUMBER)
 
 
 ## 동료 한 명이 실제로 내는 DPS (성직자 버프, 승급, 검술의 기억, 단련, 전투의 함성 포함). 공격 연출의 피해 숫자에 쓴다
@@ -103,7 +108,7 @@ func companion_dps(index: int, boss: bool) -> float:
 	var mods := _mods()
 	var cleric := Balance.cleric_multiplier(companion_level(Balance.Companion.CLERIC), mods["cleric_buff"])
 	var dps := Balance.companion_dps(index, companion_level(index), boss, mods) * cleric
-	return dps * _party_bonus(boss) * Skills.party_multiplier()
+	return minf(dps * _party_bonus(boss) * Skills.party_multiplier(), Balance.MAX_NUMBER)
 
 
 ## 동료 공식에 넘길 보정값: 단련 값에 승급 단계를 얹는다
@@ -141,9 +146,10 @@ func companion_purchase(index: int) -> Purchase:
 	return _purchase(Balance.companion_base_cost(index), companion_levels[index])
 
 
+## 레벨 상한이면(살 레벨 0) 사지 않는다
 func buy_hero() -> bool:
 	var purchase := hero_purchase()
-	if not Game.spend(purchase.cost):
+	if purchase.count <= 0 or not Game.spend(purchase.cost):
 		return false
 	hero_level += purchase.count
 	hero_changed.emit(hero_level)
@@ -155,7 +161,7 @@ func buy_companion(index: int) -> bool:
 	if not is_companion_unlocked(index) or Challenges.blocks_companions():
 		return false
 	var purchase := companion_purchase(index)
-	if not Game.spend(purchase.cost):
+	if purchase.count <= 0 or not Game.spend(purchase.cost):
 		return false
 	companion_levels[index] += purchase.count
 	companion_changed.emit(index, companion_level(index))

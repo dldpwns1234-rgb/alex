@@ -15,6 +15,11 @@ const MILESTONE_FIRST_LEVEL: int = 10    # 이 레벨에서 첫 마일스톤
 const MILESTONE_INTERVAL: int = 25       # 이후 이 간격마다 +1
 const MILESTONE_MULTIPLIER: float = 2.0  # 마일스톤당 공격력 배율
 
+# 수치 상한. float은 1.8e308에서 무한대가 되고(스테이지 4507의 체력) 그 뒤로는 비용·구매 수·DPS가 차례로 망가진다 (플레이테스트 2026-10-01).
+# 골드·결정·피해·통계는 MAX_NUMBER로 자르고, 레벨은 MAX_LEVEL까지만 산다 (레벨 비용 1.07^L은 10190에서 1e300을 넘어 어차피 못 산다). 스테이지는 FINAL_STAGE(balance.gd)까지
+const MAX_NUMBER: float = 1e300
+const MAX_LEVEL: int = 10000
+
 
 ## 마일스톤 수 m(L): 10레벨에 1, 이후 25레벨마다 +1
 func milestones(level: int) -> int:

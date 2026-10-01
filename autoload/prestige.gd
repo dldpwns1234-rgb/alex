@@ -41,7 +41,7 @@ func to_dict() -> Dictionary:
 ## 없는 필드는 기본값으로. 상점이 늘어나면 새 항목은 0레벨
 func from_dict(data: Dictionary) -> void:
 	reset()
-	crystals = maxf(float(data.get("crystals", 0.0)), 0.0)
+	crystals = clampf(float(data.get("crystals", 0.0)), 0.0, Balance.MAX_NUMBER)
 	var saved: Variant = data.get("memory_levels", [])
 	if saved is Array:
 		for i in mini(saved.size(), memory_levels.size()):
@@ -67,7 +67,7 @@ func perform() -> bool:
 	if not can_prestige():
 		return false
 	var reward := crystal_reward()
-	crystals += reward
+	crystals = minf(crystals + reward, Balance.MAX_NUMBER)
 	best_stage = maxi(best_stage, Game.highest_stage)
 	prestige_count += 1
 	Party.reset()

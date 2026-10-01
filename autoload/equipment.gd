@@ -53,7 +53,7 @@ func from_dict(data: Dictionary) -> void:
 	if levels is Array:
 		for i in mini(levels.size(), enhance_levels.size()):
 			enhance_levels[i] = clampi(int(levels[i]), 0, Balance.ENHANCE_MAX)
-	stones = maxf(float(data.get("stones", 0.0)), 0.0)
+	stones = clampf(float(data.get("stones", 0.0)), 0.0, Balance.MAX_NUMBER)
 	for i in slots.size():
 		equipment_changed.emit(i)
 	stones_changed.emit(stones)

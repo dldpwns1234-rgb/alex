@@ -7,7 +7,7 @@ signal buy_mode_changed(mode: BuyMode)
 enum BuyMode { ONE, TEN, MAX }
 
 
-## 한 번에 살 레벨 수와 비용. count는 최소 1이라 못 살 때도 비용을 보여줄 수 있다
+## 한 번에 살 레벨 수와 비용. count는 보통 최소 1이라 못 살 때도 비용을 보여줄 수 있다. 레벨 상한(Balance.MAX_LEVEL)에 닿으면 0이고 살 수 없다
 class Purchase:
 	var count: int = 1
 	var cost: float = 0.0
@@ -24,8 +24,9 @@ func set_buy_mode(mode: BuyMode) -> void:
 	buy_mode_changed.emit(mode)
 
 
-## 현재 구매 배수로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다
+## 현재 구매 배수로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다. 레벨 상한을 넘는 수는 자른다
 func _purchase(base_cost: float, level: int) -> Purchase:
+	var room := maxi(Balance.MAX_LEVEL - level, 0)
 	var count := 1
 	match buy_mode:
 		BuyMode.TEN:
@@ -35,8 +36,9 @@ func _purchase(base_cost: float, level: int) -> Purchase:
 			# 닫힌 공식의 부동소수 오차로 한 레벨 넘칠 수 있으니 실제 비용으로 확인한다
 			while count > 1 and Balance.bulk_cost(base_cost, level, count) > Game.gold:
 				count -= 1
+	count = mini(count, room)
 	var purchase := Purchase.new()
 	purchase.count = count
-	purchase.cost = Balance.bulk_cost(base_cost, level, count)
-	purchase.affordable = Game.gold >= purchase.cost
+	purchase.cost = Balance.bulk_cost(base_cost, level, maxi(count, 1))
+	purchase.affordable = count > 0 and Game.gold >= purchase.cost
 	return purchase

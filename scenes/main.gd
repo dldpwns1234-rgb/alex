@@ -134,8 +134,11 @@ func _on_tower_failed(floor: int) -> void:
 	_toast.show_message("시련의 탑 %d층 실패" % floor)
 
 
-## 마왕을 처음 잡았을 때만 엔딩: 기록을 보이고 무한 모드로 이어진다 (통계는 Achievements가 먼저 올린다)
+## 마왕을 처음 잡았을 때만 엔딩: 기록을 보이고 무한 모드로 이어진다 (통계는 Achievements가 먼저 올린다). 최종 스테이지의 마왕은 진정한 엔딩
 func _on_demon_king_defeated() -> void:
+	if Game.stage >= Balance.FINAL_STAGE:
+		_on_final_boss_defeated()
+		return
 	if Achievements.value(Balance.Stat.DEMON_KING) > 1.0:
 		_toast.show_message("마왕 토벌 · %s번째" % Num.format(Achievements.value(Balance.Stat.DEMON_KING)))
 		return
@@ -143,4 +146,16 @@ func _on_demon_king_defeated() -> void:
 		Num.format(Achievements.value(Balance.Stat.PRESTIGES)), Num.format(Achievements.value(Balance.Stat.REBIRTHS)),
 		Num.format(Achievements.value(Balance.Stat.KILLS)), Num.format(Achievements.value(Balance.Stat.TAPS)),
 		Num.format(Balance.DEMON_KING_INTERVAL)]
+	_ending_dialog.popup_centered(ENDING_POPUP_SIZE)
+
+
+## 최종 스테이지(마왕성 최심부)의 마왕: 처음이면 진정한 엔딩 창, 그 뒤로는 알림. 더 나아갈 곳이 없어 회귀·환생으로만 이어진다 (GDD 7.8절)
+func _on_final_boss_defeated() -> void:
+	if Achievements.value(Balance.Stat.FINAL) > 1.0:
+		_toast.show_message("어둠의 끝 · %s번째" % Num.format(Achievements.value(Balance.Stat.FINAL)))
+		return
+	_ending_dialog.dialog_text = "마왕성 최심부, 스테이지 %d의 마왕을 쓰러뜨렸다.\n\n회귀 %s회 · 환생 %s회 · 처치 %s마리 · 탭 %s번\n\n어둠의 근원은 사라졌고 이 세계에 더 나아갈 곳은 없다.\n회귀와 환생으로 새 삶을 시작할 수 있다. 기록은 남는다." % [
+		Balance.FINAL_STAGE,
+		Num.format(Achievements.value(Balance.Stat.PRESTIGES)), Num.format(Achievements.value(Balance.Stat.REBIRTHS)),
+		Num.format(Achievements.value(Balance.Stat.KILLS)), Num.format(Achievements.value(Balance.Stat.TAPS))]
 	_ending_dialog.popup_centered(ENDING_POPUP_SIZE)

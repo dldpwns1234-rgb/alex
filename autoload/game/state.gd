@@ -12,6 +12,7 @@ signal monster_killed(reward: float)
 signal chain_killed(count: int, reward: float)  # 넘친 피해로 같은 스테이지의 다음 몬스터들을 연달아 잡았다 (첫 처치는 monster_killed)
 signal demon_king_defeated()          # 마왕(1000의 배수 스테이지 보스)을 잡았다. 엔딩과 통계에 쓴다
 signal tower_changed(in_tower: bool)  # 시련의 탑에 들어가거나 나왔다
+signal cleared_changed(cleared: bool)       # 최종 스테이지의 마왕을 잡아 더 나아갈 곳이 없다 (회귀·환생으로만)
 signal boss_timer_changed(seconds_left: float)
 signal boss_failed()                      # 시간 초과. 보스가 사라지고 파밍 모드로
 signal farming_changed(farming: bool)
@@ -30,6 +31,7 @@ var monster_max_hp: float = 0.0
 var respawn_left: float = 0.0       # 0보다 크면 다음 몬스터를 기다리는 중 (초)
 var auto_retry: bool = true         # 파밍 중 잡을 수 있을 것 같으면 스스로 보스에 도전 (저장됨)
 var in_tower: bool = false          # 시련의 탑 안. 저장하지 않는다 (불러오면 본편)
+var cleared: bool = false           # 최종 스테이지 돌파. 몬스터가 나오지 않는다. 저장하지 않는다 (불러오면 최후의 마왕이 다시 나온다)
 var tap_rate: float = 0.0           # 최근 창의 초당 탭 수. 자동 재도전의 예상 DPS에 쓴다
 var _taps_in_window: int = 0
 var _tap_window_left: float = 0.0
@@ -40,7 +42,8 @@ var _farm_seconds: float = 0.0      # 파밍 시작(또는 취소) 뒤 흐른 �
 func reset() -> void:
 	_drop_tower()
 	stage = Rebirth.start_stage(highest_stage)  # 예지·도약(운명의 상점)이 있으면 앞 스테이지를 건너뛰고 그만큼의 골드를 유산으로 받는다. 아직 지난 판의 최고다
-	gold = Rebirth.inheritance(stage)
+	gold = minf(Rebirth.inheritance(stage), Balance.MAX_NUMBER)
+	cleared = false
 	highest_stage = stage
 	kills = 0
 	farming = false
@@ -71,9 +74,10 @@ func to_dict() -> Dictionary:
 ## 저장 데이터를 적용한다. 없는 필드는 기본값으로 채운다 (옛 저장 호환)
 func from_dict(data: Dictionary) -> void:
 	_drop_tower()
-	gold = maxf(float(data.get("gold", 0.0)), 0.0)
-	stage = maxi(int(data.get("stage", 1)), 1)
-	highest_stage = maxi(int(data.get("highest_stage", stage)), stage)
+	gold = clampf(float(data.get("gold", 0.0)), 0.0, Balance.MAX_NUMBER)  # 무한대가 든 옛 저장도 살린다
+	stage = clampi(int(data.get("stage", 1)), 1, Balance.FINAL_STAGE)
+	highest_stage = clampi(int(data.get("highest_stage", stage)), stage, Balance.FINAL_STAGE)
+	cleared = false
 	kills = clampi(int(data.get("kills", 0)), 0, Balance.MONSTERS_PER_STAGE - 1)
 	farming = bool(data.get("farming", false))
 	auto_retry = bool(data.get("auto_retry", true))
@@ -156,7 +160,7 @@ func gold_multiplier() -> float:
 
 
 func add_gold(amount: float) -> void:
-	gold += amount
+	gold = minf(gold + amount, Balance.MAX_NUMBER)
 	gold_changed.emit(gold)
 
 
@@ -169,7 +173,12 @@ func spend(cost: float) -> bool:
 	return true
 
 
+## 다음 스테이지. 최종 스테이지의 보스를 잡았으면 더 나아가지 않고 돌파 상태가 된다 (몬스터가 나오지 않는다)
 func _advance_stage() -> void:
+	if stage >= Balance.FINAL_STAGE:
+		cleared = true
+		cleared_changed.emit(true)
+		return
 	stage += 1
 	highest_stage = maxi(highest_stage, stage)
 	stage_changed.emit(stage)
@@ -177,6 +186,9 @@ func _advance_stage() -> void:
 
 func _spawn_monster() -> void:
 	respawn_left = 0.0
+	if cleared:
+		monster_hp = 0.0
+		return
 	var boss := is_boss_stage()
 	monster_max_hp = Tower.monster_hp() if in_tower else Balance.enemy_hp(stage)
 	monster_hp = monster_max_hp

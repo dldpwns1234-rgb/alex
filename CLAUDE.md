@@ -91,6 +91,8 @@ docs/LATEGAME_REFERENCES.md  다른 게임의 후반 구조(층·자동화·별�
 - 골드, 체력, 피해, 비용, 기억의 결정은 전부 float. int 금지 (64비트 int는 약 9.2e18에서 넘친다)
 - 큰 수에 `int()`, `floori()` 변환 금지. `floor()`는 float을 반환하므로 그대로 쓴다
 - 화면에 숫자를 표시할 때는 항상 `Num.format()`을 쓴다. `str()`로 직접 표시하지 않는다
+- 상한: 골드·결정·실·강화석·피해·통계는 `Balance.MAX_NUMBER`(1e300)로 자르고, 레벨은 `Balance.MAX_LEVEL`(10000), 스테이지는 `Balance.FINAL_STAGE`(4000)까지다.
+  float은 1.8e308에서 무한대가 되어 비용·구매 수·DPS가 차례로 망가진다. 저장을 불러올 때도 자른다 (무한대가 든 저장을 살린다)
 
 ## 시간 규칙
 

@@ -139,7 +139,7 @@ func _award_kill() -> float:
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)
-	gold += reward
+	gold = minf(gold + reward, Balance.MAX_NUMBER)
 	gold_changed.emit(gold)
 	return reward
 

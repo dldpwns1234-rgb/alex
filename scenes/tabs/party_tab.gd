@@ -174,7 +174,7 @@ func _refresh() -> void:
 		_title_labels[i].text = name + (" " + stars if not stars.is_empty() else "")
 		_dps_labels[i].text = "Lv %d · DPS %s" % [level, Num.format(Party.companion_dps(i, false))]
 		var verb := "고용" if level == 0 else "레벨업"
-		_buttons[i].text = "%s ×%d (%s 골드)" % [verb, purchase.count, Num.format(purchase.cost)]
+		_buttons[i].text = "최대 레벨" if purchase.count == 0 else "%s ×%d (%s 골드)" % [verb, purchase.count, Num.format(purchase.cost)]
 		_buttons[i].disabled = not purchase.affordable
 
 

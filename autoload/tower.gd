@@ -48,7 +48,7 @@ func to_dict() -> Dictionary:
 ## 없는 필드는 기본값으로. 불러오면 탑 밖이고, 날이 바뀌었으면 입장권을 채운다
 func from_dict(data: Dictionary) -> void:
 	reset()
-	best_floor = maxi(int(data.get("best_floor", 0)), 0)
+	best_floor = clampi(int(data.get("best_floor", 0)), 0, Balance.tower_max_floor())
 	tickets = clampi(int(data.get("tickets", Balance.TOWER_TICKETS_PER_DAY)), 0, Balance.TOWER_TICKETS_PER_DAY)
 	ticket_date = str(data.get("ticket_date", ticket_date))
 	refill_if_new_day()
@@ -71,9 +71,9 @@ func is_unlocked() -> bool:
 	return Achievements.value(Balance.Stat.STAGE) >= Balance.TOWER_UNLOCK_STAGE
 
 
-## 입장권이 있고 탑 밖이며 보스와 싸우는 중이 아닐 때
+## 입장권이 있고 탑 밖이며 보스와 싸우는 중이 아닐 때. 꼭대기(몬스터가 최종 스테이지를 넘지 않는 층)를 돌파했으면 더 오를 곳이 없다
 func can_enter() -> bool:
-	if not is_unlocked() or tickets <= 0 or Game.in_tower:
+	if not is_unlocked() or tickets <= 0 or Game.in_tower or best_floor >= Balance.tower_max_floor():
 		return false
 	return not (Game.is_boss_stage() and Game.is_monster_alive())
 
@@ -127,6 +127,9 @@ func clear_floor() -> void:
 	Equipment.add_stones(stones)
 	Rebirth.add_threads(threads)
 	floor_cleared.emit(floor, stones, threads)
+	if floor >= Balance.tower_max_floor():  # 꼭대기였다: 본편으로
+		leave()
+		return
 	floor += 1
 	time_left = Balance.TOWER_TIME_LIMIT
 	tower_changed.emit()

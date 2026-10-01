@@ -142,7 +142,7 @@ func _refresh() -> void:
 	var purchase := Party.hero_purchase()
 	_level_label.text = "용사 Lv %d" % Party.hero_level
 	_damage_label.text = "클릭 피해 %s" % Num.format(Party.click_damage())
-	_buy_button.text = "레벨업 ×%d  (비용 %s 골드)" % [purchase.count, Num.format(purchase.cost)]
+	_buy_button.text = "최대 레벨" if purchase.count == 0 else "레벨업 ×%d  (비용 %s 골드)" % [purchase.count, Num.format(purchase.cost)]
 	_buy_button.disabled = not purchase.affordable
 	_stones_label.text = "강화석 %s" % Num.format(Equipment.stones)
 	for slot in _slot_titles.size():

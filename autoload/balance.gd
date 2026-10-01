@@ -36,6 +36,9 @@ const TOWER_STAGE_BASE: int = 100          # f층 몬스터 = 스테이지 (100 
 const TOWER_STAGE_STEP: int = 10
 const TOWER_STONES_PER_FLOOR: float = 1.0  # 첫 돌파 보상 강화석 = 층 × 1
 const TOWER_THREAD_FLOOR_STEP: int = 10    # 10층마다 운명의 실 (층 ÷ 10)
+# 최종 스테이지 (GDD 7.8절): 마왕성 최심부. 1000의 배수라 최후의 마왕이 지키고, 잡으면 진정한 엔딩. 체력 10^274로 float 한계(스테이지 4507) 앞이다.
+# 그 뒤로는 몬스터가 나오지 않고 회귀·환생으로만 이어진다
+const FINAL_STAGE: int = 4000
 
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
@@ -121,6 +124,11 @@ func inheritance_gold(start: int, gold_multiplier: float) -> float:
 
 
 ## 시련의 탑 f층에 해당하는 스테이지 (몬스터 체력과 그림에 쓴다)
+## 탑의 마지막 층: 몬스터가 최종 스테이지를 넘지 않는 층
+func tower_max_floor() -> int:
+	return (FINAL_STAGE - TOWER_STAGE_BASE) / TOWER_STAGE_STEP
+
+
 func tower_stage(floor: int) -> int:
 	return TOWER_STAGE_BASE + TOWER_STAGE_STEP * floor
 

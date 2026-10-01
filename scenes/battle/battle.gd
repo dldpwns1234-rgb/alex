@@ -54,7 +54,8 @@ func _ready() -> void:
 	Game.boss_failed.connect(_monster_view.vanish.bind(BOSS_ESCAPE_DURATION))
 	Game.kills_changed.connect(_refresh_progress.unbind(1))
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
-	Game.farming_changed.connect(_on_farming_changed)
+	Game.farming_changed.connect(_refresh_progress.unbind(1))
+	Game.cleared_changed.connect(_refresh_progress.unbind(1))
 	Party.companion_changed.connect(_on_companion_changed)
 	Promotions.promoted.connect(_on_promoted)
 	_layout()
@@ -62,7 +63,6 @@ func _ready() -> void:
 	_on_monster_spawned(Game.monster_max_hp, Game.is_boss_stage())
 	_monster_view.set_hp(Game.monster_hp)
 	_refresh_progress()
-	_on_farming_changed(Game.farming)
 	for i in Party.companion_levels.size():
 		_on_companion_changed(i, Party.companion_level(i))
 
@@ -178,16 +178,14 @@ func _on_chain_killed(count: int, _reward: float) -> void:
 
 
 func _refresh_progress() -> void:
-	if Game.is_boss_stage():
+	if Game.cleared:
+		_kill_label.text = "최종 스테이지 돌파 · 회귀로 새 삶을"
+	elif Game.is_boss_stage():
 		_kill_label.text = "보스전"
 	elif Game.farming:
 		_kill_label.text = "파밍 중 · 처치 %d / %d" % [Game.kills, Balance.MONSTERS_PER_STAGE]
 	else:
 		_kill_label.text = "처치 %d / %d" % [Game.kills, Balance.MONSTERS_PER_STAGE]
-
-
-func _on_farming_changed(farming: bool) -> void:
-	_refresh_progress()
 
 
 func _on_companion_changed(index: int, level: int) -> void:

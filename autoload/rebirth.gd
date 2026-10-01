@@ -36,7 +36,7 @@ func to_dict() -> Dictionary:
 ## 없는 필드는 기본값으로, 상한을 넘는 값은 잘라낸다. 상점이 늘어나면 새 항목은 0레벨
 func from_dict(data: Dictionary) -> void:
 	reset()
-	threads = maxf(float(data.get("threads", 0.0)), 0.0)
+	threads = clampf(float(data.get("threads", 0.0)), 0.0, Balance.MAX_NUMBER)
 	var saved: Variant = data.get("fate_levels", [])
 	if saved is Array:
 		for i in mini(saved.size(), fate_levels.size()):

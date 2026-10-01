@@ -25,7 +25,7 @@ func _ready() -> void:
 	Prestige.prestiged.connect(_on_prestiged)
 	Rebirth.reborn.connect(_on_reborn)
 	Skills.skill_activated.connect(_on_skill_activated)
-	Game.demon_king_defeated.connect(add.bind(Balance.Stat.DEMON_KING, 1.0))
+	Game.demon_king_defeated.connect(_on_demon_king_defeated)
 
 
 ## 데이터 초기화에서만 부른다. 회귀는 아무것도 지우지 않는다
@@ -51,7 +51,7 @@ func from_dict(data: Dictionary) -> void:
 	var saved: Variant = data.get("stats", [])
 	if saved is Array:
 		for i in mini(saved.size(), stats.size()):
-			stats[i] = maxf(float(saved[i]), 0.0)
+			stats[i] = clampf(float(saved[i]), 0.0, Balance.MAX_NUMBER)
 	stats[Balance.Stat.STAGE] = maxf(stats[Balance.Stat.STAGE], float(Prestige.best_stage))
 	stats[Balance.Stat.PRESTIGES] = maxf(stats[Balance.Stat.PRESTIGES], float(Prestige.prestige_count))
 	_recount()
@@ -64,7 +64,7 @@ func from_dict(data: Dictionary) -> void:
 ## 누적 통계에 더한다 (처치, 골드, 탭, 스킬)
 func add(stat: int, amount: float) -> void:
 	if amount > 0.0:
-		_set_stat(stat, stats[stat] + amount)
+		_set_stat(stat, minf(stats[stat] + amount, Balance.MAX_NUMBER))
 
 
 ## 최고 기록 통계를 올린다 (스테이지, 회귀, 용사 레벨, 동료 수). 낮은 값은 무시한다
@@ -154,6 +154,13 @@ func _on_monster_killed(reward: float) -> void:
 func _on_chain_killed(count: int, reward: float) -> void:
 	add(Balance.Stat.KILLS, float(count))
 	add(Balance.Stat.GOLD, reward)
+
+
+## 마왕 처치. 최종 스테이지의 마왕이면 최종 돌파도 센다
+func _on_demon_king_defeated() -> void:
+	add(Balance.Stat.DEMON_KING, 1.0)
+	if Game.stage >= Balance.FINAL_STAGE:
+		add(Balance.Stat.FINAL, 1.0)
 
 
 func _on_hero_changed(level: int) -> void:
