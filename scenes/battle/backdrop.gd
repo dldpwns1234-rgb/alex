@@ -5,7 +5,7 @@ extends Control
 const HORIZON: float = 0.22       # 땅이 시작하는 높이 (높이 비율). 인물들은 땅 위에 선다
 const HILL_RADIUS: float = 0.5    # 폭 비율
 const SUN_RADIUS: float = 30.0
-const SUN_POSITION := Vector2(0.82, 0.09)
+const SUN_POSITION := Vector2(0.55, 0.09)  # 용사와 몬스터 사이 위. 오른쪽 위의 처치 수 글자와 겹치지 않게
 const TOWER_WIDTHS: Array[float] = [0.09, 0.14, 0.11, 0.12, 0.1]   # 폭 비율. 성벽 탑들
 const TOWER_HEIGHTS: Array[float] = [0.55, 0.9, 0.7, 1.0, 0.6]    # 지평선 위 높이 (지평선 높이 비율)
 const TOWER_GAP: float = 0.06
