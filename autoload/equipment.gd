@@ -106,20 +106,25 @@ func drop(slot: int, grade: int, stage: int) -> bool:
 	return better
 
 
-## 제작: 강화석 CRAFT_COST개로 고른 칸의 장비를 지금 스테이지로 하나 만든다. 등급은 드롭 표로 굴린다 (grade_roll이 0 이상이면 그 값으로,
+## 제작: 강화석 craft_cost()개(스테이지에 비례)로 고른 칸의 장비를 지금 스테이지로 하나 만든다. 등급은 드롭 표로 굴린다 (grade_roll이 0 이상이면 그 값으로,
 ## 테스트용). 떨어진 장비처럼 더 좋으면 장착하고 아니면 분해해 강화석 일부가 돌아온다. 강화석이 모자라면 false
 func craft(slot: int, grade_roll: float = -1.0) -> bool:
 	if not can_craft():
 		return false
-	stones -= Balance.CRAFT_COST
+	stones -= craft_cost()
 	var grade := Balance.roll_grade(randf() if grade_roll < 0.0 else grade_roll)
 	var better := _receive(slot, grade, Game.stage)
 	item_crafted.emit(slot, grade, Game.stage, better)
 	return better
 
 
+## 지금 스테이지의 제작 비용
+func craft_cost() -> float:
+	return Balance.craft_cost(Game.stage)
+
+
 func can_craft() -> bool:
-	return stones >= Balance.CRAFT_COST
+	return stones >= craft_cost()
 
 
 ## 새 장비를 받는다: 지금 것보다 좋으면(같아도) 장착하고 옛것을 분해, 아니면 새것을 분해. 장착했으면 true

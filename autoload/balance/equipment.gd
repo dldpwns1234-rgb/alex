@@ -27,9 +27,10 @@ const ENHANCE_MAX: int = 10
 const ENHANCE_BASE_COST: float = 3.0     # 강화 비용 (n → n+1): 올림(3 × 1.5^n) 강화석 → 3, 5, 7, 11, 16 …
 const ENHANCE_COST_GROWTH: float = 1.5
 # 제작: 강화석을 내고 고른 칸의 장비를 지금 스테이지로 하나 만든다 (등급은 드롭 표 그대로, 더 좋으면 장착·아니면 분해).
-# 세 칸이 +10이면 강화석이 쌓이기만 해서 넣었다 (플레이테스트 2026-10-01). 분해로 평균 2.8개가 돌아오니 실제 비용은 약 7개.
-# 영웅 이상(7%)이어야 지금 장비를 넘기 쉬우니 100개 남짓마다 한 번 갈아입는 셈이다
-const CRAFT_COST: float = 10.0
+# 세 칸이 +10이면 강화석이 쌓이기만 해서 넣었다 (플레이테스트 2026-10-01). 비용은 올림(10 + 스테이지 × 0.1): 100스테이지 20, 500에 60, 1000에 110.
+# 고정 10개일 때는 쌓아 둔 강화석 1만 개로 전설을 찍어냈다. 탑 보상(층수만큼)이 스테이지에 비례해 늘므로 비용도 비례해 올려 제작 빈도를 일정하게 둔다
+const CRAFT_BASE_COST: float = 10.0
+const CRAFT_COST_PER_STAGE: float = 0.1
 
 
 func slot_label(slot: int) -> String:
@@ -78,6 +79,11 @@ func item_power(grade: int, stage: int) -> float:
 ## 실제 효과 (더해지는 비율): 강화 전 효과 × (1 + 강화 레벨 × 10%)
 func item_effect(grade: int, stage: int, enhance: int) -> float:
 	return item_power(grade, stage) * (1.0 + ENHANCE_STEP * enhance)
+
+
+## 제작 비용: 올림(10 + 스테이지 × 0.1) 강화석
+func craft_cost(stage: int) -> float:
+	return ceil(CRAFT_BASE_COST + CRAFT_COST_PER_STAGE * stage)
 
 
 ## 강화석은 정수로만 다루므로 올림한다

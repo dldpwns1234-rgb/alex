@@ -77,6 +77,7 @@ func _ready() -> void:
 	scroll.release_buttons()
 
 	Game.gold_changed.connect(_refresh.unbind(1))
+	Game.stage_changed.connect(_refresh.unbind(1))  # 제작 비용이 스테이지를 따른다
 	Party.hero_changed.connect(_refresh.unbind(1))
 	Party.buy_mode_changed.connect(_refresh.unbind(1))
 	Equipment.equipment_changed.connect(_refresh.unbind(1))
@@ -151,7 +152,7 @@ func _refresh() -> void:
 ## 칸 하나: 빈 칸, 장비(등급 색 이름, 효과, 떨어진 스테이지, 강화), 강화 버튼(최대·비용·부족), 제작 버튼(비용·부족)
 func _refresh_slot(slot: int) -> void:
 	var button := _enhance_buttons[slot]
-	_craft_buttons[slot].text = "제작 (%s 강화석)" % Num.format(Balance.CRAFT_COST)
+	_craft_buttons[slot].text = "제작 (%s 강화석)" % Num.format(Equipment.craft_cost())
 	_craft_buttons[slot].disabled = not Equipment.can_craft()
 	if not Equipment.has_item(slot):
 		_slot_titles[slot].text = "%s  ·  비어 있음" % Balance.slot_label(slot)
