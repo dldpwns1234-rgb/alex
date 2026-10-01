@@ -129,13 +129,13 @@ func _chain_kills(excess: float) -> void:
 		chain_killed.emit(count, reward)
 
 
-## 처치 하나의 처치 수와 골드. 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금).
+## 처치 하나의 처치 수와 골드. 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 보물의 축복 × 전리품·황금 화살 단련 (보스면 × 헌금).
 ## 탑에서는 골드 없이 처치 수만 센다 (GDD 7.10절). 받은 골드를 돌려준다
 func _award_kill() -> float:
 	kills += 1
 	if in_tower:
 		return 0.0
-	var reward := Balance.kill_gold(monster_max_hp) * gold_multiplier() * Skills.gold_multiplier()
+	var reward := Balance.kill_gold(monster_max_hp) * gold_multiplier() * Skills.gold_multiplier() * Treasure.gold_multiplier()
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)

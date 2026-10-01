@@ -3,9 +3,10 @@ extends Control
 ## 시트(sheet.gd)는 접힌 높이만큼 Layout에 자리를 두고(SheetSpace), 펼치면 전투 화면 위로 올라온다. 알림은 시트 바로 위에 뜬다.
 ## 내비게이션이 고른 패널만 보이고, 강화할 수 있는 장비가 있으면 용사 탭에, 승급할 수 있는 동료가 있으면 동료 탭에,
 ## 살 수 있는 단련이 있으면 단련 탭에, 아직 안 본 업적 달성이 있으면 업적 탭에 점을 찍는다.
-## 업적 달성, 승급, 장비 획득, 환생은 전투 화면 아래에 알림을 띄운다. 마왕을 처음 잡으면 엔딩 창을 띄운다 (GDD 7.8절).
+## 업적 달성, 승급, 장비 획득, 환생, 보물 요정 보상은 전투 화면 아래에 알림을 띄운다. 보물 요정은 전투 화면 맨 위에 얹는다. 마왕을 처음 잡으면 엔딩 창을 띄운다 (GDD 7.8절).
 
 const Toast := preload("res://scenes/toast.gd")
+const TreasureView := preload("res://scenes/battle/treasure_view.gd")
 
 const HERO_TAB: int = 0
 const PARTY_TAB: int = 1
@@ -13,6 +14,7 @@ const TRAINING_TAB: int = 2
 const ACHIEVEMENTS_TAB: int = 4
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
 const ENDING_POPUP_SIZE := Vector2i(600, 420)
+const TREASURE_TOAST_COLOR := Color("ffd23f")  # 보물 요정 보상 알림 (요정 그림의 금빛)
 
 @onready var _top_bar: Control = $Layout/TopBar
 @onready var _sheet_space: Control = $Layout/SheetSpace
@@ -26,6 +28,8 @@ var _toast: Toast
 
 
 func _ready() -> void:
+	$Layout/Battle.add_child(TreasureView.new())  # 전투 화면의 다른 그림보다 위에 (탭을 먼저 받는다)
+	Treasure.caught.connect(_on_treasure_caught)
 	_offline_dialog = AcceptDialog.new()
 	_offline_dialog.title = "오프라인 보상"
 	_offline_dialog.ok_button_text = "확인"
@@ -114,6 +118,16 @@ func _on_offline_reward(seconds: float, gold: float) -> void:
 func _on_reborn(reward: float) -> void:
 	var opened := " · 도전 판이 열렸다" if Rebirth.rebirth_count == Balance.CHALLENGE_UNLOCK_REBIRTHS else ""
 	_toast.show_message("환생 · 운명의 실 +%s%s" % [Num.format(reward), opened])
+
+
+func _on_treasure_caught(reward: Treasure.Reward, amount: float) -> void:
+	match reward:
+		Treasure.Reward.GOLD:
+			_toast.show_message("보물 요정 · 골드 +%s" % Num.format(amount), TREASURE_TOAST_COLOR)
+		Treasure.Reward.COOLDOWN:
+			_toast.show_message("보물 요정 · 스킬 쿨타임 초기화", TREASURE_TOAST_COLOR)
+		Treasure.Reward.BLESSING:
+			_toast.show_message("보물 요정 · %d초 동안 처치 골드 ×%s" % [roundi(amount), Num.format(Balance.TREASURE_BLESSING_MULTIPLIER)], TREASURE_TOAST_COLOR)
 
 
 func _on_challenge_completed(index: int) -> void:

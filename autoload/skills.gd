@@ -101,6 +101,21 @@ func activate(index: int) -> bool:
 	return true
 
 
+## 쿨타임 중인 스킬(발동 중은 빼고)이 있는지. 보물 요정의 초기화 보상 후보를 고를 때 쓴다
+func has_cooldown() -> bool:
+	for i in activated_at.size():
+		if is_unlocked(i) and not is_active(i) and not is_ready(i):
+			return true
+	return false
+
+
+## 보물 요정: 쿨타임 중인 스킬을 바로 쓸 수 있게 한다. 발동 중인 스킬은 그대로 둔다 (지우면 효과가 끊긴다)
+func reset_cooldowns() -> void:
+	for i in activated_at.size():
+		if not is_active(i):
+			activated_at[i] = 0.0
+
+
 ## 전투의 함성: 활성 동안 동료 공격력 ×(2 + 함성 공명 단련)
 func party_multiplier() -> float:
 	if not is_active(Balance.Skill.BATTLE_CRY):

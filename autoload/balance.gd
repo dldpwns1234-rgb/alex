@@ -1,6 +1,6 @@
 extends "res://autoload/balance/challenges.gd"
 ## 모든 수치와 공식. 다른 파일에 게임 수치를 하드코딩하지 않는다.
-## 이 파일은 몬스터, 보스, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련, 업적, 장비, 환생, 도전은
+## 이 파일은 몬스터, 보스, 보물 요정, 시간, 오프라인 보상을 맡고, 용사·레벨업, 동료, 스킬, 회귀·상점, 단련, 업적, 장비, 환생, 도전은
 ## autoload/balance/ 아래 부분 스크립트에 있다 (상속으로 이어져 있어 Balance.로 모두 부른다).
 ## s = 스테이지
 
@@ -39,6 +39,14 @@ const TOWER_THREAD_FLOOR_STEP: int = 10    # 10층마다 운명의 실 (층 ÷ 1
 # 최종 스테이지 (GDD 7.8절): 마왕성 최심부. 1000의 배수라 최후의 마왕이 지키고, 잡으면 진정한 엔딩. 체력 10^274로 float 한계(스테이지 4507) 앞이다.
 # 그 뒤로는 몬스터가 나오지 않고 회귀·환생으로만 이어진다
 const FINAL_STAGE: int = 4000
+
+# 보물 요정 (GDD 3.5절): 본편 전투 중 60~120초마다 8초 동안 화면을 가로지르고, 탭하면 보상 셋 중 하나
+const TREASURE_INTERVAL_MIN: float = 60.0     # 초 (게임 시간)
+const TREASURE_INTERVAL_MAX: float = 120.0
+const TREASURE_FLIGHT_TIME: float = 8.0
+const TREASURE_GOLD_KILLS: float = 30.0       # 골드 보상 = 지금 스테이지 일반 몬스터 이만큼의 처치 골드
+const TREASURE_BLESSING_TIME: float = 30.0    # 보물의 축복 지속 (실제 시간 초)
+const TREASURE_BLESSING_MULTIPLIER: float = 2.0  # 축복 중 처치 골드 배율
 
 # 시간
 const MAX_DELTA: float = 0.25            # _process delta 상한 (초)
@@ -93,6 +101,11 @@ func boss_beatable(hp: float, dps: float, limit: float) -> bool:
 ## 기본 처치 골드: 체력 ÷ 15 (보스 포함). 황금의 기억(Prestige)과 황금 손길(Skills)은 Game이 곱한다
 func kill_gold(max_hp: float) -> float:
 	return max_hp * GOLD_PER_HP
+
+
+## 보물 요정의 골드 보상: 지금 스테이지(보스 스테이지면 직전) 일반 몬스터 30마리의 처치 골드 × 골드 배율
+func treasure_gold(stage: int, gold_multiplier: float) -> float:
+	return TREASURE_GOLD_KILLS * kill_gold(monster_hp(offline_stage(stage))) * gold_multiplier
 
 
 ## 오프라인 기준 스테이지: 현재 스테이지, 보스 스테이지면 직전 스테이지

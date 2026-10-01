@@ -81,6 +81,7 @@ func to_dict() -> Dictionary:
 		"automation": Automation.to_dict(),
 		"challenges": Challenges.to_dict(),
 		"tower": Tower.to_dict(),
+		"treasure": Treasure.to_dict(),
 		"prefs": Prefs.to_dict(),
 	}
 
@@ -99,6 +100,7 @@ func from_dict(data: Dictionary) -> void:
 	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
 	Challenges.from_dict(_section(data, "challenges"))
 	Tower.from_dict(_section(data, "tower"))
+	Treasure.from_dict(_section(data, "treasure"))
 	Prefs.from_dict(_section(data, "prefs"))
 
 
@@ -169,6 +171,7 @@ func reset_data() -> void:
 	Automation.reset()
 	Challenges.reset()
 	Tower.reset()
+	Treasure.reset()
 	Prefs.reset()
 	save_game()
 
