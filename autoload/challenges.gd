@@ -7,6 +7,7 @@ signal challenge_changed()
 signal completed(index: int)
 
 var active: int = -1          # 진행 중인 도전 (Balance.CHALLENGES 색인). 없으면 -1. 저장된다
+var _starting: bool = false  # 도전 판을 시작하는 중 (새 판의 시작 스테이지를 정하는 동안)
 var done: Array[bool] = []    # 달성 여부. 회귀·환생해도 남고 데이터 초기화에서만 지운다
 
 
@@ -62,10 +63,12 @@ func can_start(index: int) -> bool:
 func start(index: int) -> bool:
 	if not can_start(index):
 		return false
+	_starting = true  # 새 판이 도약으로 목표를 건너뛰지 않게 (Rebirth.start_stage가 묻는다)
 	if Prestige.can_prestige():
 		Prestige.perform()  # prestiged 시그널이 active를 지우므로 그 뒤에 켠다
 	else:
 		_reset_run()
+	_starting = false
 	active = index
 	challenge_changed.emit()
 	Save.save_game()
@@ -111,6 +114,11 @@ func _on_stage_changed(_stage: int) -> void:
 func _restriction() -> int:
 	return Balance.challenge_restriction(active) if active >= 0 else -1
 
+
+
+## 도전 판을 시작하는 새 판은 도약(운명의 상점)으로 목표를 건너뛰지 않는다
+func blocks_leap() -> bool:
+	return _starting
 
 func blocks_companions() -> bool:
 	return _restriction() == Balance.Restriction.NO_COMPANIONS

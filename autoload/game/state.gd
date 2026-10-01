@@ -9,6 +9,7 @@ signal monster_spawned(max_hp: float, boss: bool)
 signal monster_damaged(hp: float)         # 체력바 갱신용. 탭 피해와 동료 피해 모두
 signal tap_hit(amount: float, crit: bool)  # 탭 피해 숫자 연출용. crit는 클릭 치명타
 signal monster_killed(reward: float)
+signal chain_killed(count: int, reward: float)  # 넘친 피해로 같은 스테이지의 다음 몬스터들을 연달아 잡았다 (첫 처치는 monster_killed)
 signal demon_king_defeated()          # 마왕(1000의 배수 스테이지 보스)을 잡았다. 엔딩과 통계에 쓴다
 signal tower_changed(in_tower: bool)  # 시련의 탑에 들어가거나 나왔다
 signal boss_timer_changed(seconds_left: float)
@@ -38,8 +39,8 @@ var _farm_seconds: float = 0.0      # 파밍 시작(또는 취소) 뒤 흐른 �
 ## 새 판 시작 상태로 되돌린다. 회귀(M5)에서도 쓴다
 func reset() -> void:
 	_drop_tower()
-	stage = Rebirth.start_stage()  # 예지(운명의 상점)가 있으면 앞 스테이지를 건너뛰고 그만큼의 골드를 유산으로 받는다
-	gold = Rebirth.inheritance()
+	stage = Rebirth.start_stage(highest_stage)  # 예지·도약(운명의 상점)이 있으면 앞 스테이지를 건너뛰고 그만큼의 골드를 유산으로 받는다. 아직 지난 판의 최고다
+	gold = Rebirth.inheritance(stage)
 	highest_stage = stage
 	kills = 0
 	farming = false

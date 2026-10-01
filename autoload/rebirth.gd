@@ -125,14 +125,17 @@ func crystal_multiplier() -> float:
 	return Balance.bond_multiplier(level(Balance.Fate.BOND))
 
 
-## 회귀 뒤 (그리고 환생 뒤) 시작 스테이지
-func start_stage() -> int:
-	return Balance.start_stage(level(Balance.Fate.FORESIGHT))
+## 회귀 뒤 (그리고 환생 뒤) 시작 스테이지: 예지(1 + 25 × 레벨)와 도약(지난 판 최고 − 간격) 중 높은 쪽. previous_best는 끝나는 판의 최고 스테이지.
+## 도전 판을 시작할 때는 목표를 건너뛰지 않게 도약을 쉰다
+func start_stage(previous_best: int) -> int:
+	var start := Balance.start_stage(level(Balance.Fate.FORESIGHT))
+	if Challenges.blocks_leap():
+		return start
+	return maxi(start, Balance.leap_start(level(Balance.Fate.LEAP), previous_best))
 
 
-## 유산: 예지가 건너뛴 스테이지의 골드. 시작이 1이면 0이라 배율을 묻지 않는다 (Game이 준비되기 전에도 불린다)
-func inheritance() -> float:
-	var start := start_stage()
+## 유산: 예지·도약이 건너뛴 스테이지의 골드. 시작이 1이면 0이라 배율을 묻지 않는다 (Game이 준비되기 전에도 불린다)
+func inheritance(start: int) -> float:
 	if start <= 1:
 		return 0.0
 	return Balance.inheritance_gold(start, Game.gold_multiplier())

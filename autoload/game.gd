@@ -1,6 +1,6 @@
 extends "res://autoload/game/state.gd"
 ## 게임 진행: 골드, 스테이지, 몬스터, 보스. 상태 변경은 오토로드의 함수로만 하고 UI는 표시만 한다.
-## 이 파일은 매 프레임 전투 흐름(피해, 처치, 보스 타이머, 파밍과 도전)을 맡는다. 상태와 저장은 game/state.gd에 있다.
+## 이 파일은 매 프레임 전투 흐름(피해, 처치와 연쇄 처치, 보스 타이머, 파밍과 도전)을 맡는다. 상태와 저장은 game/state.gd에 있다.
 
 
 func _ready() -> void:
@@ -94,38 +94,63 @@ func _start_boss_challenge() -> void:
 	_advance_stage()  # 재등장 대기가 끝나면 이 스테이지의 보스가 나온다
 
 
+## 피해를 준다. 넘친 피해는 같은 스테이지의 다음 몬스터들을 연달아 잡는 데 쓴다 (연쇄 처치, GDD 3절)
 func _damage_monster(amount: float) -> void:
-	monster_hp = maxf(monster_hp - amount, 0.0)  # 넘친 피해는 버린다
+	var excess := amount - monster_hp
+	monster_hp = maxf(monster_hp - amount, 0.0)
 	monster_damaged.emit(monster_hp)
 	if monster_hp <= 0.0:
 		_kill_monster()
+		_chain_kills(excess)
 
 
-## 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금). 탑에서는 골드 없이 처치 수만 센다
+## 처치: 골드와 처치 수, 재등장 대기, 연출 알림, 진행
 func _kill_monster() -> void:
+	var reward := _award_kill()
+	boss_time_left = 0.0
+	respawn_left = respawn_delay()
+	monster_killed.emit(reward)
+	if Balance.is_demon_king_stage(stage) and not in_tower:
+		demon_king_defeated.emit()
+	_after_kill()
+
+
+## 연쇄 처치: 넘친 피해가 몬스터 하나를 통째로 잡을 만큼이면 같은 스테이지(탑이면 같은 층)의 다음 몬스터를 재등장 대기 없이 잡는다.
+## 스테이지가 넘어가면(처치 수 0) 멈추고 나머지는 버린다. 보스는 혼자라 연쇄가 없다. 한 방 구간을 몬스터 수만큼 빠르게 지난다
+func _chain_kills(excess: float) -> void:
+	var count := 0
+	var reward := 0.0
+	while kills > 0 and not is_boss_stage() and excess >= monster_max_hp:
+		excess -= monster_max_hp
+		reward += _award_kill()
+		count += 1
+		_after_kill()
+	if count > 0:
+		chain_killed.emit(count, reward)
+
+
+## 처치 하나의 처치 수와 골드. 처치 골드 = 기본 × 황금의 기억 × 업적 × 장신구 × 황금 손길 × 전리품·황금 화살 단련 (보스면 × 헌금).
+## 탑에서는 골드 없이 처치 수만 센다 (GDD 7.10절). 받은 골드를 돌려준다
+func _award_kill() -> float:
+	kills += 1
 	if in_tower:
-		kills += 1
-		respawn_left = respawn_delay()
-		monster_killed.emit(0.0)
-		if kills >= Balance.MONSTERS_PER_STAGE:
-			kills = 0
-			Tower.clear_floor()
-		kills_changed.emit(kills)
-		return
+		return 0.0
 	var reward := Balance.kill_gold(monster_max_hp) * gold_multiplier() * Skills.gold_multiplier()
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)
 	gold += reward
-	kills += 1
-	boss_time_left = 0.0
-	respawn_left = respawn_delay()
 	gold_changed.emit(gold)
-	monster_killed.emit(reward)
-	if Balance.is_demon_king_stage(stage):
-		demon_king_defeated.emit()
-	# 보스는 1마리, 일반 스테이지는 10마리. 파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로 간다
-	if farming and boss_queued:
+	return reward
+
+
+## 처치 뒤 진행. 탑은 10마리면 다음 층. 본편은 보스 1마리, 일반 10마리면 다음 스테이지 (파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로)
+func _after_kill() -> void:
+	if in_tower:
+		if kills >= Balance.MONSTERS_PER_STAGE:
+			kills = 0
+			Tower.clear_floor()
+	elif farming and boss_queued:
 		_start_boss_challenge()
 	elif is_boss_stage() or kills >= Balance.MONSTERS_PER_STAGE:
 		kills = 0

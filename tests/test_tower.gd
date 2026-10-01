@@ -85,8 +85,8 @@ func _test_climb() -> void:
 	var gold := Game.gold
 	var stones := Equipment.stones
 	var threads := Rebirth.threads
-	for i in Balance.MONSTERS_PER_STAGE:
-		Game.tap_attack()
+	for i in Balance.MONSTERS_PER_STAGE:  # 체력만큼만 쳐서 한 마리씩 (넘치면 연쇄 처치로 층을 한 번에 넘긴다)
+		Game._damage_monster(Game.monster_hp)
 		_advance(Game.respawn_delay() + 0.01)
 	_close(Game.gold, gold, "탑에서는 골드가 없다")
 	_equal(_cleared, [[10, 10.0, 1.0]], "10층 돌파: 강화석 10, 실 1")
@@ -107,9 +107,8 @@ func _test_climb() -> void:
 	Tower.floor = 11
 	Game._spawn_monster()
 	_cleared.clear()
-	for i in Balance.MONSTERS_PER_STAGE:
-		Game.tap_attack()
-		_advance(Game.respawn_delay() + 0.01)
+	Game.tap_attack()  # 넘친 피해로 층의 열 마리를 연쇄 처치
+	_equal(Game.kills, 0, "한 번에 층을 넘겼다")
 	_equal(_cleared, [[11, 0.0, 0.0]], "다시 오른 층은 보상이 없다")
 	Tower.leave()
 	Tower.floor_cleared.disconnect(_on_cleared)

@@ -19,6 +19,7 @@ func _ready() -> void:
 	reset()
 	Game.stage_changed.connect(_on_stage_changed)
 	Game.monster_killed.connect(_on_monster_killed)
+	Game.chain_killed.connect(_on_chain_killed)
 	Party.hero_changed.connect(_on_hero_changed)
 	Party.companion_changed.connect(_on_companion_changed)
 	Prestige.prestiged.connect(_on_prestiged)
@@ -146,6 +147,12 @@ func _on_monster_killed(reward: float) -> void:
 	add(Balance.Stat.KILLS, 1.0)
 	if Game.is_boss_stage():
 		add(Balance.Stat.BOSS_KILLS, 1.0)
+	add(Balance.Stat.GOLD, reward)
+
+
+## 연쇄 처치: 일반 몬스터만이라 보스 수는 없다
+func _on_chain_killed(count: int, reward: float) -> void:
+	add(Balance.Stat.KILLS, float(count))
 	add(Balance.Stat.GOLD, reward)
 
 

@@ -13,6 +13,7 @@ const Zones := preload("res://scenes/battle/zones.gd")
 const TAP_TEXT_COLOR := Color("ffe66d")
 const PARTY_TEXT_COLOR := Color("dfe3ea")
 const CRIT_TEXT_COLOR := Color("ff8c42")
+const CHAIN_TEXT_COLOR := Color("8ce9ff")  # 연쇄 처치
 const EDGE_MARGIN: float = 16.0
 const LABEL_HEIGHT: float = 44.0
 const MONSTER_X: float = 0.68       # 몬스터 중심의 가로 위치 (화면 폭 비율)
@@ -49,6 +50,7 @@ func _ready() -> void:
 	Game.monster_damaged.connect(_monster_view.set_hp)
 	Game.tap_hit.connect(_on_tap_hit)
 	Game.monster_killed.connect(_on_monster_killed)
+	Game.chain_killed.connect(_on_chain_killed)
 	Game.boss_failed.connect(_monster_view.vanish.bind(BOSS_ESCAPE_DURATION))
 	Game.kills_changed.connect(_refresh_progress.unbind(1))
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
@@ -168,6 +170,11 @@ func _on_monster_killed(_reward: float) -> void:
 	_monster_view.die(Game.respawn_delay())
 	_stage.impact(_monster_view.position + MonsterView.FIGURE_SIZE * 0.5, false, true)
 	_stage.shake(KILL_SHAKE)
+
+
+## 연쇄 처치: 넘친 피해로 같은 스테이지의 몬스터를 더 잡았다. 그림은 첫 처치 하나만 쓰러지고 수만 띄운다
+func _on_chain_killed(count: int, _reward: float) -> void:
+	_monster_view.pop("연쇄 ×%d" % (count + 1), CHAIN_TEXT_COLOR, true)
 
 
 func _refresh_progress() -> void:

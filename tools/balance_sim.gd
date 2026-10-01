@@ -134,12 +134,12 @@ func _rebirth() -> void:
 		Rebirth.rebirth_count + 1, _clock(_t), Rebirth.best_stage(), _clock(_t - _run_start), Num.format(reward)])
 	Rebirth.perform()
 	_buy_fates()
-	_report("    운명: 숙명 Lv %d (×%s), 인연 Lv %d (×%s), 예지 Lv %d (시작 %d), 남은 실 %s" % [
-		Rebirth.level(Balance.Fate.DESTINY), Num.format(Rebirth.damage_multiplier()),
-		Rebirth.level(Balance.Fate.BOND), Num.format(Rebirth.crystal_multiplier()),
-		Rebirth.level(Balance.Fate.FORESIGHT), Rebirth.start_stage(), Num.format(Rebirth.threads)])
 	_previous_best = 0
 	_new_run()
+	_report("    운명: 숙명 Lv %d (×%s), 인연 Lv %d (×%s), 예지 Lv %d, 도약 Lv %d (시작 %d), 남은 실 %s" % [
+		Rebirth.level(Balance.Fate.DESTINY), Num.format(Rebirth.damage_multiplier()),
+		Rebirth.level(Balance.Fate.BOND), Num.format(Rebirth.crystal_multiplier()),
+		Rebirth.level(Balance.Fate.FORESIGHT), Rebirth.level(Balance.Fate.LEAP), Game.stage, Num.format(Rebirth.threads)])
 
 
 func _new_run() -> void:

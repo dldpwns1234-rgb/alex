@@ -6,7 +6,7 @@ extends "res://autoload/balance/equipment.gd"
 const REBIRTH_MIN_STAGE: int = 500        # 환생 조건: 역대 최고 스테이지 (이번 판 포함)
 const REBIRTH_BASE_STAGE: int = 450       # 운명의 실 = floor((역대 최고 스테이지 − 450) / 10) → 500에서 5, 600에서 15
 const REBIRTH_STAGE_PER_THREAD: int = 10
-enum Fate { DESTINY, BOND, FORESIGHT, AUTO_PRESTIGE, AUTO_SKILLS, COMPANION_MEMORY, AUTO_UPGRADE }
+enum Fate { DESTINY, BOND, FORESIGHT, AUTO_PRESTIGE, AUTO_SKILLS, COMPANION_MEMORY, AUTO_UPGRADE, LEAP }
 const FATES: Array[Dictionary] = [
 	{"name": "숙명", "max_level": 0},
 	{"name": "인연", "max_level": 0},
@@ -15,11 +15,17 @@ const FATES: Array[Dictionary] = [
 	{"name": "자동 스킬", "max_level": 1},
 	{"name": "동료 기억", "max_level": 5},
 	{"name": "자동 강화", "max_level": 1},
+	{"name": "도약", "max_level": 8},
 ]
 const FATE_COST_STEP: int = 1             # 비용 = 현재 레벨 + 1 (1, 2, 3 …)
 const DESTINY_MULTIPLIER: float = 3.0     # 숙명: 레벨당 모든 피해 ×3 (복리)
 const BOND_MULTIPLIER: float = 2.0        # 인연: 레벨당 기억의 결정 ×2 (복리)
 const FORESIGHT_STAGES: int = 25          # 예지: 레벨당 회귀 후 시작 스테이지 +25. 건너뛴 스테이지의 골드는 유산으로 받는다
+# 도약: 회귀·환생 뒤 지난 판 최고 − (550 − 50 × 레벨)에서 시작 (1레벨 −500, 8레벨 −150). 예지보다 높을 때만 쓰고 유산도 받는다.
+# 한 판의 95%가 한 방 구간(스테이지당 2초)이라 3000스테이지면 한 삶에 1시간 반을 기다렸다 (플레이테스트 2026-10-01). 벽 앞 150스테이지면 몇 분이다.
+# 환생 직후 검술을 잃어도 50스테이지쯤이라 여유 150 안이다. 도전 판은 목표를 건너뛰지 않게 도약을 쉰다
+const LEAP_BASE_GAP: int = 550
+const LEAP_GAP_PER_LEVEL: int = 50
 enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬·자동 강화 운명이 나머지를 하나씩 연다
 const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화"]
 const AUTO_UPGRADE_BUYS_PER_FRAME: int = 10  # 동료 자동 강화: 한 프레임에 사는 횟수 상한 (유산·오프라인 골드를 몇 프레임에 나눠 쓴다)
@@ -64,6 +70,18 @@ func start_stage(level: int) -> int:
 	return 1 + FORESIGHT_STAGES * level
 
 
+## 도약이 지난 판 최고에서 얼마나 뒤에서 시작하는지
+func leap_gap(level: int) -> int:
+	return LEAP_BASE_GAP - LEAP_GAP_PER_LEVEL * level
+
+
+## 도약 시작 스테이지: 지난 판 최고 − 간격. 레벨이 없으면 1
+func leap_start(level: int, previous_best: int) -> int:
+	if level <= 0:
+		return 1
+	return maxi(previous_best - leap_gap(level), 1)
+
+
 ## 동료 기억: 지난 판 레벨의 이 비율만큼 가지고 시작한다
 func companion_memory_ratio(level: int) -> float:
 	return COMPANION_MEMORY_PER_LEVEL * level
@@ -88,6 +106,8 @@ func fate_note(index: int) -> String:
 			return "쿨타임이 끝나면 스킬을 바로 쓴다"
 		Fate.AUTO_UPGRADE:
 			return "살 수 있는 동료 레벨업·승급 중 골드 효율이 가장 좋은 것을 스스로 산다"
+		Fate.LEAP:
+			return "회귀 후 지난 판 최고 − %d에서 시작, 레벨마다 %d씩 가까이 (예지보다 높을 때, 유산도 받는다. 도전 판은 제외)" % [LEAP_BASE_GAP - LEAP_GAP_PER_LEVEL, LEAP_GAP_PER_LEVEL]
 	return "회귀 뒤 동료 레벨의 %d%%를 기억으로 얹고 시작" % roundi(COMPANION_MEMORY_PER_LEVEL * 100.0)
 
 
