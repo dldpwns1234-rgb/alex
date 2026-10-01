@@ -103,7 +103,7 @@ func _test_effects() -> void:
 
 	Prestige.memory_levels[Balance.Memory.MEDITATION] = 1
 	Skills.activated_at[Balance.Skill.STORM_SLASH] = Time.get_unix_time_from_system()
-	_equal(absf(Skills.cooldown_left(Balance.Skill.STORM_SLASH) - 270.0) < 1.0, true, "명상 1레벨: 쿨타임 4분 30초")
+	_equal(absf(Skills.cooldown_left(Balance.Skill.STORM_SLASH) - 216.0) < 1.0, true, "명상 1레벨: 쿨타임 3분 36초")
 
 	Prestige.memory_levels[Balance.Memory.NAP] = 1
 	Game.stage = 1

@@ -8,7 +8,7 @@ const SKILLS: Array[Dictionary] = [
 	{"name": "황금 손길", "unlock_level": 50},
 ]
 const SKILL_DURATION: float = 30.0                 # 초
-const SKILL_COOLDOWN: float = 5.0 * 60.0           # 초
+const SKILL_COOLDOWN: float = 4.0 * 60.0           # 초. 5분이었다가 플레이테스트에서 '조금 짧게'라는 소감으로 4분 (2026-10-01)
 const MEDITATION_COOLDOWN_CUT: float = 0.1         # 명상(M5) 레벨당 −10%
 const STORM_SLASH_CLICKS_PER_SECOND: float = 10.0  # 폭풍 베기: 초당 자동 클릭
 const BATTLE_CRY_MULTIPLIER: float = 2.0           # 전투의 함성: 동료 공격력
@@ -23,7 +23,7 @@ func skill_unlock_level(index: int) -> int:
 	return SKILLS[index]["unlock_level"]
 
 
-## 쿨타임: 5분 × (1 − 0.1 × 명상 레벨)
+## 쿨타임: 4분 × (1 − 0.1 × 명상 레벨)
 func skill_cooldown(meditation_level: int) -> float:
 	return SKILL_COOLDOWN * (1.0 - MEDITATION_COOLDOWN_CUT * meditation_level)
 

@@ -59,7 +59,7 @@ func duration() -> float:
 	return Balance.SKILL_DURATION + Training.value(Balance.Effect.SKILL_DURATION)
 
 
-## 쿨타임: 5분 × 명상 × 마나 순환 단련 × 침묵의 검 보너스
+## 쿨타임: 4분 × 명상 × 마나 순환 단련 × 침묵의 검 보너스
 func cooldown() -> float:
 	var base := Balance.skill_cooldown(Prestige.effect_level(Balance.Memory.MEDITATION))
 	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN)) * Challenges.cooldown_multiplier()

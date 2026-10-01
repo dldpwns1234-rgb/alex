@@ -84,7 +84,7 @@ func _test_skills_and_offline() -> void:
 	Training.levels[8] = 1   # 함성 공명 +0.2
 	Training.levels[24] = 1  # 기적 +0.2
 	_close(Skills.duration(), 32.0, "지속 32초")
-	_close(Skills.cooldown(), 240.0, "쿨타임 4분")
+	_close(Skills.cooldown(), 192.0, "쿨타임 4분 × 0.8 = 192초")
 	Skills.activate(Balance.Skill.BATTLE_CRY)
 	_close(Skills.party_multiplier(), 2.2, "함성 ×2.2")
 	Skills.activate(Balance.Skill.GOLDEN_TOUCH)

@@ -13,8 +13,8 @@ func _test_balance() -> void:
 	_equal(Balance.skill_unlock_level(Balance.Skill.STORM_SLASH), 10, "폭풍 베기 10레벨")
 	_equal(Balance.skill_unlock_level(Balance.Skill.BATTLE_CRY), 25, "전투의 함성 25레벨")
 	_equal(Balance.skill_unlock_level(Balance.Skill.GOLDEN_TOUCH), 50, "황금 손길 50레벨")
-	_close(Balance.skill_cooldown(0), 300.0, "쿨타임 5분")
-	_close(Balance.skill_cooldown(2), 240.0, "명상 2레벨이면 −20%")
+	_close(Balance.skill_cooldown(0), 240.0, "쿨타임 4분")
+	_close(Balance.skill_cooldown(2), 192.0, "명상 2레벨이면 −20%")
 	_equal(Num.format_clock(272.0), "4:32", "쿨타임 표기")
 	_equal(Num.format_clock(0.0), "0:00", "0초")
 
@@ -31,7 +31,7 @@ func _test_state() -> void:
 	_equal(Skills.is_active(S), true, "발동 직후 활성")
 	_equal(absf(Skills.active_left(S) - 30.0) < 1.0, true, "남은 지속 시간 약 30초")
 	_equal(Skills.is_ready(S), false, "쿨타임 중")
-	_equal(absf(Skills.cooldown_left(S) - 300.0) < 1.0, true, "남은 쿨타임 약 5분")
+	_equal(absf(Skills.cooldown_left(S) - 240.0) < 1.0, true, "남은 쿨타임 약 4분")
 	_equal(Skills.activate(S), false, "쿨타임 중엔 못 쓴다")
 
 	# 실제 시간 기준: 발동 시각을 과거로 돌리면 그만큼 흐른 것과 같다
@@ -39,8 +39,8 @@ func _test_state() -> void:
 	Skills.activated_at[S] = now - 31.0
 	_equal(Skills.is_active(S), false, "31초 뒤엔 끝난다")
 	_equal(Skills.is_ready(S), false, "아직 쿨타임")
-	Skills.activated_at[S] = now - 301.0
-	_equal(Skills.is_ready(S), true, "5분 뒤엔 다시 준비")
+	Skills.activated_at[S] = now - 241.0
+	_equal(Skills.is_ready(S), true, "4분 뒤엔 다시 준비")
 
 	# 저장 왕복: 쿨타임이 이어진다
 	Skills.activated_at[S] = now - 100.0
@@ -48,7 +48,7 @@ func _test_state() -> void:
 	Skills.reset()
 	_equal(Skills.is_ready(S), true, "초기화하면 쿨타임도 지워진다")
 	Skills.from_dict(data)
-	_equal(absf(Skills.cooldown_left(S) - 200.0) < 1.0, true, "불러오면 남은 쿨타임 약 200초")
+	_equal(absf(Skills.cooldown_left(S) - 140.0) < 1.0, true, "불러오면 남은 쿨타임 약 140초")
 	Skills.from_dict({})
 	_equal(Skills.activated_at, [0.0, 0.0, 0.0], "필드가 없으면 0")
 
@@ -57,7 +57,7 @@ func _test_state() -> void:
 	_equal(whole.has("skills"), true, "저장 데이터에 스킬이 들어간다")
 	Skills.reset()
 	Save.from_dict(whole)
-	_equal(absf(Skills.cooldown_left(S) - 200.0) < 1.0, true, "Save로 복원")
+	_equal(absf(Skills.cooldown_left(S) - 140.0) < 1.0, true, "Save로 복원")
 
 
 func _test_effects() -> void:
