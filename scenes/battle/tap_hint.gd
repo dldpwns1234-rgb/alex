@@ -6,7 +6,7 @@ const HIDE_AFTER_TAPS: float = 5.0  # 이만큼 탭하면 안내를 거둔다
 const PULSE_SCALE: float = 1.08      # 숨 쉬듯 커졌다 작아진다. 자리를 옮기면 앵커 배치와 다퉈 위치를 Tween하지 않는다
 const PULSE_SECONDS: float = 0.6
 const FADE_SECONDS: float = 0.3
-const VERTICAL_ANCHOR: float = 0.80  # 전투 화면 높이에서의 자리. 몬스터 이름·체력 아래, 알림 위
+const VERTICAL_ANCHOR: float = 0.24  # 전투 화면 높이에서의 자리. 하늘(용사 머리 위). 아래쪽은 알림 자리라 겹친다
 
 var _pulse: Tween
 
