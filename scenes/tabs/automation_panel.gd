@@ -5,14 +5,14 @@ extends VBoxContainer
 const GAP: int = 10
 const ROW_PADDING: int = 10
 const ROW_HEIGHT: float = 92.0  # 제목 한 줄 + 설명 한 줄. 글이 바뀌어도 줄 높이가 변하지 않는다
-const NOTE_FONT_SIZE: int = 22
+const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
 const TOGGLE_SIZE := Vector2(130, 56)
 
 var _titles: Array[Label] = []
 var _notes: Array[Label] = []
-var _toggles: Array[Button] = []
+var _toggles: Array[CheckButton] = []
 
 
 func _ready() -> void:
@@ -52,8 +52,7 @@ func _make_row(kind: int) -> PanelContainer:
 	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
 	note.add_theme_color_override("font_color", NOTE_COLOR)
 	text.add_child(note)
-	var toggle := Button.new()
-	toggle.toggle_mode = true
+	var toggle := CheckButton.new()  # 스위치 모양이라 켬/끔 상태가 한눈에 보인다 (테마의 CheckButton 아이콘)
 	toggle.custom_minimum_size = TOGGLE_SIZE
 	toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	toggle.toggled.connect(_on_toggled.bind(kind))
@@ -79,9 +78,7 @@ func _refresh() -> void:
 		if not unlocked:
 			_notes[kind].text = "운명의 상점에서 '%s'을 사면 열린다" % Balance.fate_name(Balance.auto_fate(kind))
 			toggle.text = "잠김"
-			toggle.theme_type_variation = ""
 			continue
 		_notes[kind].text = Balance.auto_note(kind)
 		toggle.text = "켬" if Automation.is_enabled(kind) else "끔"
-		toggle.theme_type_variation = "AccentButton" if Automation.is_enabled(kind) else ""
 	visible = any_unlocked
