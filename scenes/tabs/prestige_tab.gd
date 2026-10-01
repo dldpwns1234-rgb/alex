@@ -22,6 +22,7 @@ var _prestige_button: Button
 var _confirm: ConfirmationDialog
 var _titles: Array[Label] = []
 var _buttons: Array[Button] = []
+var _shown_minute: int = -1  # 판 시간은 분이 바뀔 때만 다시 쓴다
 
 
 func _ready() -> void:
@@ -71,7 +72,15 @@ func _ready() -> void:
 	Prestige.memory_changed.connect(_refresh.unbind(2))
 	Prestige.prestiged.connect(_refresh.unbind(1))
 	Game.stage_changed.connect(_refresh.unbind(1))
+	Game.run_started.connect(_refresh.unbind(1))  # Prestige가 판 기록을 바꾼 뒤 (먼저 연결돼 있다)
 	_refresh()
+
+
+## 판 시간이 흐르므로 보이는 동안 분이 바뀌면 요약을 다시 쓴다
+func _process(_delta: float) -> void:
+	var minute := floori(Prestige.run_seconds / 60.0)
+	if is_visible_in_tree() and minute != _shown_minute:
+		_refresh_summary()
 
 
 func _make_row(index: int) -> PanelContainer:
@@ -117,9 +126,22 @@ func _on_prestige_pressed() -> void:
 	_confirm.popup_centered(CONFIRM_SIZE)
 
 
+## 둘째 줄은 판 기록: 이번 판 시간과 지난 판 최고 대비 (회귀할지 판단하게. docs/LATEGAME_REFERENCES.md 3절)
+func _refresh_summary() -> void:
+	_shown_minute = floori(Prestige.run_seconds / 60.0)
+	var record := "이번 판 %d분" % _shown_minute
+	if Prestige.last_run_best > 0:
+		var gain := Prestige.run_gain()
+		record += "  ·  지난 판 최고 %d 대비 %s%d" % [Prestige.last_run_best, "+" if gain >= 0 else "−", absi(gain)]
+	else:
+		record += "  ·  첫 판"
+	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d
+%s" % [
+		Num.format(Prestige.crystals), Prestige.prestige_count, Prestige.best_stage, record]
+
+
 func _refresh() -> void:
-	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d" % [
-		Num.format(Prestige.crystals), Prestige.prestige_count, Prestige.best_stage]
+	_refresh_summary()
 	if Prestige.can_prestige():
 		# 가진 결정이 몇 배가 되는지 보여 "지금 회귀할까"를 계산할 수 있게 한다 (UX 점검 2026-10-02)
 		var reward := Prestige.crystal_reward()

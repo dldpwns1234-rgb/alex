@@ -3,8 +3,18 @@ extends "res://autoload/game/state.gd"
 ## 이 파일은 매 프레임 전투 흐름(피해, 처치와 연쇄 처치, 보스 타이머, 파밍과 도전)을 맡는다. 상태와 저장은 game/state.gd에 있다.
 
 
+signal run_started(previous_highest: int)  # 새 판 (회귀·환생·도전 시작·데이터 초기화). 지난 판의 최고 스테이지를 넘긴다
+
+
 func _ready() -> void:
 	reset()
+
+
+## 새 판. 지난 판의 최고는 reset()이 지우기 전에 잡아 둔다 (Prestige가 판 기록에 쓴다)
+func reset() -> void:
+	var previous := highest_stage
+	super()
+	run_started.emit(previous)
 
 
 func _process(delta: float) -> void:

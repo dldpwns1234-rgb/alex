@@ -1,5 +1,6 @@
 extends Node
 ## 회귀와 기억의 상점 (GDD 7절). 기억의 결정, 상점 레벨, 역대 기록은 회귀해도 남는다 (환생에서 내려놓는다).
+## 판 기록(이번 판 시간, 지난 판 최고)도 여기서 센다. 새 판은 Game.run_started로 안다.
 ## 상태 변경은 Game·Party·Skills·Prestige의 함수로만 한다.
 
 signal crystals_changed(crystals: float)
@@ -10,10 +11,33 @@ var crystals: float = 0.0
 var memory_levels: Array[int] = []
 var best_stage: int = 1          # 역대 최고 스테이지 (통계)
 var prestige_count: int = 0
+var run_seconds: float = 0.0     # 이번 판이 흐른 게임 시간 (초). 오프라인 시간은 넣지 않는다
+var last_run_best: int = 0       # 지난 판의 최고 스테이지. 0이면 지난 판이 없다
 
 
 func _ready() -> void:
 	reset()
+	Game.run_started.connect(_on_run_started)
+
+
+func _process(delta: float) -> void:
+	tick(minf(delta, Balance.MAX_DELTA))
+
+
+func tick(dt: float) -> void:
+	run_seconds += dt
+
+
+## 새 판: 시간을 0으로, 지난 판의 최고를 남긴다. 처음 시작(데이터 초기화 포함)이면 지난 판이 없다
+func _on_run_started(previous_highest: int) -> void:
+	run_seconds = 0.0
+	var first_run := prestige_count == 0 and Rebirth.rebirth_count == 0
+	last_run_best = 0 if first_run else previous_highest
+
+
+## 이번 판 최고가 지난 판 최고보다 얼마나 높은지 (낮으면 음수)
+func run_gain() -> int:
+	return Game.highest_stage - last_run_best
 
 
 ## 데이터 초기화에서만 부른다. 회귀는 perform()이다
@@ -24,6 +48,8 @@ func reset() -> void:
 	memory_levels.fill(0)
 	best_stage = 1
 	prestige_count = 0
+	run_seconds = 0.0
+	last_run_best = 0
 	crystals_changed.emit(crystals)
 	for i in memory_levels.size():
 		memory_changed.emit(i, 0)
@@ -35,6 +61,8 @@ func to_dict() -> Dictionary:
 		"memory_levels": memory_levels.duplicate(),
 		"best_stage": best_stage,
 		"prestige_count": prestige_count,
+		"run_seconds": run_seconds,
+		"last_run_best": last_run_best,
 	}
 
 
@@ -48,6 +76,8 @@ func from_dict(data: Dictionary) -> void:
 			memory_levels[i] = clampi(int(saved[i]), 0, _cap(i))
 	best_stage = maxi(int(data.get("best_stage", 1)), 1)
 	prestige_count = maxi(int(data.get("prestige_count", 0)), 0)
+	run_seconds = maxf(float(data.get("run_seconds", 0.0)), 0.0)  # 옛 저장은 불러온 때부터 센다
+	last_run_best = maxi(int(data.get("last_run_best", 0)), 0)
 	crystals_changed.emit(crystals)
 	for i in memory_levels.size():
 		memory_changed.emit(i, memory_levels[i])

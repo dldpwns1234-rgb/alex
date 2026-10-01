@@ -38,6 +38,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_chain.gd"),
 	preload("res://tests/test_limits.gd"),
 	preload("res://tests/test_treasure.gd"),
+	preload("res://tests/test_run_record.gd"),
 ]
 
 
