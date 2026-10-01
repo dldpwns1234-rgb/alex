@@ -85,7 +85,7 @@ func _process(delta: float) -> void:
 		if i == Balance.Companion.ARCHER and randf() < Balance.ARCHER_CRIT_CHANCE:
 			_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
 		else:
-			_monster_view.pop(Num.format(amount), PARTY_TEXT_COLOR)
+			_monster_view.pop(Num.format(amount), PARTY_TEXT_COLOR, false, true, true)
 
 
 func _gui_input(event: InputEvent) -> void:

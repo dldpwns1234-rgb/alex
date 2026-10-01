@@ -22,8 +22,12 @@ const OUTLINE_SIZE: int = 6
 const OUTLINE_COLOR := Color("2b2438")
 const POP_FONT_SIZE: int = 40
 const POP_CRIT_FONT_SIZE: int = 52
+const POP_SMALL_FONT_SIZE: int = 30  # 동료 피해. 탭 피해보다 작게
 const POP_START: float = 0.35      # 피해 숫자가 나타나는 높이 (그림 높이 비율). 몬스터 얼굴 위
+const POP_SMALL_START: float = 0.6  # 동료 피해는 몸통에서. 탭 숫자와 자리를 나눈다
 const POP_SPREAD: float = 40.0     # 피해 숫자가 나타나는 가로 흔들림
+const POP_SPREAD_Y: float = 45.0   # 세로 흔들림. 연타 숫자가 한 줄에 포개지지 않게
+const POP_LIMIT: int = 4           # 동시에 떠 있는 숫자 상한. 넘치면 오래된 것부터 지운다 (후반 연타에 숫자가 덩어리졌다)
 const POP_RISE: float = 100.0      # 피해 숫자가 떠오르는 거리
 const POP_DURATION: float = 0.6
 # 탭 공격이 닿는 자리 (몬스터 앞쪽). 파편이 여기서 나오고 Battle은 접촉 섬광을 여기 띄운다
@@ -50,6 +54,7 @@ var _hp_fill: StyleBoxFlat
 var _hp_label: Label
 var _sparks: CPUParticles2D
 var _name: String = ""
+var _pops: Array[Label] = []
 
 
 func _ready() -> void:
@@ -158,24 +163,35 @@ func hit(strong: bool, crit: bool = false, flurry: bool = false) -> void:
 		_sparks.restart()
 
 
-## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때, punch가 꺼지면 커졌다 줄지 않는다 (연타 중)
-func pop(text: String, color: Color, big: bool = false, punch: bool = true) -> void:
+## 몬스터 머리 위에 글자를 띄우고 떠오르며 사라지게 한다. big은 치명타처럼 강조할 때, punch가 꺼지면 커졌다 줄지 않는다 (연타 중).
+## small은 동료 피해: 작게, 몸통 높이에서
+func pop(text: String, color: Color, big: bool = false, punch: bool = true, small: bool = false) -> void:
+	while _pops.size() >= POP_LIMIT:
+		_pops.pop_front().queue_free()  # 트윈은 글자에 붙어 있어 함께 사라진다
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", POP_CRIT_FONT_SIZE if big else POP_FONT_SIZE)
+	label.add_theme_font_size_override("font_size",
+		POP_CRIT_FONT_SIZE if big else POP_SMALL_FONT_SIZE if small else POP_FONT_SIZE)
 	label.add_theme_color_override("font_color", color)
 	_outline(label)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.size = label.get_minimum_size()
 	label.pivot_offset = label.size * 0.5
-	label.position = Vector2(FIGURE_SIZE.x * 0.5 + randf_range(-POP_SPREAD, POP_SPREAD), FIGURE_SIZE.y * POP_START)
+	label.position = Vector2(FIGURE_SIZE.x * 0.5 + randf_range(-POP_SPREAD, POP_SPREAD),
+		FIGURE_SIZE.y * (POP_SMALL_START if small else POP_START) + randf_range(-POP_SPREAD_Y, POP_SPREAD_Y)) - label.size * 0.5
 	label.scale = Vector2.ONE * (POP_PUNCH if punch else 1.0)  # 크게 나타나 원래 크기로 줄어들며 튀어 오른다
 	add_child(label)
-	var tween := create_tween()
+	_pops.append(label)
+	var tween := label.create_tween()
 	tween.tween_property(label, "scale", Vector2.ONE, POP_PUNCH_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(label, "position:y", label.position.y - POP_RISE, POP_DURATION)
 	tween.parallel().tween_property(label, "modulate:a", 0.0, POP_DURATION)
-	tween.tween_callback(label.queue_free)
+	tween.tween_callback(_drop_pop.bind(label))
+
+
+func _drop_pop(label: Label) -> void:
+	_pops.erase(label)
+	label.queue_free()
 
 
 ## 밝은 배경 위에서도 읽히도록 글자에 테두리를 준다
