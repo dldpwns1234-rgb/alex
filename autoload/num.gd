@@ -29,7 +29,8 @@ func format(value: float) -> String:
 	if mantissa >= UNIT_BASE - EPSILON:
 		unit_index += 1
 		mantissa = 1.0
-	elif mantissa < 1.0:
+	# 1에 EPSILON만큼 못 미치는 것은 오차다. 내리면 1e68이 "10000불가사의"가 된다
+	elif mantissa < 1.0 - EPSILON:
 		unit_index -= 1
 		mantissa *= UNIT_BASE
 	if unit_index > UNITS.size():
@@ -53,7 +54,7 @@ func _scientific(value: float) -> String:
 	if mantissa >= 10.0 - EPSILON:
 		exponent += 1
 		mantissa = 1.0
-	elif mantissa < 1.0:
+	elif mantissa < 1.0 - EPSILON:
 		exponent -= 1
 		mantissa *= 10.0
 	return "%.2fe%d" % [floor(mantissa * 100.0 + EPSILON) / 100.0, exponent]
