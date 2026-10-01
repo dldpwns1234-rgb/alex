@@ -22,6 +22,7 @@ const SWORD_MULTIPLIER: float = 1.5          # 레벨당 모든 피해 ×1.5 (�
 const GOLD_MEMORY_MULTIPLIER: float = 1.25   # 레벨당 처치 골드 ×1.25 (복리)
 const SAND_SECONDS_PER_LEVEL: float = 3.0    # 레벨당 보스 제한 시간 +3초
 const AWAKENING_SHARE_PER_LEVEL: float = 0.01  # 레벨당 클릭 피해에 동료 DPS 합계의 1% 추가
+const AWAKENING_MILESTONE_GROWTH: float = 1.07  # 각성 몫에 용사 마일스톤마다 ×1.07. 후반에 용사 레벨업이 클릭 피해에 보이도록 (플레이테스트 2026-10-01). 1.1은 500 도달이 58분까지 빨라져 1.07 (docs/BALANCE_SIM.md)
 const OFFLINE_RATE_PER_NAP_LEVEL: float = 0.1  # 단잠: 레벨당 오프라인 보상 +10%p
 const WIND_RESPAWN_CUT_PER_LEVEL: float = 0.03  # 바람의 걸음: 레벨당 재등장 대기 −0.03초 (5레벨이면 0.3초 → 0.15초)
 # 명상(MEDITATION_COOLDOWN_CUT)은 skills.gd에 있다
@@ -67,6 +68,12 @@ func awakening_share(level: int) -> float:
 	return AWAKENING_SHARE_PER_LEVEL * level
 
 
+## 각성 몫에 곱하는 용사 마일스톤 보정: 1.07^m(L). 용사 자신의 몫(기본 1)은 동료 합(335 × 승급 × 성직자)에 비해 너무 작아
+## 후반 클릭 피해는 각성 몫이 전부인데, 그 몫이 용사 레벨과 무관하면 용사 레벨업이 보이지 않는다
+func awakening_factor(hero_level: int) -> float:
+	return pow(AWAKENING_MILESTONE_GROWTH, milestones(hero_level))
+
+
 func wind_respawn_cut(level: int) -> float:
 	return WIND_RESPAWN_CUT_PER_LEVEL * level
 
@@ -85,5 +92,5 @@ func memory_note(index: int) -> String:
 		Memory.NAP:
 			return "오프라인 보상 +%d%%p" % roundi(OFFLINE_RATE_PER_NAP_LEVEL * 100.0)
 		Memory.AWAKENING:
-			return "클릭 피해에 동료 DPS 합계의 %d%% 추가" % roundi(AWAKENING_SHARE_PER_LEVEL * 100.0)
+			return "클릭 피해에 동료 DPS 합계의 %d%% 추가 (용사 마일스톤마다 ×%.2f)" % [roundi(AWAKENING_SHARE_PER_LEVEL * 100.0), AWAKENING_MILESTONE_GROWTH]
 	return "재등장 대기 −%.2f초" % WIND_RESPAWN_CUT_PER_LEVEL

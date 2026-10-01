@@ -91,13 +91,13 @@ func companion_level_list() -> Array[int]:
 	return levels
 
 
-## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 도전 보너스 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 (GDD 5절)
+## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 도전 보너스 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 × 용사 마일스톤 보정 (GDD 5절)
 func click_damage() -> float:
 	var boss := Game.is_boss_stage()
 	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier() * Achievements.damage_multiplier()
 	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier() * Challenges.click_multiplier()
 	base *= (1.0 + Training.value(Balance.Effect.CLICK_DAMAGE)) * _boss_bonus(boss)
-	return base + party_dps(boss) * Prestige.awakening_share()
+	return base + party_dps(boss) * Prestige.awakening_share() * Balance.awakening_factor(hero_level)
 
 
 ## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.

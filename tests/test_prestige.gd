@@ -21,6 +21,9 @@ func _test_balance() -> void:
 	_close(Balance.sword_multiplier(2), 2.25, "검술 2레벨 ×2.25")
 	_close(Balance.gold_memory_multiplier(1), 1.25, "황금 1레벨 ×1.25")
 	_close(Balance.awakening_share(3), 0.03, "각성 3레벨 3%")
+	_close(Balance.awakening_factor(1), 1.0, "용사 마일스톤 없으면 각성 보정 1")
+	_close(Balance.awakening_factor(10), 1.07, "첫 마일스톤에 ×1.07")
+	_close(Balance.awakening_factor(500), pow(1.07, 21), "500레벨(마일스톤 21)에 1.07^21")
 	_equal(Balance.memory_max_level(Balance.Memory.SWORD), 0, "검술은 상한 없음")
 	_equal(Balance.memory_max_level(Balance.Memory.SAND), 10, "시간의 모래 상한 10")
 	_equal(Balance.memory_max_level(Balance.Memory.WIND), 5, "바람의 걸음 상한 5")
@@ -88,7 +91,7 @@ func _test_effects() -> void:
 	_close(Party.party_dps(false), 4.5, "검술 1레벨: 동료 ×1.5")
 	_close(Party.companion_dps(Balance.Companion.WARRIOR, false), 4.5, "연출용 DPS도 ×1.5")
 	Prestige.memory_levels[Balance.Memory.AWAKENING] = 2
-	_close(Party.click_damage(), 30.0 + 4.5 * 0.02, "각성 2레벨: 동료 DPS의 2% 추가")
+	_close(Party.click_damage(), 30.0 + 4.5 * 0.02 * 1.07, "각성 2레벨: 동료 DPS의 2% × 용사 마일스톤 보정(10레벨, ×1.07) 추가")
 
 	Prestige.memory_levels[Balance.Memory.GOLD] = 1
 	var before := Game.gold
