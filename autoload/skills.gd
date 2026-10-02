@@ -130,5 +130,10 @@ func gold_multiplier() -> float:
 	return Balance.GOLDEN_TOUCH_MULTIPLIER + Training.value(Balance.Effect.GOLDEN_TOUCH)
 
 
+## 지금 시각. 발동 시각이 지금보다 뒤면(기기 시계를 되돌렸거나 미래 시각이 든 저장) 지금으로 당긴다.
+## 그대로 두면 스킬이 되돌린 시간만큼 이어지고 그 뒤 쿨타임도 그만큼 길어진다
 func _now() -> float:
-	return clock_override if clock_override >= 0.0 else Time.get_unix_time_from_system()
+	var now := clock_override if clock_override >= 0.0 else Time.get_unix_time_from_system()
+	for i in activated_at.size():
+		activated_at[i] = minf(activated_at[i], now)
+	return now

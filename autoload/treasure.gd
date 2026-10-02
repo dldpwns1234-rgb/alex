@@ -87,8 +87,9 @@ func catch() -> bool:
 	return true
 
 
+## 축복 시간보다 길게 남지 않는다: 기기 시계를 되돌려도 몇 시간씩 이어지지 않게
 func blessing_left() -> float:
-	return maxf(blessing_until - _now(), 0.0)
+	return clampf(blessing_until - _now(), 0.0, Balance.TREASURE_BLESSING_TIME)
 
 
 ## 처치 골드에 곱한다 (Game이 부른다)

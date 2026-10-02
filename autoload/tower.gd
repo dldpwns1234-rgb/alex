@@ -55,8 +55,9 @@ func from_dict(data: Dictionary) -> void:
 	tower_changed.emit()
 
 
+## 날짜가 앞으로 갔을 때만 채운다 ("YYYY-MM-DD"는 문자열 순서가 곧 날짜 순서). 기기 날짜를 앞뒤로 돌려 입장권을 무한히 얻지 못하게
 func refill_if_new_day() -> void:
-	if Time.get_date_string_from_system() != ticket_date:
+	if Time.get_date_string_from_system() > ticket_date:
 		_refill()
 		tower_changed.emit()
 
