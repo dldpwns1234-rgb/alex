@@ -60,6 +60,13 @@ func _test_perform() -> void:
 	_close(Achievements.value(Balance.Stat.KILLS), 500.0, "통계는 남는다")
 	_equal(Game.stage, 1, "판이 처음부터")
 	_equal(Automation.is_unlocked(Balance.Auto.PRESTIGE), true, "초월 1회부터 자동화 해금이 남는다")
+	for fate: int in [Balance.Fate.AUTO_PRESTIGE, Balance.Fate.AUTO_SKILLS, Balance.Fate.AUTO_UPGRADE]:
+		_equal(Rebirth.level(fate), 1, "자동화 운명은 상점에 1/1로 남는다")
+	_equal(Rebirth.level(Balance.Fate.COMPANION_MEMORY), 0, "자동화가 아닌 운명은 지운다")
+	var data := Save.to_dict()
+	data["rebirth"]["fate_levels"] = []  # 이 수정 전에 초월한 저장
+	Save.from_dict(data)
+	_equal(Rebirth.level(Balance.Fate.AUTO_SKILLS), 1, "옛 저장도 불러오면 자동화 운명이 1/1")
 	_fresh_run()
 
 

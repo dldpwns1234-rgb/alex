@@ -81,6 +81,7 @@ func perform() -> bool:
 	cycle_seconds = 0.0
 	final_cleared = false
 	Rebirth.reset()   # 운명의 실, 운명의 상점, 환생 횟수
+	Rebirth.keep_automation_fates()  # 자동화 운명은 1레벨로 남긴다 (상점에 1/1)
 	Prestige.reset()  # 결정, 기억의 상점, 회귀 기록
 	Tower.forget_floors()
 	Party.reset()

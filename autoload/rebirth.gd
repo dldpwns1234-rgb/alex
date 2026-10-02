@@ -45,6 +45,7 @@ func from_dict(data: Dictionary) -> void:
 	threads_changed.emit(threads)
 	for i in fate_levels.size():
 		fate_changed.emit(i, fate_levels[i])
+	keep_automation_fates()  # 이 수정 전에 초월한 저장은 자동화 운명이 0으로 남아 있다 (Transcend가 먼저 불린다)
 
 
 ## 역대 최고 스테이지 (이번 판 포함)
@@ -150,6 +151,17 @@ func companion_memory_ratio() -> float:
 ## 해금형 운명(자동 회귀, 자동 스킬)을 샀는지
 func has_fate(index: int) -> bool:
 	return fate_levels[index] > 0
+
+
+## 한 번 초월했으면 자동화 운명(자동 회귀·자동 스킬·자동 강화)을 1레벨로 남긴다. 초월이 운명을 지워도 자동화는 남고,
+## 상점에도 1/1로 보여야 실을 다시 쓰지 않는다 (GDD 7.12절). 초월할 때와 불러올 때 부른다
+func keep_automation_fates() -> void:
+	if not Transcend.keeps_automation():
+		return
+	for index: int in [Balance.Fate.AUTO_PRESTIGE, Balance.Fate.AUTO_SKILLS, Balance.Fate.AUTO_UPGRADE]:
+		if fate_levels[index] == 0:
+			fate_levels[index] = 1
+			fate_changed.emit(index, 1)
 
 
 ## 저장 데이터의 레벨 상한. 0(무한)이면 그대로
