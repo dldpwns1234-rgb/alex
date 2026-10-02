@@ -2,6 +2,7 @@ extends VBoxContainer
 ## 업적 탭 도전 절 아래의 별자리 시련 (GDD 7.12절): 이름과 단계(별 다섯), 제한 둘과 이번 목표, 단계 보상, 버튼(시련 시작 / 포기 / 완성).
 ## 초월 1회 전에는 보이지 않는다. Trials의 함수만 부르고 표시만 한다. 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const GAP: int = 8
 const ROW_PADDING: int = 10
 const ROW_HEIGHT: float = 128.0  # 세 줄. 글이 바뀌어도 줄 높이와 버튼 자리가 변하지 않는다
@@ -13,6 +14,7 @@ const ACTIVE_COLOR := Color("ff8a80")
 const BUTTON_SIZE := Vector2(170, 64)
 const CONFIRM_SIZE := Vector2i(600, 420)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _titles: Array[Label] = []
 var _rules: Array[Label] = []
 var _buttons: Array[Button] = []
@@ -21,6 +23,8 @@ var _pending: int = -1
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self, true)
+	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
 	var header := Label.new()
 	header.text = "별자리 시련"
@@ -35,10 +39,10 @@ func _ready() -> void:
 	_confirm.dialog_autowrap = true
 	_confirm.confirmed.connect(_on_confirmed)
 	add_child(_confirm)
-	Trials.trial_changed.connect(_refresh)
-	Challenges.challenge_changed.connect(_refresh)
-	Transcend.transcended.connect(_refresh.unbind(1))
-	Game.stage_changed.connect(_refresh.unbind(1))
+	Trials.trial_changed.connect(_gate.queue)
+	Challenges.challenge_changed.connect(_gate.queue)
+	Transcend.transcended.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)
 	_refresh()
 
 

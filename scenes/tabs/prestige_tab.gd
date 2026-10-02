@@ -2,6 +2,7 @@ extends MarginContainer
 ## 회귀 탭 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 자동화(automation_panel.gd), 기억의 상점 7종, 그 아래 환생(rebirth_panel.gd).
 ## Prestige의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const RebirthPanel := preload("res://scenes/tabs/rebirth_panel.gd")
 const AutomationPanel := preload("res://scenes/tabs/automation_panel.gd")
@@ -20,6 +21,7 @@ const BUTTON_HEIGHT: float = 72.0
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
 const CONFIRM_SIZE := Vector2i(600, 300)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _summary: Label
 var _prestige_button: Button
 var _confirm: ConfirmationDialog
@@ -29,6 +31,8 @@ var _shown_minute: int = -1  # 판 시간은 분이 바뀔 때만 다시 쓴다
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 	var column := VBoxContainer.new()
@@ -74,11 +78,11 @@ func _ready() -> void:
 	_confirm.confirmed.connect(Prestige.perform)
 	add_child(_confirm)
 
-	Prestige.crystals_changed.connect(_refresh.unbind(1))
-	Prestige.memory_changed.connect(_refresh.unbind(2))
-	Prestige.prestiged.connect(_refresh.unbind(1))
-	Game.stage_changed.connect(_refresh.unbind(1))
-	Game.run_started.connect(_refresh.unbind(1))  # Prestige가 판 기록을 바꾼 뒤 (먼저 연결돼 있다)
+	Prestige.crystals_changed.connect(_gate.queue)
+	Prestige.memory_changed.connect(_gate.queue)
+	Prestige.prestiged.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)
+	Game.run_started.connect(_gate.queue)  # Prestige가 판 기록을 바꾼 뒤 (먼저 연결돼 있다)
 	_refresh()
 
 

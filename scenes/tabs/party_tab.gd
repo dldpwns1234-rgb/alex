@@ -2,6 +2,7 @@ extends MarginContainer
 ## 동료 탭: 동료 5명의 고용(늘 최대로)과 레벨업, 승급, 골드 효율(지금 구매로 파티 DPS가 골드당 얼마나 느는지, 최고 대비 %) (GDD 6절·6.6절). 줄은 코드로 생성한다.
 ## Game·Party·Promotions의 시그널을 받아 표시만 하고, 구매는 Party.buy_companion()과 Promotions.promote()를 부른다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const PORTRAITS: Array[Texture2D] = [  # Balance.Companion 순서
 	preload("res://assets/sprites/warrior.svg"),
@@ -24,6 +25,7 @@ const ROW_HEIGHT: float = 158.0  # 버튼 두 개 높이. 글이 바뀌어도 �
 const PORTRAIT_SIZE := Vector2(72, 72)
 const LOCKED_PORTRAIT_COLOR := Color(0.5, 0.48, 0.6)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _portraits: Array[TextureRect] = []
 var _title_labels: Array[Label] = []
 var _dps_labels: Array[Label] = []
@@ -34,6 +36,8 @@ var _promote_buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 
@@ -47,13 +51,13 @@ func _ready() -> void:
 		column.add_child(_make_row(i))
 	scroll.release_buttons()
 
-	Game.gold_changed.connect(_refresh.unbind(1))
-	Game.stage_changed.connect(_refresh.unbind(1))
-	Party.companion_changed.connect(_refresh.unbind(2))
-	Party.buy_mode_changed.connect(_refresh.unbind(1))
-	Promotions.promotion_changed.connect(_refresh.unbind(2))
-	Automation.settings_changed.connect(_refresh)  # 동료 자동 강화 표시
-	Rebirth.fate_changed.connect(_refresh.unbind(2))
+	Game.gold_changed.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)
+	Party.companion_changed.connect(_gate.queue)
+	Party.buy_mode_changed.connect(_gate.queue)
+	Promotions.promotion_changed.connect(_gate.queue)
+	Automation.settings_changed.connect(_gate.queue)  # 동료 자동 강화 표시
+	Rebirth.fate_changed.connect(_gate.queue)
 	_refresh()
 
 
@@ -98,7 +102,7 @@ func _make_row(index: int) -> PanelContainer:
 	row.add_child(buttons)
 	var button := _make_button(BUTTON_SIZE, _on_buy_pressed.bind(index))
 	buttons.add_child(button)
-	var promote := _make_button(PROMOTE_SIZE, _on_promote_pressed.bind(index))
+	var promote := _make_button(PROMOTE_SIZE, Promotions.promote.bind(index))
 	buttons.add_child(promote)
 
 	_portraits.append(portrait)
@@ -134,10 +138,6 @@ func _make_button(size: Vector2, callback: Callable) -> Button:
 
 func _on_buy_pressed(index: int) -> void:
 	Party.buy_companion(index, Party.BuyMode.MAX if not Party.is_companion_hired(index) else Party.buy_mode)  # 고용은 늘 최대로
-
-
-func _on_promote_pressed(index: int) -> void:
-	Promotions.promote(index)
 
 
 func _refresh() -> void:

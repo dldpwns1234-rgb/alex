@@ -2,6 +2,7 @@ extends MarginContainer
 ## 단련 탭 (GDD 6.5절): 주인별로 묶은 단련 25종의 해금·강화. 줄은 코드로 생성한다.
 ## Training의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 
 const MARGIN: int = 16
@@ -14,12 +15,15 @@ const HEADER_COLOR := Color("ffe66d")
 const BUTTON_SIZE := Vector2(230, 64)
 const ROW_HEIGHT: float = 128.0  # 설명이 두 줄이 되어도 줄 높이가 변하지 않게 (버튼 자리가 움직이면 누르기 불편하다)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _titles: Array[Label] = []
 var _notes: Array[Label] = []
 var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
@@ -38,11 +42,11 @@ func _ready() -> void:
 		column.add_child(_make_row(i))
 	scroll.release_buttons()
 
-	Game.gold_changed.connect(_refresh.unbind(1))
-	Training.training_changed.connect(_refresh.unbind(2))
-	Party.hero_changed.connect(_refresh.unbind(1))
-	Party.companion_changed.connect(_refresh.unbind(2))
-	Party.buy_mode_changed.connect(_refresh.unbind(1))
+	Game.gold_changed.connect(_gate.queue)
+	Training.training_changed.connect(_gate.queue)
+	Party.hero_changed.connect(_gate.queue)
+	Party.companion_changed.connect(_gate.queue)
+	Party.buy_mode_changed.connect(_gate.queue)
 	_refresh()
 
 

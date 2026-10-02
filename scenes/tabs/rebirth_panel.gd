@@ -2,6 +2,7 @@ extends VBoxContainer
 ## 회귀 탭 아래쪽의 환생 (GDD 7.7절): 운명의 실과 환생 횟수, 환생 버튼과 확인 창, 운명의 상점 3종. 줄은 코드로 생성한다.
 ## Rebirth의 함수만 부르고 표시만 한다. 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const GAP: int = 10
 const ROW_PADDING: int = 10
@@ -13,6 +14,7 @@ const BUTTON_HEIGHT: float = 72.0
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
 const CONFIRM_SIZE := Vector2i(600, 360)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _summary: Label
 var _button: Button
 var _confirm: ConfirmationDialog
@@ -21,6 +23,8 @@ var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
 	var header := Label.new()
 	header.text = "환생"
@@ -52,12 +56,12 @@ func _ready() -> void:
 	_confirm.confirmed.connect(Rebirth.perform)
 	add_child(_confirm)
 
-	Rebirth.threads_changed.connect(_refresh.unbind(1))
-	Rebirth.fate_changed.connect(_refresh.unbind(2))
-	Rebirth.reborn.connect(_refresh.unbind(1))
-	Transcend.star_changed.connect(_refresh.unbind(2))  # 지름길이 환생 조건을 바꾼다
-	Prestige.prestiged.connect(_refresh.unbind(1))
-	Game.stage_changed.connect(_refresh.unbind(1))
+	Rebirth.threads_changed.connect(_gate.queue)
+	Rebirth.fate_changed.connect(_gate.queue)
+	Rebirth.reborn.connect(_gate.queue)
+	Transcend.star_changed.connect(_gate.queue)  # 지름길이 환생 조건을 바꾼다
+	Prestige.prestiged.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)
 	_refresh()
 
 

@@ -2,6 +2,7 @@ extends VBoxContainer
 ## 회귀 탭 초월 절 아래의 심연 (GDD 7.13절): 심연석, 최고 깊이와 오늘의 최고, 남은 원정, 심연 각인 3종(심연 안에서만 듣는 영구 강화).
 ## 첫 초월 전에는 보이지 않는다. 입구는 전투 화면(battle/abyss_controls.gd)에 있다. Abyss의 함수만 부르고 표시만 한다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const GAP: int = 10
 const ROW_PADDING: int = 10
@@ -11,12 +12,15 @@ const HEADER_COLOR := Color("ffe66d")
 const ABYSS_COLOR := Color("b9a2ff")
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _summary: Label
 var _titles: Array[Label] = []
 var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self, true)
+	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
 	var header := Label.new()
 	header.text = "심연 각인"
@@ -30,10 +34,10 @@ func _ready() -> void:
 	add_child(_summary)
 	for i in Balance.MARKS.size():
 		add_child(_make_row(i))
-	Abyss.abyss_changed.connect(_refresh)
-	Abyss.stones_changed.connect(_refresh.unbind(1))
-	Abyss.mark_changed.connect(_refresh.unbind(2))
-	Transcend.transcended.connect(_refresh.unbind(1))
+	Abyss.abyss_changed.connect(_gate.queue)
+	Abyss.stones_changed.connect(_gate.queue)
+	Abyss.mark_changed.connect(_gate.queue)
+	Transcend.transcended.connect(_gate.queue)
 	_refresh()
 
 

@@ -2,6 +2,7 @@ extends VBoxContainer
 ## 회귀 탭 환생 절 아래의 초월 (GDD 7.12절): 별의 파편과 초월 횟수, 이번 삶의 시간, 초월 버튼과 확인 창, 별의 상점 6종.
 ## 최후의 마왕을 한 번이라도 잡기 전(그리고 초월한 적이 없으면)은 보이지 않는다. Transcend의 함수만 부르고 표시만 한다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const GAP: int = 10
 const ROW_PADDING: int = 10
@@ -14,6 +15,7 @@ const SHOP_BUTTON_SIZE := Vector2(210, 64)
 const CONFIRM_SIZE := Vector2i(600, 380)
 const REFRESH_INTERVAL: float = 1.0  # 초. 이번 삶의 시간과 받을 파편을 다시 적는다
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _summary: Label
 var _button: Button
 var _confirm: ConfirmationDialog
@@ -23,6 +25,8 @@ var _refresh_left: float = 0.0
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self, true)
+	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
 	var header := Label.new()
 	header.text = "초월"
@@ -53,10 +57,10 @@ func _ready() -> void:
 	_confirm.confirmed.connect(Transcend.perform)
 	add_child(_confirm)
 
-	Transcend.stars_changed.connect(_refresh.unbind(1))
-	Transcend.star_changed.connect(_refresh.unbind(2))
-	Transcend.ready_changed.connect(_refresh.unbind(1))
-	Achievements.stat_changed.connect(_refresh.unbind(2))
+	Transcend.stars_changed.connect(_gate.queue)
+	Transcend.star_changed.connect(_gate.queue)
+	Transcend.ready_changed.connect(_gate.queue)
+	Achievements.stat_changed.connect(_gate.queue)
 	_refresh()
 
 

@@ -2,6 +2,7 @@ extends MarginContainer
 ## 용사 탭: 레벨, 클릭 피해, 레벨업 버튼, 그 아래 장비 3칸(GDD 7.6절)과 강화석. 칸마다 강화 버튼과 그 아래 제작 버튼. 구매 배수는 탭 패널 위의 BuyBar가 정한다.
 ## Game·Party·Equipment의 시그널을 받아 표시만 하고, 구매는 Party.buy_hero()·Equipment.enhance()·Equipment.craft()를 부른다. 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
 
@@ -21,6 +22,7 @@ const LEVEL_FONT_SIZE: int = 30   # 용사 탭의 핵심 숫자는 크게 (UX �
 const DAMAGE_FONT_SIZE: int = 26
 const ROW_HEIGHT: float = 140.0  # 버튼 두 개 높이. 장비 설명이 두 줄이 되어도 줄 높이가 변하지 않게
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _level_label: Label
 var _damage_label: Label
 var _milestone_label: Label
@@ -33,6 +35,8 @@ var _craft_buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 	var scroll := TapScroll.new()  # 장비 칸까지 한 화면에 안 들어가면 끌어 스크롤
@@ -84,12 +88,12 @@ func _ready() -> void:
 		column.add_child(_make_slot_row(slot))
 	scroll.release_buttons()
 
-	Game.gold_changed.connect(_refresh.unbind(1))
-	Game.stage_changed.connect(_refresh.unbind(1))  # 제작 비용이 스테이지를 따른다
-	Party.hero_changed.connect(_refresh.unbind(1))
-	Party.buy_mode_changed.connect(_refresh.unbind(1))
-	Equipment.equipment_changed.connect(_refresh.unbind(1))
-	Equipment.stones_changed.connect(_refresh.unbind(1))
+	Game.gold_changed.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)  # 제작 비용이 스테이지를 따른다
+	Party.hero_changed.connect(_gate.queue)
+	Party.buy_mode_changed.connect(_gate.queue)
+	Equipment.equipment_changed.connect(_gate.queue)
+	Equipment.stones_changed.connect(_gate.queue)
 	_refresh()
 
 

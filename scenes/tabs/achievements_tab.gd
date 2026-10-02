@@ -2,6 +2,7 @@ extends MarginContainer
 ## 업적 탭 (GDD 7.5절): 통계별로 묶은 업적 목록과 진행 막, 위에는 달성 수와 보너스 합계, 목록 맨 위에 도전 판(challenge_panel.gd). 줄은 코드로 생성한다.
 ## Achievements의 함수만 부르고 표시만 한다. 탭이 보이면 달성을 본 것으로 표시해 내비게이션의 점을 지운다. 상수는 배치용이다.
 
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const ChallengePanel := preload("res://scenes/tabs/challenge_panel.gd")
 const TrialPanel := preload("res://scenes/tabs/trial_panel.gd")
@@ -19,6 +20,7 @@ const SUMMARY_COLOR := Color("b8b4c8")
 const BAR_HEIGHT: float = 12.0
 const PROGRESS_WIDTH: float = 190.0
 
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _summary: Label
 var _titles: Array[Label] = []
 var _bars: Array[ProgressBar] = []
@@ -26,6 +28,8 @@ var _progress: Array[Label] = []
 
 
 func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
 	var column := VBoxContainer.new()
@@ -57,7 +61,7 @@ func _ready() -> void:
 		list.add_child(_make_row(i))
 	scroll.release_buttons()
 
-	Achievements.stat_changed.connect(_refresh.unbind(2))
+	Achievements.stat_changed.connect(_gate.queue)
 	visibility_changed.connect(_on_visibility_changed)
 	_refresh()
 
