@@ -66,9 +66,9 @@ func can_transcend() -> bool:
 	return final_cleared
 
 
-## 지금 초월하면 받을 파편
+## 지금 초월하면 받을 파편 (별자리 시련 '홀로 잊힌 자'의 단계 보상을 더한다)
 func star_reward() -> float:
-	return Balance.star_reward(cycle_seconds)
+	return Balance.star_reward(cycle_seconds) + Trials.star_bonus()
 
 
 ## 초월: 파편을 받고 운명·기억·판·탑 층을 내려놓는다

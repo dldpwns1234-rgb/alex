@@ -21,12 +21,14 @@ static func to_dict() -> Dictionary:
 		"treasure": Treasure.to_dict(),
 		"fragments": Fragments.to_dict(),
 		"transcend": Transcend.to_dict(),
+		"trials": Trials.to_dict(),
 		"prefs": Prefs.to_dict(),
 	}
 
 
 static func from_dict(data: Dictionary) -> void:
 	Challenges.from_dict(_section(data, "challenges"))  # 맨 앞: 지금 세션의 도전으로 가져온 스테이지를 달성 판정하지 않게
+	Trials.from_dict(_section(data, "trials"))  # 같은 까닭 (별자리 시련)
 	Transcend.from_dict(_section(data, "transcend"))  # 승급 상한(동료 각성)과 환생 조건(지름길)이 묻는다
 	Rebirth.from_dict(_section(data, "rebirth"))
 	Prestige.from_dict(_section(data, "prestige"))
@@ -47,6 +49,7 @@ static func from_dict(data: Dictionary) -> void:
 ## 데이터 초기화: 모든 오토로드를 기본값으로
 static func reset_all() -> void:
 	Transcend.reset()
+	Trials.reset()
 	Rebirth.reset()
 	Prestige.reset()
 	Achievements.reset()

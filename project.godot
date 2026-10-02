@@ -44,6 +44,8 @@ Treasure="*res://autoload/treasure.gd"
 Fragments="*res://autoload/fragments.gd"
 ; 초월은 Game의 마왕 처치를 받고 Rebirth·Prestige·Tower·Party를 초기화한다. Promotions·Rebirth·Automation이 효과를 묻는다
 Transcend="*res://autoload/transcend.gd"
+; 별자리 시련은 초월 뒤에 열리고 Game·Prestige·Rebirth·Transcend의 시그널을 받는다. Challenges가 제한과 보상을 묻는다
+Trials="*res://autoload/trials.gd"
 ; 화면·소리 설정(하단 메뉴 시트 높이, 효과음·배경음 음량)은 Save가 불러오므로 그 앞에
 Prefs="*res://autoload/prefs.gd"
 Save="*res://autoload/save.gd"

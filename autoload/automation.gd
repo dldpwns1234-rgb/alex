@@ -21,7 +21,7 @@ func _ready() -> void:
 ## 정체 시계를 재고, 자동 회귀·자동 스킬·동료 자동 강화를 돌린다. 보스와 싸우는 중, 도전 판, 탑 안에서는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
 func _process(delta: float) -> void:
 	_stall += minf(delta, Balance.MAX_DELTA)
-	var stalled := _stall >= Balance.AUTO_PRESTIGE_STALL and not _boss_alive() and Challenges.active < 0 and not Game.in_tower
+	var stalled := _stall >= Balance.AUTO_PRESTIGE_STALL and not _boss_alive() and not Challenges.any_active() and not Game.in_tower
 	if stalled and is_active(Balance.Auto.REBIRTH) and Rebirth.can_rebirth():
 		Rebirth.perform()  # 자동 환생이 자동 회귀보다 먼저 (별의 상점, GDD 7.12절)
 	elif stalled and is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige():

@@ -49,6 +49,7 @@ func _ready() -> void:
 	_on_sheet_height_changed(_sheet.current_height())
 	Game.demon_king_defeated.connect(_on_demon_king_defeated)
 	Challenges.completed.connect(_on_challenge_completed)
+	Trials.completed.connect(func(index: int, tier: int) -> void: _toast.show_message("별자리 시련 · %s %d단계" % [Balance.trial_name(index), tier]))
 	Tower.floor_cleared.connect(_on_floor_cleared)
 	Tower.failed.connect(_on_tower_failed)
 	Save.offline_reward.connect(_on_offline_reward)

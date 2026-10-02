@@ -4,6 +4,7 @@ extends MarginContainer
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const ChallengePanel := preload("res://scenes/tabs/challenge_panel.gd")
+const TrialPanel := preload("res://scenes/tabs/trial_panel.gd")
 
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
@@ -46,6 +47,7 @@ func _ready() -> void:
 	list.add_theme_constant_override("separation", GAP)
 	scroll.add_child(list)
 	list.add_child(ChallengePanel.new())  # 도전 판은 환생 1회부터 목록 맨 위에 (GDD 7.9절)
+	list.add_child(TrialPanel.new())  # 별자리 시련은 초월 1회부터 그 아래에 (GDD 7.12절)
 	var last_stat := -1
 	for i in Balance.ACHIEVEMENTS.size():
 		var stat := Balance.achievement_stat(i)

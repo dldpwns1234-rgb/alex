@@ -27,6 +27,7 @@ func _ready() -> void:
 	Skills.skill_activated.connect(func(_index: int) -> void: play("skill"))
 	Achievements.unlocked.connect(func(_index: int) -> void: play("achievement"))
 	Challenges.completed.connect(func(_index: int) -> void: play("achievement"))
+	Trials.completed.connect(func(_index: int, _tier: int) -> void: play("achievement"))
 	Equipment.item_dropped.connect(_on_item)
 	Equipment.item_crafted.connect(_on_item)
 	Prestige.prestiged.connect(func(_reward: float) -> void: play("prestige"))

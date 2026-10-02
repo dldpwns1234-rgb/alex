@@ -52,6 +52,7 @@ res://
     treasure.gd  (Treasure) 보물 요정: 등장 시계(게임 시간), 잡기와 보상 셋(골드·스킬 쿨타임 초기화·보물의 축복), 축복 배율. 그림은 scenes/battle/treasure_view.gd
     fragments.gd (Fragments) 기억 조각: 업적 통계로 차례대로 열림(다시 계산), 본 수 저장. 카드는 scenes/fragment_card.gd, 다시 읽기는 tabs/fragment_panel.gd
     transcend.gd (Transcend) 초월: 별의 파편, 별의 상점 6종, 이번 삶 시간, 최후의 마왕 처치 여부. 초월 1회부터 자동화 해금이 남는다. 화면은 tabs/transcend_panel.gd
+    trials.gd    (Trials) 별자리 시련: 도전 판 제한 둘씩 × 단계 5개, 단계 보상. Challenges가 제한(_has)과 보상을 함께 묻는다. 화면은 tabs/trial_panel.gd
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
     prefs.gd     (Prefs) 화면·소리 설정: 하단 메뉴 시트 높이, 효과음·배경음 켬/끔과 음량. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
     save.gd      (Save) 저장, 불러오기, 오프라인 보상. 저장할 절과 불러오기·초기화 순서는 save/sections.gd 한 곳에 있다. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
@@ -65,7 +66,7 @@ res://
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전), tower_controls(시련의 탑 입구), treasure_view(보물 요정 비행·잡기, 축복 남은 시간)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경, 마왕성 성벽), zones(스테이지→몬스터 종류·색조·팔레트, 마왕성과 마왕)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
-    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생, +fragment_panel 기억의 서), achievements(+challenge_panel 도전), settings(+sound_panel 소리). 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
+    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생, +fragment_panel 기억의 서), achievements(+challenge_panel 도전, +trial_panel 별자리 시련), settings(+sound_panel 소리). 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 5), monsters/(6종 + 마왕성 3종 + 마왕), fx/(왕관, 파편, 검격 프레임 slash_0~5, 보물 요정), ui/(아이콘). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
   tools/make_slash_frames.gd  검격 프레임 생성기. slash_N.svg는 손으로 고치지 않는다: 상수를 고치고 다시 만든다 (`--script tools/make_slash_frames.gd`)

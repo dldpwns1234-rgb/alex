@@ -1,6 +1,6 @@
 extends VBoxContainer
-## 업적 탭 목록 맨 위의 도전 판 (GDD 7.9절): 이름과 상태, 제한과 목표, 보상, 버튼(도전 시작 / 포기 / 달성). 환생 1회 전에는 보이지 않는다.
-## Challenges의 함수만 부르고 표시만 한다. 상수는 배치용이다.
+## 업적 탭 도전 절 아래의 별자리 시련 (GDD 7.12절): 이름과 단계(별 다섯), 제한 둘과 이번 목표, 단계 보상, 버튼(시련 시작 / 포기 / 완성).
+## 초월 1회 전에는 보이지 않는다. Trials의 함수만 부르고 표시만 한다. 상수는 배치용이다.
 
 const GAP: int = 8
 const ROW_PADDING: int = 10
@@ -8,12 +8,13 @@ const ROW_HEIGHT: float = 128.0  # 세 줄. 글이 바뀌어도 줄 높이와 �
 const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const HEADER_COLOR := Color("ffe66d")
-const DONE_COLOR := Color("ffe66d")
+const DONE_COLOR := Color("fff3b0")
 const ACTIVE_COLOR := Color("ff8a80")
 const BUTTON_SIZE := Vector2(170, 64)
-const CONFIRM_SIZE := Vector2i(600, 400)
+const CONFIRM_SIZE := Vector2i(600, 420)
 
 var _titles: Array[Label] = []
+var _rules: Array[Label] = []
 var _buttons: Array[Button] = []
 var _confirm: ConfirmationDialog
 var _pending: int = -1
@@ -22,21 +23,21 @@ var _pending: int = -1
 func _ready() -> void:
 	add_theme_constant_override("separation", GAP)
 	var header := Label.new()
-	header.text = "도전"
+	header.text = "별자리 시련"
 	header.add_theme_color_override("font_color", HEADER_COLOR)
 	add_child(header)
-	for i in Balance.CHALLENGES.size():
+	for i in Balance.TRIALS.size():
 		add_child(_make_row(i))
 	_confirm = ConfirmationDialog.new()
-	_confirm.title = "도전"
+	_confirm.title = "별자리 시련"
 	_confirm.ok_button_text = "시작한다"
 	_confirm.cancel_button_text = "취소"
 	_confirm.dialog_autowrap = true
 	_confirm.confirmed.connect(_on_confirmed)
 	add_child(_confirm)
+	Trials.trial_changed.connect(_refresh)
 	Challenges.challenge_changed.connect(_refresh)
-	Trials.trial_changed.connect(_refresh)  # 시련 중에는 도전을 시작할 수 없다
-	Rebirth.reborn.connect(_refresh.unbind(1))
+	Transcend.transcended.connect(_refresh.unbind(1))
 	Game.stage_changed.connect(_refresh.unbind(1))
 	_refresh()
 
@@ -57,10 +58,9 @@ func _make_row(index: int) -> PanelContainer:
 	var title := _make_line(0, Color.WHITE)
 	text.add_child(title)
 	var rule := _make_line(NOTE_FONT_SIZE, NOTE_COLOR)
-	rule.text = "%s · 스테이지 %d 도달" % [Balance.restriction_note(Balance.challenge_restriction(index)), Balance.challenge_goal(index)]
 	text.add_child(rule)
 	var reward := _make_line(NOTE_FONT_SIZE, NOTE_COLOR)
-	reward.text = "보상: %s" % Balance.perk_note(Balance.challenge_perk(index))
+	reward.text = "보상: %s" % Balance.trial_reward_note(index)
 	text.add_child(reward)
 	var button := Button.new()
 	button.custom_minimum_size = BUTTON_SIZE
@@ -70,6 +70,7 @@ func _make_row(index: int) -> PanelContainer:
 	button.pressed.connect(_on_pressed.bind(index))
 	row.add_child(button)
 	_titles.append(title)
+	_rules.append(rule)
 	_buttons.append(button)
 	return panel
 
@@ -85,47 +86,61 @@ func _make_line(font_size: int, color: Color) -> Label:
 	return label
 
 
+## 줄에는 짧은 이름 ("스킬 봉인 + 보스 시간 절반"), 확인 창에는 긴 설명
+func _rule_text(index: int, long: bool = false) -> String:
+	var notes: PackedStringArray = []
+	for restriction: int in Balance.trial_restrictions(index):
+		notes.append(Balance.restriction_note(restriction) if long else Balance.restriction_short(restriction))
+	return " + ".join(notes)
+
+
 ## 진행 중이면 포기, 아니면 확인 창을 띄운다 (지금 판이 끝난다)
 func _on_pressed(index: int) -> void:
-	if Challenges.is_active(index):
-		Challenges.give_up()
+	if Trials.active == index:
+		Trials.give_up()
 		return
-	if not Challenges.can_start(index):
+	if not Trials.can_start(index):
 		return
 	_pending = index
 	var ending := "지금 판은 회귀로 끝납니다 (결정 +%s)." % Num.format(Prestige.crystal_reward()) if Prestige.can_prestige() else "지금 판은 보상 없이 끝납니다 (스테이지 %d 전)." % Balance.PRESTIGE_MIN_STAGE
-	_confirm.dialog_text = "'%s' 도전을 시작합니다.\n%s\n\n제한: %s\n목표: 스테이지 %d 도달\n보상: %s (영구)" % [
-		Balance.challenge_name(index), ending, Balance.restriction_note(Balance.challenge_restriction(index)),
-		Balance.challenge_goal(index), Balance.perk_note(Balance.challenge_perk(index))]
+	_confirm.dialog_text = "'%s' %d단계를 시작합니다.\n%s\n\n제한: %s\n목표: 스테이지 %d 도달\n보상: %s (영구, 초월해도 남는다)" % [
+		Balance.trial_name(index), Trials.tiers[index] + 1, ending, _rule_text(index, true), Trials.goal(index), Balance.trial_reward_note(index)]
 	_confirm.popup_centered(CONFIRM_SIZE)
 
 
 func _on_confirmed() -> void:
 	if _pending >= 0:
-		Challenges.start(_pending)
+		Trials.start(_pending)
 	_pending = -1
 
 
 func _refresh() -> void:
-	visible = Challenges.is_unlocked()
+	visible = Trials.is_unlocked()
+	if not visible:
+		return
+	var tier_count := Balance.TRIAL_TIER_SCALES.size()
 	for i in _buttons.size():
 		var button := _buttons[i]
 		var title := _titles[i]
+		var stars := "★".repeat(Trials.tiers[i]) + "☆".repeat(tier_count - Trials.tiers[i])
 		title.remove_theme_color_override("font_color")
 		button.theme_type_variation = ""
-		if Challenges.is_done(i):
-			title.text = "%s · 달성" % Balance.challenge_name(i)
+		if Trials.is_maxed(i):
+			title.text = "%s %s" % [Balance.trial_name(i), stars]
 			title.add_theme_color_override("font_color", DONE_COLOR)
-			button.text = "달성"
+			_rules[i].text = _rule_text(i)
+			button.text = "완성"
 			button.disabled = true
-		elif Challenges.is_active(i):
-			title.text = "%s · 진행 중 (이번 판 최고 %d)" % [Balance.challenge_name(i), Game.highest_stage]
+			continue
+		_rules[i].text = "%s · 목표 %d" % [_rule_text(i), Trials.goal(i)]
+		if Trials.active == i:
+			title.text = "%s %s · 진행 중 (최고 %d)" % [Balance.trial_name(i), stars, Game.highest_stage]
 			title.add_theme_color_override("font_color", ACTIVE_COLOR)
 			button.text = "포기"
 			button.disabled = false
 		else:
-			title.text = Balance.challenge_name(i)
-			button.text = "도전 시작"
-			button.disabled = not Challenges.can_start(i)
+			title.text = "%s %s" % [Balance.trial_name(i), stars]
+			button.text = "%d단계 시작" % (Trials.tiers[i] + 1)
+			button.disabled = not Trials.can_start(i)
 			if not button.disabled:
 				button.theme_type_variation = "AccentButton"

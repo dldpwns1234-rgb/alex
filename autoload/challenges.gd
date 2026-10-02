@@ -56,7 +56,7 @@ func is_active(index: int) -> bool:
 
 ## 한 번에 하나만, 달성한 것은 다시 못 한다
 func can_start(index: int) -> bool:
-	return is_unlocked() and not done[index] and active < 0
+	return is_unlocked() and not done[index] and active < 0 and Trials.active < 0
 
 
 ## 지금 판을 끝내고(회귀할 수 있으면 결정을 받는다) 제한이 걸린 새 판을 시작한다
@@ -116,32 +116,42 @@ func _restriction() -> int:
 	return Balance.challenge_restriction(active) if active >= 0 else -1
 
 
+## 도전 판이나 별자리 시련(제한 둘)이 이 제한을 거는지
+func _has(restriction: int) -> bool:
+	return _restriction() == restriction or Trials.restricts(restriction)
+
+
+## 도전 판이나 별자리 시련이 진행 중이면 자동 회귀·자동 환생이 쉰다
+func any_active() -> bool:
+	return active >= 0 or Trials.active >= 0
+
+
 
 ## 도전 판을 시작하는 새 판은 도약(운명의 상점)으로 목표를 건너뛰지 않는다
 func blocks_leap() -> bool:
-	return _starting
+	return _starting or Trials.is_starting()
 
 func blocks_companions() -> bool:
-	return _restriction() == Balance.Restriction.NO_COMPANIONS
+	return _has(Balance.Restriction.NO_COMPANIONS)
 
 
 func blocks_skills() -> bool:
-	return _restriction() == Balance.Restriction.NO_SKILLS
+	return _has(Balance.Restriction.NO_SKILLS)
 
 
 func blocks_equipment() -> bool:
-	return _restriction() == Balance.Restriction.NO_EQUIPMENT
+	return _has(Balance.Restriction.NO_EQUIPMENT)
 
 
 func blocks_memories() -> bool:
-	return _restriction() == Balance.Restriction.NO_MEMORIES
+	return _has(Balance.Restriction.NO_MEMORIES)
 
 
 func boss_time_scale() -> float:
-	return Balance.CHALLENGE_BOSS_TIME_SCALE if _restriction() == Balance.Restriction.HALF_BOSS_TIME else 1.0
+	return Balance.CHALLENGE_BOSS_TIME_SCALE if _has(Balance.Restriction.HALF_BOSS_TIME) else 1.0
 
 
-# 보너스. 달성한 도전의 보너스는 영구히 붙는다
+# 보너스. 달성한 도전의 보너스는 영구히 붙는다. 별자리 시련의 단계 보상(Trials)도 여기서 곱한다
 
 func has_perk(perk: int) -> bool:
 	for i in done.size():
@@ -151,7 +161,7 @@ func has_perk(perk: int) -> bool:
 
 
 func click_multiplier() -> float:
-	return 1.0 + Balance.PERK_CLICK_BONUS if has_perk(Balance.Perk.CLICK) else 1.0
+	return (1.0 + Balance.PERK_CLICK_BONUS if has_perk(Balance.Perk.CLICK) else 1.0) * Trials.click_multiplier()
 
 
 func cooldown_multiplier() -> float:
@@ -159,12 +169,12 @@ func cooldown_multiplier() -> float:
 
 
 func boss_time_bonus() -> float:
-	return Balance.PERK_BOSS_TIME_SECONDS if has_perk(Balance.Perk.BOSS_TIME) else 0.0
+	return (Balance.PERK_BOSS_TIME_SECONDS if has_perk(Balance.Perk.BOSS_TIME) else 0.0) + Trials.boss_time_bonus()
 
 
 func stone_multiplier() -> float:
-	return Balance.PERK_STONE_MULTIPLIER if has_perk(Balance.Perk.STONES) else 1.0
+	return (Balance.PERK_STONE_MULTIPLIER if has_perk(Balance.Perk.STONES) else 1.0) * Trials.stone_multiplier()
 
 
 func crystal_multiplier() -> float:
-	return 1.0 + Balance.PERK_CRYSTAL_BONUS if has_perk(Balance.Perk.CRYSTALS) else 1.0
+	return (1.0 + Balance.PERK_CRYSTAL_BONUS if has_perk(Balance.Perk.CRYSTALS) else 1.0) * Trials.crystal_multiplier()

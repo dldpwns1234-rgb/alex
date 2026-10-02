@@ -86,6 +86,7 @@ func _ready() -> void:
 	Game.monster_killed.connect(_on_gold_earned)
 	Game.chain_killed.connect(func(_count: int, reward: float) -> void: _on_gold_earned(reward))
 	Challenges.challenge_changed.connect(_refresh_timer)
+	Trials.trial_changed.connect(_refresh_timer)
 	Tower.timer_changed.connect(_on_tower_timer_changed)
 	Game.tower_changed.connect(_on_tower_changed)
 	# Game은 오토로드라 이미 준비돼 있으므로 현재 값을 직접 읽어 채운다
@@ -152,14 +153,14 @@ func _on_boss_timer_changed(seconds_left: float) -> void:
 ## 탑 안이면 층 남은 시간, 보스가 살아 있으면 남은 시간, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다
 func _refresh_timer() -> void:
 	var boss := Game.is_boss_stage() and Game.is_monster_alive()
-	var challenge := Challenges.active >= 0
+	var challenge := Challenges.any_active()  # 도전 판이나 별자리 시련
 	_timer_label.modulate.a = 1.0 if boss or challenge or Game.in_tower else 0.0
 	if Game.in_tower:
 		_on_tower_timer_changed(Tower.time_left)
 	elif boss:
 		_on_boss_timer_changed(Game.boss_time_left)
 	elif challenge:
-		_timer_label.text = Balance.challenge_name(Challenges.active)
+		_timer_label.text = Balance.challenge_name(Challenges.active) if Challenges.active >= 0 else Balance.trial_name(Trials.active)
 
 
 func _on_gold_earned(reward: float) -> void:
