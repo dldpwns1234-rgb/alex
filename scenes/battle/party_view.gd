@@ -46,6 +46,7 @@ func _ready() -> void:
 		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
 		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.z_index = 1  # 지그재그라 이웃 열의 그림이 이름표 위에 겹친다. 이름(과 별)은 늘 그림 위에
 		add_child(label)
 		_labels.append(label)
 		set_hired(i, false)
