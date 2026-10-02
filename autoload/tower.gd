@@ -94,6 +94,13 @@ func enter() -> bool:
 	return true
 
 
+## 초월이 최고층을 지운다 (입장권과 날짜는 그대로)
+func forget_floors() -> void:
+	leave()
+	best_floor = 0
+	tower_changed.emit()
+
+
 ## 본편으로 돌아온다. 돌파한 층은 남고 입장권은 돌려주지 않는다
 func leave() -> void:
 	if floor <= 0:

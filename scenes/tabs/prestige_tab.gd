@@ -6,6 +6,7 @@ const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const RebirthPanel := preload("res://scenes/tabs/rebirth_panel.gd")
 const AutomationPanel := preload("res://scenes/tabs/automation_panel.gd")
 const FragmentPanel := preload("res://scenes/tabs/fragment_panel.gd")
+const TranscendPanel := preload("res://scenes/tabs/transcend_panel.gd")
 
 const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
 const MARGIN: int = 16
@@ -58,6 +59,7 @@ func _ready() -> void:
 	for i in Balance.MEMORIES.size():
 		shop.add_child(_make_row(i))
 	shop.add_child(RebirthPanel.new())  # 환생은 상점 아래에 이어진다 (GDD 7.7절)
+	shop.add_child(TranscendPanel.new())  # 환생 아래에 초월 (GDD 7.12절)
 	shop.add_child(FragmentPanel.new())  # 맨 아래에 기억의 서 (GDD 7.11절)
 	scroll.release_buttons()
 

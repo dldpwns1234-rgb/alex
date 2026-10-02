@@ -42,6 +42,8 @@ Tower="*res://autoload/tower.gd"
 Treasure="*res://autoload/treasure.gd"
 ; 기억 조각은 업적 통계로 열리므로 Achievements 뒤에, Save가 불러오므로 그 앞에
 Fragments="*res://autoload/fragments.gd"
+; 초월은 Game의 마왕 처치를 받고 Rebirth·Prestige·Tower·Party를 초기화한다. Promotions·Rebirth·Automation이 효과를 묻는다
+Transcend="*res://autoload/transcend.gd"
 ; 화면·소리 설정(하단 메뉴 시트 높이, 효과음·배경음 음량)은 Save가 불러오므로 그 앞에
 Prefs="*res://autoload/prefs.gd"
 Save="*res://autoload/save.gd"

@@ -32,7 +32,7 @@ func from_dict(data: Dictionary) -> void:
 	var saved: Variant = data.get("ranks", [])
 	if saved is Array:
 		for i in mini(saved.size(), ranks.size()):
-			ranks[i] = clampi(int(saved[i]), 0, Balance.PROMOTION_MAX_RANK)
+			ranks[i] = clampi(int(saved[i]), 0, max_rank())
 	for i in ranks.size():
 		promotion_changed.emit(i, ranks[i])
 
@@ -41,8 +41,13 @@ func rank(index: int) -> int:
 	return ranks[index]
 
 
+## 승급 상한: 5단계 + 별의 상점 '동료 각성' (GDD 7.12절)
+func max_rank() -> int:
+	return Balance.PROMOTION_MAX_RANK + Transcend.level(Balance.Star.AWAKEN)
+
+
 func is_maxed(index: int) -> bool:
-	return ranks[index] >= Balance.PROMOTION_MAX_RANK
+	return ranks[index] >= max_rank()
 
 
 ## 다음 승급에 필요한 동료 레벨

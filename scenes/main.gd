@@ -67,6 +67,7 @@ func _ready() -> void:
 	Equipment.item_dropped.connect(_on_item_received.bind("획득"))
 	Equipment.item_crafted.connect(_on_item_received.bind("제작"))
 	Rebirth.reborn.connect(_on_reborn)
+	Transcend.transcended.connect(func(reward: float) -> void: _toast.show_message("초월 · 별의 파편 +%s" % Num.format(reward)))
 	Achievements.unlocked.connect(_on_achievement_unlocked)
 	Achievements.seen_changed.connect(_refresh_achievement_badge)
 	_refresh_badges()

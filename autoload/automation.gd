@@ -14,14 +14,17 @@ func _ready() -> void:
 	Game.stage_changed.connect(_on_stage_changed)
 	Prestige.prestiged.connect(_on_new_run)
 	Rebirth.reborn.connect(_on_new_run)
+	Transcend.transcended.connect(_on_new_run)
 	Game.tower_changed.connect(_restart_clock.unbind(1))  # 탑에 다녀온 시간은 정체가 아니다
 
 
 ## 정체 시계를 재고, 자동 회귀·자동 스킬·동료 자동 강화를 돌린다. 보스와 싸우는 중, 도전 판, 탑 안에서는 회귀하지 않는다 (판이 끊기는 느낌을 막는다)
 func _process(delta: float) -> void:
 	_stall += minf(delta, Balance.MAX_DELTA)
-	if is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige() and _stall >= Balance.AUTO_PRESTIGE_STALL \
-			and not _boss_alive() and Challenges.active < 0 and not Game.in_tower:
+	var stalled := _stall >= Balance.AUTO_PRESTIGE_STALL and not _boss_alive() and Challenges.active < 0 and not Game.in_tower
+	if stalled and is_active(Balance.Auto.REBIRTH) and Rebirth.can_rebirth():
+		Rebirth.perform()  # 자동 환생이 자동 회귀보다 먼저 (별의 상점, GDD 7.12절)
+	elif stalled and is_active(Balance.Auto.PRESTIGE) and Prestige.can_prestige():
 		Prestige.perform()
 	if is_active(Balance.Auto.SKILLS):
 		use_skills()
@@ -56,8 +59,12 @@ func is_enabled(kind: int) -> bool:
 	return enabled[kind]
 
 
+## 운명의 상점에서 열었거나, 한 번 초월했으면 (초월은 운명을 지우지만 자동화 해금은 남긴다, GDD 7.12절)
+## 자동 환생은 별의 상점에서만 열린다
 func is_unlocked(kind: int) -> bool:
-	return Rebirth.has_fate(Balance.auto_fate(kind))
+	if kind == Balance.Auto.REBIRTH:
+		return Transcend.level(Balance.Star.AUTO_REBIRTH) > 0
+	return Rebirth.has_fate(Balance.auto_fate(kind)) or Transcend.keeps_automation()
 
 
 ## 켜져 있고 운명의 상점에서 해금했으면 동작한다

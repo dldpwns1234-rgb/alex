@@ -128,6 +128,14 @@ func can_buy(index: int) -> bool:
 	return not is_maxed(index) and crystals >= memory_cost(index)
 
 
+## 별의 상점 '기억의 잔향': 결정을 쓰지 않고 레벨을 얹는다 (초월·환생 직후)
+func grant_levels(index: int, amount: int) -> void:
+	if amount <= 0:
+		return
+	memory_levels[index] = mini(memory_levels[index] + amount, _cap(index))
+	memory_changed.emit(index, memory_levels[index])
+
+
 ## 기억의 상점에서 지금 살 수 있는 것이 있는지 (회귀 탭 점)
 func any_affordable() -> bool:
 	for i in memory_levels.size():

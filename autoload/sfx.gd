@@ -31,6 +31,7 @@ func _ready() -> void:
 	Equipment.item_crafted.connect(_on_item)
 	Prestige.prestiged.connect(func(_reward: float) -> void: play("prestige"))
 	Rebirth.reborn.connect(func(_reward: float) -> void: play("rebirth"))
+	Transcend.transcended.connect(func(_reward: float) -> void: play("rebirth"))
 	Treasure.appeared.connect(func(_duration: float) -> void: play("fairy_appear"))
 	Treasure.caught.connect(func(_reward: int, _amount: float) -> void: play("fairy_catch"))
 	Tower.floor_cleared.connect(func(_floor: int, _stones: float, _threads: float) -> void: play("boss_kill"))

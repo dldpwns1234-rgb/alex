@@ -26,22 +26,23 @@ const FORESIGHT_STAGES: int = 25          # 예지: 레벨당 회귀 후 시작 
 # 환생 직후 검술을 잃어도 50스테이지쯤이라 여유 150 안이다. 도전 판은 목표를 건너뛰지 않게 도약을 쉰다
 const LEAP_BASE_GAP: int = 550
 const LEAP_GAP_PER_LEVEL: int = 50
-enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬·자동 강화 운명이 나머지를 하나씩 연다
-const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화"]
+enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE, REBIRTH }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬·자동 강화 운명이 하나씩, 자동 환생은 별의 상점이 연다
+const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화", "자동 환생"]
 const AUTO_UPGRADE_BUYS_PER_FRAME: int = 10  # 동료 자동 강화: 한 프레임에 사는 횟수 상한 (유산·오프라인 골드를 몇 프레임에 나눠 쓴다)
 const AUTO_PRESTIGE_STALL: float = 30.0   # 자동 회귀: 최고 스테이지가 이만큼(초) 오르지 않으면 회귀 (13절의 사람 정책)
 const COMPANION_MEMORY_PER_LEVEL: float = 0.1  # 동료 기억: 레벨당 지난 판 동료 레벨의 10%를 기억 레벨로 얹고 시작 (비용에는 안 든다)
 
 
-func can_rebirth(best_stage: int) -> bool:
-	return best_stage >= REBIRTH_MIN_STAGE
+## cut: 별의 상점 '지름길'이 내리는 스테이지 (조건과 실 공식의 기준을 함께 내린다)
+func can_rebirth(best_stage: int, cut: int = 0) -> bool:
+	return best_stage >= REBIRTH_MIN_STAGE - cut
 
 
 ## 환생으로 받는 운명의 실. 조건 미달이면 0
-func thread_reward(best_stage: int) -> float:
-	if not can_rebirth(best_stage):
+func thread_reward(best_stage: int, cut: int = 0) -> float:
+	if not can_rebirth(best_stage, cut):
 		return 0.0
-	return floor(float(best_stage - REBIRTH_BASE_STAGE) / REBIRTH_STAGE_PER_THREAD)
+	return floor(float(best_stage - (REBIRTH_BASE_STAGE - cut)) / REBIRTH_STAGE_PER_THREAD)
 
 
 func fate_name(index: int) -> String:
@@ -147,4 +148,6 @@ func auto_note(kind: int) -> String:
 			return "회귀하면 결정을 싼 것부터 산다"
 		Auto.SKILLS:
 			return "쿨타임이 끝나면 스킬을 바로 쓴다"
+		Auto.REBIRTH:
+			return "환생할 수 있고 %d초 안 오르면 회귀 대신 환생" % roundi(AUTO_PRESTIGE_STALL)
 	return "살 수 있는 것 중 골드 효율 최고를 산다"

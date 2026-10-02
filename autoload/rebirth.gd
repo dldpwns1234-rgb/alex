@@ -53,12 +53,12 @@ func best_stage() -> int:
 
 
 func can_rebirth() -> bool:
-	return Balance.can_rebirth(best_stage())
+	return Balance.can_rebirth(best_stage(), Transcend.shortcut())
 
 
 ## 지금 환생하면 받을 운명의 실
 func thread_reward() -> float:
-	return Balance.thread_reward(best_stage())
+	return Balance.thread_reward(best_stage(), Transcend.shortcut())
 
 
 ## 환생: 실을 받고 기억까지 내려놓는다. 남는 것은 운명의 실과 상점, 환생 횟수, 업적, 장비, 설정
@@ -74,6 +74,7 @@ func perform() -> bool:
 	Training.reset()
 	Promotions.reset()
 	Game.reset()
+	Transcend.grant_start_bonus()  # 별빛 날개(실)와 기억의 잔향(기억 레벨)
 	threads_changed.emit(threads)
 	reborn.emit(reward)
 	Save.save_game()
@@ -117,8 +118,9 @@ func buy(index: int) -> bool:
 
 # 효과
 
+## 숙명 × 별의 축복 (초월, GDD 7.12절). Party가 클릭과 동료 피해에 곱한다
 func damage_multiplier() -> float:
-	return Balance.destiny_multiplier(level(Balance.Fate.DESTINY))
+	return Balance.destiny_multiplier(level(Balance.Fate.DESTINY)) * Transcend.damage_multiplier()
 
 
 func crystal_multiplier() -> float:

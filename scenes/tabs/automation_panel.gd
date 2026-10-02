@@ -25,6 +25,8 @@ func _ready() -> void:
 		add_child(_make_row(kind))
 	Automation.settings_changed.connect(_refresh)
 	Rebirth.fate_changed.connect(_refresh.unbind(2))
+	Transcend.star_changed.connect(_refresh.unbind(2))  # 자동 환생은 별의 상점이 연다
+	Transcend.transcended.connect(_refresh.unbind(1))
 	_refresh()
 
 
@@ -76,7 +78,9 @@ func _refresh() -> void:
 		toggle.set_pressed_no_signal(Automation.is_enabled(kind))
 		toggle.disabled = not unlocked
 		if not unlocked:
-			_notes[kind].text = "운명의 상점에서 '%s'을 사면 열린다" % Balance.fate_name(Balance.auto_fate(kind))
+			var shop := "별의 상점에서 '%s'" % Balance.star_name(Balance.Star.AUTO_REBIRTH) if kind == Balance.Auto.REBIRTH \
+				else "운명의 상점에서 '%s'" % Balance.fate_name(Balance.auto_fate(kind))
+			_notes[kind].text = "%s을 사면 열린다" % shop
 			toggle.text = "잠김"
 			continue
 		_notes[kind].text = Balance.auto_note(kind)

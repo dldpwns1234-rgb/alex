@@ -36,7 +36,7 @@ AI가 가장 자주 하는 실수다. 왼쪽 문법은 절대 쓰지 않는다.
 res://
   autoload/
     balance.gd   (Balance) 모든 수치와 공식. 200줄 규칙 때문에 balance/ 아래 부분 스크립트를 상속으로 이어 붙인다
-    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → challenges(도전 판) → story(기억 조각 12개) → balance.gd(몬스터·보스·마왕성·시련의 탑·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
+    balance/     leveling(용사·레벨업) → companions(동료) → skills(스킬) → memory(회귀·상점) → training(단련) → achievements(업적) → equipment(장비) → rebirth(환생·운명의 상점·자동화) → challenges(도전 판) → story(기억 조각 12개) → transcend(초월·별의 상점) → balance.gd(몬스터·보스·마왕성·시련의 탑·오프라인·유산). 바깥에서는 Balance.만 쓴다. 앞 스크립트는 뒤 스크립트의 것을 못 본다
     game.gd      (Game) 전투 흐름: 피해, 처치와 연쇄 처치, 보스 타이머, 파밍과 도전. 상태 변경은 오토로드에서만
     game/state.gd  Game 1부: 시그널, 상태, 저장, 골드, 진행과 등장. game.gd가 상속한다
     party.gd     (Party) 용사와 동료의 레벨, 구매, 골드 효율 조회. party/purchases.gd(1부: 구매 배수와 구매 계산)를 상속한다
@@ -51,9 +51,10 @@ res://
     challenges.gd (Challenges) 도전 판: 시작(회귀로 판 끝내기), 제한 조회(Party·Skills·Game·Equipment·Prestige가 묻는다), 달성과 영구 보너스. 환생 1회부터
     treasure.gd  (Treasure) 보물 요정: 등장 시계(게임 시간), 잡기와 보상 셋(골드·스킬 쿨타임 초기화·보물의 축복), 축복 배율. 그림은 scenes/battle/treasure_view.gd
     fragments.gd (Fragments) 기억 조각: 업적 통계로 차례대로 열림(다시 계산), 본 수 저장. 카드는 scenes/fragment_card.gd, 다시 읽기는 tabs/fragment_panel.gd
+    transcend.gd (Transcend) 초월: 별의 파편, 별의 상점 6종, 이번 삶 시간, 최후의 마왕 처치 여부. 초월 1회부터 자동화 해금이 남는다. 화면은 tabs/transcend_panel.gd
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
     prefs.gd     (Prefs) 화면·소리 설정: 하단 메뉴 시트 높이, 효과음·배경음 켬/끔과 음량. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
-    save.gd      (Save) 저장, 불러오기, 오프라인 보상. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
+    save.gd      (Save) 저장, 불러오기, 오프라인 보상. 저장할 절과 불러오기·초기화 순서는 save/sections.gd 한 곳에 있다. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
     num.gd       (Num) 한국식 숫자 표기
     sfx.gd       (Sfx) 효과음·배경음. 게임 오토로드의 시그널만 받는다 (상태를 바꾸지 않는다). Save 뒤에 뜬다. sfx/player.gd(1부: 버스 음량, 동시 재생 수·최소 간격·음높이 흔들기, 곡 교차 페이드, 웹 첫 입력 잠금)를 상속한다
   scenes/
