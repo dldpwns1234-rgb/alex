@@ -51,32 +51,38 @@ func is_unlocked(index: int) -> bool:
 
 
 func is_active(index: int) -> bool:
-	return activated_at[index] > 0.0 and _now() < activated_at[index] + duration()
+	return activated_at[index] > 0.0 and _now() < activated_at[index] + duration(index)
 
 
-## 지속 시간: 30초 + 각성의 잔향 단련
-func duration() -> float:
-	return Balance.SKILL_DURATION + Training.value(Balance.Effect.SKILL_DURATION)
+## 지속 시간: 30초 + 각성의 잔향 단련. 폭풍 베기는 심연 각인 '폭풍의 숨'만큼 더 (index를 주면)
+func duration(index: int = -1) -> float:
+	var seconds := Balance.SKILL_DURATION + Training.value(Balance.Effect.SKILL_DURATION)
+	if index == Balance.Skill.STORM_SLASH:
+		seconds += Balance.MARK_STORM_SECONDS * Abyss.level(Balance.Mark.STORM_DURATION)
+	return seconds
 
 
-## 쿨타임: 4분 × 명상 × 마나 순환 단련 × 침묵의 검 보너스
-func cooldown() -> float:
+## 쿨타임: 4분 × 명상 × 마나 순환 단련 × 침묵의 검 보너스. 폭풍 베기는 심연 각인 '폭풍의 날'만큼 덜 (index를 주면)
+func cooldown(index: int = -1) -> float:
 	var base := Balance.skill_cooldown(Prestige.effect_level(Balance.Memory.MEDITATION))
-	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN)) * Challenges.cooldown_multiplier()
+	var cut := 1.0
+	if index == Balance.Skill.STORM_SLASH:
+		cut -= Balance.MARK_STORM_COOLDOWN_CUT * Abyss.level(Balance.Mark.STORM_COOLDOWN)
+	return base * (1.0 - Training.value(Balance.Effect.SKILL_COOLDOWN)) * Challenges.cooldown_multiplier() * cut
 
 
 ## 남은 지속 시간 (초)
 func active_left(index: int) -> float:
 	if not is_active(index):
 		return 0.0
-	return activated_at[index] + duration() - _now()
+	return activated_at[index] + duration(index) - _now()
 
 
 ## 남은 쿨타임 (초)
 func cooldown_left(index: int) -> float:
 	if activated_at[index] <= 0.0:
 		return 0.0
-	return maxf(activated_at[index] + cooldown() - _now(), 0.0)
+	return maxf(activated_at[index] + cooldown(index) - _now(), 0.0)
 
 
 func is_ready(index: int) -> bool:

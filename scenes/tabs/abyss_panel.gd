@@ -83,6 +83,10 @@ func _refresh() -> void:
 		var total := ""
 		if level > 0 and i == Balance.Mark.POWER:
 			total = "  ·  지금 " + Num.multiplier(Balance.mark_power_multiplier(level))
+		elif level > 0 and i == Balance.Mark.STORM_COOLDOWN:
+			total = "  ·  지금 −%d%%" % roundi(Balance.MARK_STORM_COOLDOWN_CUT * level * 100.0)
+		elif level > 0 and i == Balance.Mark.STORM_DURATION:
+			total = "  ·  지금 %d초" % roundi(Skills.duration(Balance.Skill.STORM_SLASH))
 		_titles[i].text = "%s  %s%s" % [Balance.mark_name(i), level_text, total]
 		if Abyss.is_maxed(i):
 			_buttons[i].text = "최대"

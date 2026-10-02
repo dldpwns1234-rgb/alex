@@ -252,6 +252,25 @@ func _test_marks() -> void:
 	_close(Abyss.stones, 80.0, "20 냈다")
 	Abyss.marks[Balance.Mark.TIME] = Balance.mark_max_level(Balance.Mark.TIME)
 	_equal(Abyss.can_buy(Balance.Mark.TIME), false, "최대 레벨")
+	# 폭풍 베기 각인 둘: 본편에도 듣는다 (방장 제안 2026-10-02)
+	var storm := Balance.Skill.STORM_SLASH
+	var cry := Balance.Skill.BATTLE_CRY
+	var base_cooldown := Skills.cooldown(storm)
+	var base_duration := Skills.duration(storm)
+	Abyss.marks[Balance.Mark.STORM_COOLDOWN] = 10
+	Abyss.marks[Balance.Mark.STORM_DURATION] = 10
+	_close(Skills.cooldown(storm), base_cooldown * 0.5, "폭풍의 날 10레벨: 쿨타임 절반")
+	_close(Skills.duration(storm), base_duration + 50.0, "폭풍의 숨 10레벨: 지속 +50초")
+	_close(Skills.cooldown(cry), base_cooldown, "다른 스킬은 그대로")
+	_close(Skills.duration(cry), base_duration, "다른 스킬 지속도 그대로")
+	Party.hero_level = 100
+	Skills.clock_override = 5000.0
+	Skills.activate(storm)
+	Skills.clock_override = 5000.0 + base_duration + 1.0
+	_equal(Skills.is_active(storm), true, "늘어난 지속 동안 계속 돈다")
+	Skills.clock_override = -1.0
+	Abyss.marks[Balance.Mark.STORM_COOLDOWN] = 0
+	Abyss.marks[Balance.Mark.STORM_DURATION] = 0
 
 
 func _test_save() -> void:

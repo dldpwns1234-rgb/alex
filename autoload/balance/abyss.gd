@@ -41,15 +41,20 @@ const CURSES: Array[Dictionary] = [
 ]
 enum Blessing { FURY, BOND, CLEANSE, TIME }
 const BLESSINGS: Array[String] = ["분노", "유대", "정화", "유예"]
-enum Mark { POWER, TIME, HARVEST }
+enum Mark { POWER, TIME, HARVEST, STORM_COOLDOWN, STORM_DURATION }
 const MARKS: Array[Dictionary] = [
 	{"name": "심연의 힘", "max_level": 0, "base_cost": 20.0, "cost_growth": 1.12},
 	{"name": "심연의 시간", "max_level": 10, "base_cost": 40.0, "cost_growth": 1.5},
 	{"name": "심연의 수확", "max_level": 10, "base_cost": 50.0, "cost_growth": 1.5},
+	# 폭풍 베기 각인 둘은 본편에도 듣는다 (방장 제안 2026-10-02: 심연의 성장 동기). 다 올리면 쿨타임 2분에 80초
+	{"name": "폭풍의 날", "max_level": 10, "base_cost": 60.0, "cost_growth": 1.6},
+	{"name": "폭풍의 숨", "max_level": 10, "base_cost": 60.0, "cost_growth": 1.6},
 ]
 const MARK_POWER_MULTIPLIER: float = 1.1     # = 층 성장. 1레벨이 1층이다
 const MARK_TIME_PER_LEVEL: float = 3.0
 const MARK_HARVEST_PER_LEVEL: float = 0.2
+const MARK_STORM_COOLDOWN_CUT: float = 0.05     # 폭풍 베기 쿨타임 −5%/레벨
+const MARK_STORM_SECONDS: float = 5.0           # 폭풍 베기 지속 +5초/레벨
 
 
 func abyss_is_boss_floor(floor: int) -> bool:
@@ -179,4 +184,8 @@ func mark_note(index: int) -> String:
 			return "심연 안 모든 피해 ×%s (복리, 1레벨 = 1층)" % MARK_POWER_MULTIPLIER
 		Mark.TIME:
 			return "심연 층 제한 시간 +%d초" % roundi(MARK_TIME_PER_LEVEL)
+		Mark.STORM_COOLDOWN:
+			return "폭풍 베기 쿨타임 −%d%% (본편에도)" % roundi(MARK_STORM_COOLDOWN_CUT * 100.0)
+		Mark.STORM_DURATION:
+			return "폭풍 베기 지속 +%d초 (본편에도)" % roundi(MARK_STORM_SECONDS)
 	return "심연석 +%d%%" % roundi(MARK_HARVEST_PER_LEVEL * 100.0)

@@ -61,12 +61,12 @@ func _refresh() -> void:
 			button.text = "%s\n%d초" % [name, ceili(Skills.active_left(i))]
 			button.disabled = true
 			button.theme_type_variation = "SkillActive"
-			_fill_shade(i, ACTIVE_SHADE, Skills.active_left(i) / Skills.duration())
+			_fill_shade(i, ACTIVE_SHADE, Skills.active_left(i) / Skills.duration(i))
 		elif not Skills.is_ready(i):
 			button.text = "%s\n%s" % [name, Num.format_clock(Skills.cooldown_left(i))]
 			button.disabled = true
 			button.theme_type_variation = ""
-			_fill_shade(i, COOLDOWN_SHADE, Skills.cooldown_left(i) / Skills.cooldown())
+			_fill_shade(i, COOLDOWN_SHADE, Skills.cooldown_left(i) / Skills.cooldown(i))
 		else:
 			button.text = "%s\n%s" % [name, Balance.skill_note(i)]
 			button.disabled = false
