@@ -5,6 +5,8 @@ extends Node
 signal training_changed(index: int, level: int)
 
 var levels: Array[int] = []
+var _mods_hash: int = 0           # mods()를 만든 때의 levels 해시. 레벨이 바뀔 때만 다시 만든다 (파티 DPS를 잴 때마다 불려 후반 비용의 절반이었다)
+var _mods_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -108,8 +110,17 @@ func companion_damage_multiplier(companion: int) -> float:
 	return 1.0 + total
 
 
-## Balance의 동료 공식에 넘길 보정값. 기본값에 단련을 더한 것
+## Balance의 동료 공식에 넘길 보정값. 기본값에 단련을 더한 것. 같은 딕셔너리를 돌려주니 받는 쪽은 고치지 않는다 (고치려면 duplicate(true)).
+## levels를 직접 바꿔도(시뮬레이션·불러오기) 해시가 달라져 다시 만든다
 func mods() -> Dictionary:
+	var hash := levels.hash()
+	if _mods_cache.is_empty() or hash != _mods_hash:
+		_mods_hash = hash
+		_mods_cache = _build_mods()
+	return _mods_cache
+
+
+func _build_mods() -> Dictionary:
 	var damage: Array[float] = []
 	for i in Balance.COMPANIONS.size():
 		damage.append(companion_damage_multiplier(i))

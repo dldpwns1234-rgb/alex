@@ -96,6 +96,17 @@ func _test_values() -> void:
 	_close(mods["archer_crit_mult"], 5.0, "치명타 배율 그대로")
 	_close(mods["cleric_buff"], 0.03, "축복 5레벨: 버프 3%/레벨")
 	_close(mods["companion_damage"][0], 1.4, "보정값에도 전사 ×1.4")
+	# 캐시: 레벨이 바뀌면(직접 바꿔도, 불러오기·초기화로 통째로 바뀌어도) 다시 만든다
+	var warrior_training := 5  # 굳건함
+	Training.levels[warrior_training] += 1
+	_close(Training.mods()["companion_damage"][0], 1.6, "레벨을 직접 바꿔도 보정값이 따라온다")
+	var saved := Training.to_dict()
+	Training.reset()
+	_close(Training.mods()["companion_damage"][0], 1.0, "초기화하면 보정값도 처음으로")
+	Training.from_dict(saved)
+	_close(Training.mods()["companion_damage"][0], 1.6, "불러오면 보정값도 되돌아온다")
+	Party._mods()["companion_damage"][0] = 99.0
+	_close(Training.mods()["companion_damage"][0], 1.6, "파티가 고친 사본이 캐시를 건드리지 않는다")
 
 
 func _test_save() -> void:

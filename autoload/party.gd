@@ -113,7 +113,7 @@ func companion_dps(index: int, boss: bool) -> float:
 
 ## 동료 공식에 넘길 보정값: 단련 값에 승급 단계를 얹는다
 func _mods() -> Dictionary:
-	var mods := Training.mods()
+	var mods := Training.mods().duplicate(true)  # 단련 쪽은 공유 캐시라 고치기 전에 복사한다
 	mods["promotion_ranks"] = Promotions.ranks
 	mods["demon_king"] = not Game.in_tower and Balance.is_demon_king_stage(Game.stage)
 	Abyss.apply_mods(mods)  # 심연의 사슬(동료 하나 ×0)·유대(×3)·무딘 칼날(궁수 치명타 0)

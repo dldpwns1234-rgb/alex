@@ -20,7 +20,7 @@ func _buy_everything() -> void:
 	while _all_enhanced() and Equipment.craft(_weakest_slot()):
 		pass
 	# 골드당 진행 속도 상승을 후보마다 기억해 두고 산 것만 다시 잰다: 동료 i(c)와 그 승급(p)의 상승은 다른 동료를 사도 그대로다 (성직자 레벨은 빼고).
-	# 모두에게 곱해지는 것(성직자, 단련, 용사 마일스톤의 각성 배율)을 사면 전부 다시 잰다. 레벨마다 41개를 다시 재던 것이 실행 시간의 90%였다
+	# 모두에게 곱해지는 것(단련, 용사 마일스톤의 각성 배율)을 사면 전부 다시 잰다. 레벨마다 41개를 다시 재던 것이 실행 시간의 90%였다
 	var cache := {}
 	while true:
 		var current := _progress_rate()
@@ -38,6 +38,7 @@ func _buy_everything() -> void:
 			return
 		var milestones := Balance.milestones(Party.hero_level)
 		var index := int(best.substr(1))
+		var cleric_before := _cleric_multiplier()
 		match best[0]:
 			"h": Party.buy_hero()
 			"c": Party.buy_companion(index)
@@ -45,8 +46,17 @@ func _buy_everything() -> void:
 			"p": Promotions.promote(index)
 		cache.erase("c%d" % index)
 		cache.erase("p%d" % index)
-		if best[0] == "t" or index == Balance.Companion.CLERIC and best[0] != "h" or Balance.milestones(Party.hero_level) != milestones:
+		if best[0] == "t" or Balance.milestones(Party.hero_level) != milestones:
 			cache.clear()
+		elif best == "c%d" % Balance.Companion.CLERIC:
+			# 성직자 버프는 다른 동료·승급의 상승에 똑같이 곱해진다: 지우지 않고 배율만큼 곱한다 (후반 구매의 절반이 성직자라 지우면 느렸다)
+			var factor := _cleric_multiplier() / cleric_before
+			for key: String in cache:
+				cache[key] *= factor
+
+
+func _cleric_multiplier() -> float:
+	return Balance.cleric_multiplier(Party.companion_level(Balance.Companion.CLERIC), Training.mods()["cleric_buff"])
 
 
 func _buy_keys() -> PackedStringArray:
