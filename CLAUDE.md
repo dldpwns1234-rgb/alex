@@ -52,9 +52,10 @@ res://
     treasure.gd  (Treasure) 보물 요정: 등장 시계(게임 시간), 잡기와 보상 셋(골드·스킬 쿨타임 초기화·보물의 축복), 축복 배율. 그림은 scenes/battle/treasure_view.gd
     fragments.gd (Fragments) 기억 조각: 업적 통계로 차례대로 열림(다시 계산), 본 수 저장. 카드는 scenes/fragment_card.gd, 다시 읽기는 tabs/fragment_panel.gd
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
-    prefs.gd     (Prefs) 화면 설정: 하단 메뉴 시트 높이. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
+    prefs.gd     (Prefs) 화면·소리 설정: 하단 메뉴 시트 높이, 효과음·배경음 켬/끔과 음량. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
     save.gd      (Save) 저장, 불러오기, 오프라인 보상. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
     num.gd       (Num) 한국식 숫자 표기
+    sfx.gd       (Sfx) 효과음·배경음. 게임 오토로드의 시그널만 받는다 (상태를 바꾸지 않는다). Save 뒤에 뜬다. sfx/player.gd(1부: 버스 음량, 동시 재생 수·최소 간격·음높이 흔들기, 곡 교차 페이드, 웹 첫 입력 잠금)를 상속한다
   scenes/
     main.tscn    세로 화면 전체 (상단 바, 전투, 하단 메뉴 시트: 스킬 바, 구매 배수, 탭 내비게이션, 패널)
     sheet.gd     하단 메뉴 시트. 접히면 Layout이 비워 둔 자리에 맞고 펼치면 전투 화면 위로 올라온다. 손잡이 버튼으로 토글·끌기, 높이는 Prefs
@@ -63,11 +64,14 @@ res://
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전), tower_controls(시련의 탑 입구), treasure_view(보물 요정 비행·잡기, 축복 남은 시간)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경, 마왕성 성벽), zones(스테이지→몬스터 종류·색조·팔레트, 마왕성과 마왕)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
-    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생, +fragment_panel 기억의 서), achievements(+challenge_panel 도전), settings. 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
+    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training, prestige(+automation_panel 자동화, +rebirth_panel 환생, +fragment_panel 기억의 서), achievements(+challenge_panel 도전), settings(+sound_panel 소리). 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 5), monsters/(6종 + 마왕성 3종 + 마왕), fx/(왕관, 파편, 검격 프레임 slash_0~5, 보물 요정), ui/(아이콘). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
   tools/make_slash_frames.gd  검격 프레임 생성기. slash_N.svg는 손으로 고치지 않는다: 상수를 고치고 다시 만든다 (`--script tools/make_slash_frames.gd`)
   assets/shaders/ flash.gdshader (피격 번쩍임)
+  assets/sfx/, assets/music/  효과음 16개와 배경음 2곡(field·castle) WAV. 손으로 고치지 않는다: tools/make_sfx.gd·make_music.gd의 상수를 고치고 다시 만든 뒤 `--import` (배경음 .wav.import의 edit/loop_mode는 2)
+  tools/make_sfx.gd, tools/make_music.gd  소리 생성기 (`--script tools/make_sfx.gd`). 합성 도구(음·종·하프·잡음·메아리, WAV 저장)는 tools/synth.gd
+  default_bus_layout.tres  오디오 버스: Master 아래 SFX·Music. Sfx가 설정 음량을 건다
   assets/ui/theme.tres 전체 테마. 손으로 고치지 않는다: tools/make_theme.gd의 상수를 고치고 다시 만든다
   tools/make_splash.gd 부팅·로딩 화면 그림(assets/ui/splash.png) 생성기. 파티 SVG를 한 줄로 세운다. PNG는 손으로 고치지 않는다
   tools/make_theme.gd  테마 생성기. `<GODOT 경로> --headless --path . --script tools/make_theme.gd`

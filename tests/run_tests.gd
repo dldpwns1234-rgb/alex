@@ -3,7 +3,7 @@ extends Node
 ##
 ##   godot --headless --path . res://tests/run_tests.tscn
 ##
-## 메인 씬 대신 이 씬을 띄우면 오토로드(Balance, Num, Prestige, Rebirth, Party, Skills, Training, Promotions, Game, Achievements, Equipment, Automation, Challenges, Tower, Treasure, Fragments, Prefs, Save)가 그대로 뜬다.
+## 메인 씬 대신 이 씬을 띄우면 오토로드(Balance, Num, Prestige, Rebirth, Party, Skills, Training, Promotions, Game, Achievements, Equipment, Automation, Challenges, Tower, Treasure, Fragments, Prefs, Save, Sfx)가 그대로 뜬다.
 ## --script 모드는 오토로드를 띄우지 않아 Game이 컴파일되지 않으므로 쓰지 않는다.
 ## 실패하면 종료 코드 1을 돌려준다. 테스트 안의 SCRIPT ERROR는 종료 코드에 잡히지 않으므로 CI가 로그를 grep한다.
 
@@ -42,6 +42,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_dragon_knight.gd"),
 	preload("res://tests/test_fragments.gd"),
 	preload("res://tests/test_release_fixes.gd"),
+	preload("res://tests/test_sfx.gd"),
 ]
 
 

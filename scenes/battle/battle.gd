@@ -83,7 +83,7 @@ func _process(delta: float) -> void:
 		var amount := Party.companion_dps(i, Game.is_boss_stage()) * ATTACK_INTERVAL
 		# 궁수의 치명타는 연출만 한다 (GDD 6절). 피해는 이미 기대값이다
 		if i == Balance.Companion.ARCHER and randf() < Balance.ARCHER_CRIT_CHANCE:
-			_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR)
+			_monster_view.pop(Num.format(amount) + "!", CRIT_TEXT_COLOR, false, true, true)  # 색으로 치명타를 알린다. 글이 길면 숫자끼리 덩어리진다
 		else:
 			_monster_view.pop(Num.format(amount), PARTY_TEXT_COLOR, false, true, true)
 
@@ -159,7 +159,7 @@ func _land_tap(amount: float, crit: bool, flurry: bool, downward: bool) -> void:
 	_stage.slash(hand, downward, crit, flurry)
 	if crit:
 		_stage.slash(hand, not downward, crit, flurry)
-		_monster_view.pop("치명타! " + Num.format(amount), CRIT_TEXT_COLOR, true)
+		_monster_view.pop(Num.format(amount) + "!", CRIT_TEXT_COLOR, true)
 	else:
 		_monster_view.pop(Num.format(amount), TAP_TEXT_COLOR, false, not light)
 	_monster_view.hit(true, crit, flurry)

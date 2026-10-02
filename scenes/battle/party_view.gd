@@ -61,7 +61,8 @@ func layout(area: Vector2, ground_y: float) -> void:
 	var row := FIGURE_SIZE.y + NAME_HEIGHT
 	var count := _actors.size()
 	# 이웃한 동료는 다른 열이라 위아래로 겹쳐도 된다. 같은 열(두 칸 건너)끼리만 안 겹치면 된다
-	var step := minf(row + GAP, (area.y - row) / maxf(count - 1, 1))
+	var room := area.y - row - GAP * 2.0  # 맨 아래 이름표의 테두리가 잘리지 않게 위아래로 조금 비운다
+	var step := minf(row + GAP, room / maxf(count - 1, 1))
 	var top := (area.y - ((count - 1) * step + row)) * 0.5
 	for i in count:
 		var origin := Vector2(area.x * (COLUMN_X + (i % 2) * ZIGZAG_X), top + i * step)

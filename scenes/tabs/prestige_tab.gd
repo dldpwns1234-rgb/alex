@@ -137,9 +137,8 @@ func _refresh_summary() -> void:
 		record += "  ·  지난 판 최고 %d 대비 %s%d" % [Prestige.last_run_best, "+" if gain >= 0 else "−", absi(gain)]
 	else:
 		record += "  ·  첫 판"
-	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d
-%s" % [
-		Num.format(Prestige.crystals), Prestige.prestige_count, Prestige.best_stage, record]
+	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d\n%s" % [
+		Num.format(Prestige.crystals), Prestige.prestige_count, maxi(Prestige.best_stage, Game.highest_stage), record]  # 역대 기록은 회귀 때 굳으니 이번 판도 친다
 
 
 func _refresh() -> void:
