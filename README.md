@@ -5,7 +5,7 @@
 **장르:** 클리커 + 자동 전투 인크리멘탈 (Clicker Heroes식 동시 전투)
 **플랫폼:** 웹 브라우저, 세로 화면 (PC와 모바일)
 **엔진:** Godot 4.7.1 / GDScript (typed)
-**현재 상태:** **M8 콘텐츠 완료** — 보스 자동 재도전, 업적, 동료 승급, 장비, 2차 환생. 남은 것은 효과음(맨 마지막)과 M7 공개
+**현재 상태:** **M10 출시 준비** — M9 후반 콘텐츠와 보물 요정·기억 조각·용기사까지 완료. 출시 절차와 itch.io 문안은 [docs/RELEASE.md](docs/RELEASE.md)
 
 기획서는 [docs/GDD.md](docs/GDD.md), 개발 규칙은 [CLAUDE.md](CLAUDE.md)에 있다.
 
