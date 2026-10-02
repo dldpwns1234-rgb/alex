@@ -16,7 +16,9 @@ func _ready() -> void:
 	theme_type_variation = "Pill"
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	z_index = 10  # 전투 화면이 나중에 만드는 인물·연출보다 위에
+	# 전투 화면이 _ready에서 만드는 인물·연출보다 위에 그리려고 프레임 끝에 맨 뒤 자식으로 옮긴다.
+	# z_index를 올리면 펼친 하단 메뉴 시트 위에까지 그려진다
+	move_to_front.call_deferred()
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
 	anchor_top = VERTICAL_ANCHOR
 	anchor_bottom = VERTICAL_ANCHOR

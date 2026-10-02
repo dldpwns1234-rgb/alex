@@ -12,3 +12,6 @@
 # 에디터 로컬 설정
 *.translation
 .DS_Store
+
+# Claude Code 하위 에이전트 작업 트리
+.claude/
