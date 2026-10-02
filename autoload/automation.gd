@@ -1,5 +1,5 @@
 extends Node
-## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화. 운명의 상점에서 해금했을 때만 동작한다.
+## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화, 단련 자동 구매. 운명의 상점에서 해금했을 때만 동작한다.
 ## 켜고 끄는 설정은 저장되고 회귀·환생해도 남는다 (데이터 초기화에서만 기본값으로). 상태 변경은 Prestige·Skills·Party·Promotions의 함수로만 한다.
 
 signal settings_changed()
@@ -28,6 +28,8 @@ func _process(delta: float) -> void:
 		Prestige.perform()
 	if is_active(Balance.Auto.SKILLS):
 		use_skills()
+	if is_active(Balance.Auto.TRAINING):
+		buy_trainings()  # 동료 강화보다 먼저: 동료 강화는 살 수 있는 만큼 다 써서 뒤에 오면 단련 몫이 남지 않는다
 	if is_active(Balance.Auto.UPGRADE):
 		upgrade_companions()
 
@@ -135,6 +137,23 @@ func _buy_best_upgrade() -> bool:
 	if pick < 0:
 		return false
 	return Promotions.promote(pick) if promote else Party.buy_companion(pick)
+
+
+## 단련 자동 구매: 다음 레벨 비용이 가진 골드의 일정 몫 이하인 단련 중 가장 싼 것을 한 레벨씩 산다 (구매 배수와 상관없이).
+## 단련은 최대 레벨이 있어 금방 다 차고, 몫을 두어 동료 강화에 쓸 골드를 남긴다. 한 프레임에 상한까지 되풀이한다
+func buy_trainings() -> void:
+	for _i in Balance.AUTO_UPGRADE_BUYS_PER_FRAME:
+		var pick := -1
+		var cheapest := 0.0
+		for i in Training.levels.size():
+			if not Training.is_unlocked(i) or Training.is_maxed(i):
+				continue
+			var cost := Training.purchase(i, Party.BuyMode.ONE).cost
+			if cost <= Game.gold * Balance.AUTO_TRAINING_GOLD_SHARE and (pick < 0 or cost < cheapest):
+				pick = i
+				cheapest = cost
+		if pick < 0 or not Training.buy(pick, Party.BuyMode.ONE):
+			return
 
 
 ## 새 스테이지에 닿으면 정체 시계를 되돌린다. 보스 실패로 돌아갔다 다시 오른 것은 진행이 아니다

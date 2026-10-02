@@ -39,6 +39,7 @@ func _test_auto_upgrade() -> void:
 	var W: int = Balance.Companion.WARRIOR
 	var C: int = Balance.Companion.CLERIC
 	var U: int = Balance.Auto.UPGRADE
+	Automation.set_enabled(Balance.Auto.TRAINING, false)  # 같은 운명이 여는 단련 자동 구매는 test_auto_training.gd에서 본다
 	Game.highest_stage = 100
 	for i in LEVELS.size():
 		Party.companion_levels[i] = LEVELS[i]
@@ -95,6 +96,7 @@ func _test_auto_upgrade() -> void:
 	Automation.from_dict({"enabled": [true, true, false]})
 	_equal(Automation.is_enabled(U), true, "옛 저장은 동료 자동 강화가 켬")
 	_equal(Automation.is_enabled(Balance.Auto.SKILLS), false, "있는 값은 그대로")
+	Automation.reset()
 
 
 func _total(levels: Array[int], ranks: Array[int]) -> int:

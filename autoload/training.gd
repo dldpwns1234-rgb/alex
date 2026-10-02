@@ -50,13 +50,13 @@ func is_maxed(index: int) -> bool:
 	return levels[index] >= Balance.training_max_level(index)
 
 
-## 현재 구매 배수로 살 레벨 수와 비용. 남은 레벨을 넘지 않는다. 못 사면 1레벨 비용을 보여준다
-func purchase(index: int) -> Party.Purchase:
+## 구매 배수(기본은 현재 배수)로 살 레벨 수와 비용. 남은 레벨을 넘지 않는다. 못 사면 1레벨 비용을 보여준다
+func purchase(index: int, mode: Party.BuyMode = Party.buy_mode) -> Party.Purchase:
 	var remaining := maxi(Balance.training_max_level(index) - levels[index], 1)
 	var base := Balance.training_base_cost(index)
 	var growth := Balance.TRAINING_COST_GROWTH
 	var count := 1
-	match Party.buy_mode:
+	match mode:
 		Party.BuyMode.TEN:
 			count = mini(Balance.BULK_COUNT, remaining)
 		Party.BuyMode.MAX:
@@ -74,10 +74,10 @@ func can_buy(index: int) -> bool:
 	return is_unlocked(index) and not is_maxed(index) and purchase(index).affordable
 
 
-func buy(index: int) -> bool:
+func buy(index: int, mode: Party.BuyMode = Party.buy_mode) -> bool:
 	if not is_unlocked(index) or is_maxed(index):
 		return false
-	var result := purchase(index)
+	var result := purchase(index, mode)
 	if not Game.spend(result.cost):
 		return false
 	levels[index] += result.count

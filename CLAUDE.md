@@ -47,7 +47,7 @@ res://
     promotions.gd (Promotions) 동료 승급 단계, 구매, DPS 배율. 한 판 안의 강화. Party가 동료 공식에 배율을 넘긴다
     achievements.gd (Achievements) 누적 통계와 업적 달성, 영구 보너스 배율. 회귀해도 남는다. 통계는 Game·Party·Prestige·Skills의 시그널로 모은다
     equipment.gd (Equipment) 장비 3칸, 보스 드롭(Game 시그널), 자동 장착·분해, 강화석과 강화, 효과 배율. 회귀해도 남는다
-    automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화(골드 효율 최고의 레벨업·승급). 운명의 상점에서 해금하면 동작하고 토글은 저장된다
+    automation.gd (Automation) 자동 회귀(정체 시계), 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화(골드 효율 최고의 레벨업·승급), 단련 자동 구매(골드의 10% 이하인 것을 싼 것부터), 자동 환생. 운명의 상점에서 해금하면 동작하고 토글은 저장된다
     challenges.gd (Challenges) 도전 판: 시작(회귀로 판 끝내기), 제한 조회(Party·Skills·Game·Equipment·Prestige가 묻는다), 달성과 영구 보너스. 환생 1회부터
     treasure.gd  (Treasure) 보물 요정: 등장 시계(게임 시간), 잡기와 보상 셋(골드·스킬 쿨타임 초기화·보물의 축복), 축복 배율. 그림은 scenes/battle/treasure_view.gd
     fragments.gd (Fragments) 기억 조각: 업적 통계로 차례대로 열림(다시 계산), 본 수 저장. 카드는 scenes/fragment_card.gd, 다시 읽기는 tabs/fragment_panel.gd
