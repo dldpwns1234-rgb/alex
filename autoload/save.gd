@@ -11,6 +11,7 @@ const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 
 const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
 const WebHooks := preload("res://autoload/save/web_hooks.gd")
 const GapClock := preload("res://autoload/save/gap_clock.gd")
+const Sections := preload("res://autoload/save/sections.gd")
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
 ## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막는다 (시뮬레이션은 _ready 한 번에 수십 초를 써서 공백으로 잡힌다)
@@ -63,52 +64,18 @@ func _notification(what: int) -> void:
 			save_game()
 
 
-## 저장 데이터 전체. 새 필드를 넣으면 from_dict에서 기본값도 넣는다
+## 저장 데이터 전체. 절과 순서는 save/sections.gd
 func to_dict() -> Dictionary:
-	return {
-		"save_version": SAVE_VERSION,
-		"saved_at": Time.get_unix_time_from_system(),
-		"game": Game.to_dict(),
-		"rebirth": Rebirth.to_dict(),
-		"party": Party.to_dict(),
-		"skills": Skills.to_dict(),
-		"training": Training.to_dict(),
-		"promotions": Promotions.to_dict(),
-		"prestige": Prestige.to_dict(),
-		"achievements": Achievements.to_dict(),
-		"equipment": Equipment.to_dict(),
-		"automation": Automation.to_dict(),
-		"challenges": Challenges.to_dict(),
-		"tower": Tower.to_dict(),
-		"treasure": Treasure.to_dict(),
-		"fragments": Fragments.to_dict(),
-		"prefs": Prefs.to_dict(),
-	}
+	var data := Sections.to_dict()
+	data["save_version"] = SAVE_VERSION
+	data["saved_at"] = Time.get_unix_time_from_system()
+	return data
 
 
-## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다. 업적은 회귀 기록(Prestige) 뒤, 통계를 시그널로 받는 Party·Game 앞
+## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다 (순서는 save/sections.gd)
 func from_dict(data: Dictionary) -> void:
-	Challenges.from_dict(_section(data, "challenges"))  # 맨 앞: 지금 세션의 도전으로 가져온 스테이지를 달성 판정하지 않게
-	Rebirth.from_dict(_section(data, "rebirth"))
-	Prestige.from_dict(_section(data, "prestige"))
-	Achievements.from_dict(_section(data, "achievements"))
-	Party.from_dict(_section(data, "party"))
-	Promotions.from_dict(_section(data, "promotions"))
-	Equipment.from_dict(_section(data, "equipment"))
-	Skills.from_dict(_section(data, "skills"))
-	Training.from_dict(_section(data, "training"))
-	Game.from_dict(_section(data, "game"))
-	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
-	Tower.from_dict(_section(data, "tower"))
-	Treasure.from_dict(_section(data, "treasure"))
-	Fragments.from_dict(_section(data, "fragments"))  # 업적(통계) 뒤에
-	Prefs.from_dict(_section(data, "prefs"))
+	Sections.from_dict(data)
 
-
-## 저장 데이터의 한 부분. 없거나 딕셔너리가 아니면 빈 딕셔너리 (각 오토로드가 기본값으로 채운다)
-func _section(data: Dictionary, key: String) -> Dictionary:
-	var part: Variant = data.get(key, {})
-	return part if part is Dictionary else {}
 
 
 func save_game() -> void:
@@ -160,23 +127,7 @@ func import_string(text: String) -> bool:
 
 ## 모든 데이터를 지우고 새 판으로 시작한다. 설정 탭에서 두 번 확인한 뒤에만 부른다
 func reset_data() -> void:
-	Rebirth.reset()
-	Prestige.reset()
-	Achievements.reset()
-	Equipment.reset()
-	Party.reset()
-	Skills.reset()
-	Training.reset()
-	Promotions.reset()
-	Game.reset()
-	Game.set_auto_retry(true)  # 회귀가 지우지 않는 화면 설정도 기본값으로 ("모든 데이터를 지운다")
-	Party.set_buy_mode(Party.BuyMode.ONE)
-	Automation.reset()
-	Challenges.reset()
-	Tower.reset()
-	Treasure.reset()
-	Fragments.reset()
-	Prefs.reset()
+	Sections.reset_all()
 	save_game()
 
 
