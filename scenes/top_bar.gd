@@ -13,6 +13,7 @@ const CRYSTAL_COLOR := Color("7fd1f0")
 const TIMER_WIDTH: float = 150.0   # 보스 시간 알림 자리. 보스전이 아닐 때도 비워 두어 결정 아이콘이 움직이지 않는다
 const STAGE_WIDTH: float = 190.0   # "스테이지 999"까지 자릿수가 늘어도 다른 것이 밀리지 않는 폭
 const RATE_FONT_SIZE: int = 17
+const GOLD_STRETCH: float = 1.6  # 골드 칸을 결정 칸보다 넓게: "+10.1억/초"가 잘렸다 (결정은 자릿수가 짧다)
 const RATE_COLOR := Color("d9c87a")
 const RATE_WINDOW: float = 10.0   # 초당 골드는 최근 10초(게임 시간)의 처치 골드로 잰다. 1초 칸으로 나눠 굴린다
 
@@ -42,6 +43,7 @@ func _ready() -> void:
 	row.add_child(_make_icon(COIN_ICON))
 	var gold_column := VBoxContainer.new()  # 골드 아래에 초당 골드 (UX 점검 2026-10-02: 속도 정보가 없다)
 	gold_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gold_column.size_flags_stretch_ratio = GOLD_STRETCH
 	gold_column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	gold_column.add_theme_constant_override("separation", 0)
 	row.add_child(gold_column)
