@@ -37,6 +37,7 @@ func _ready() -> void:
 	Save.blocked = true  # 시뮬레이션은 저장하지 않는다. 시작할 때 읽힌 저장이 있어도 전부 새로 시작한다
 	_parse_args()
 	seed(RANDOM_SEED)
+	Transcend.reset()
 	Rebirth.reset()
 	Prestige.reset()
 	Achievements.reset()
@@ -56,7 +57,7 @@ func _ready() -> void:
 	print("=== 밸런스 시뮬레이션: 초당 %d클릭, 목표 %d, 회귀 배수 %s, 스킬 %s, 결정 %s, 정체 %d초, 환생 +%d ===" % [
 		roundi(clicks_per_second), _goal, _ratio, "사용" if _skills else "없음", _plan, roundi(_stall), _extra])
 	# 목표가 있으면 시간 상한만 둔다 (일찍 회귀하는 정책은 회귀 12번을 금방 채운다)
-	while _t < _hours * 3600.0 and (_goal > 0 or _prestiges < MAX_PRESTIGES) and not _goal_reached():
+	while _t < _hours * 3600.0 and (_goal > 0 or _transcends > 0 or _prestiges < MAX_PRESTIGES) and not _goal_reached():
 		_second()
 	if _goal_reached():
 		_report("목표 %d 도달: %s (회귀 %d회, 환생 %d회)  SCORE=%d" % [_goal, _clock(_t), _prestiges, Rebirth.rebirth_count, roundi(_t)])
@@ -67,6 +68,8 @@ func _ready() -> void:
 
 
 func _goal_reached() -> bool:
+	if _transcends > 0:
+		return Transcend.count >= _transcends
 	return _goal > 0 and Rebirth.best_stage() >= _goal
 
 
@@ -84,6 +87,7 @@ func _second() -> void:
 			_tap_budget -= 1.0
 			Game.tap_attack()
 		Game._process(dt)
+		Transcend.cycle_seconds += dt  # 파편 수를 정하는 삶의 시간. 실제 _process는 시뮬레이션 시간을 모른다
 		_t += dt
 	Skills.clock_override = _t
 	if _skills:
@@ -91,6 +95,9 @@ func _second() -> void:
 	if _t >= _next_buy:
 		_next_buy = _t + BUY_INTERVAL
 		_buy_everything()
+	if Transcend.can_transcend():
+		_transcend()
+		return
 	if Prestige.can_prestige() and (_t - _last_progress >= _stall or _worth_prestige()):
 		if Rebirth.can_rebirth() and Rebirth.best_stage() >= Balance.REBIRTH_MIN_STAGE + _extra:
 			_rebirth()
@@ -130,8 +137,7 @@ func _prestige() -> void:
 ## 환생: 기억을 내려놓고 운명의 실로 운명의 상점을 산다. 이전 기록도 새 삶에서 다시 센다
 func _rebirth() -> void:
 	var reward := Rebirth.thread_reward()
-	_report("환생 %d: %s에 역대 최고 %d, 판 길이 %s, 운명의 실 +%s" % [
-		Rebirth.rebirth_count + 1, _clock(_t), Rebirth.best_stage(), _clock(_t - _run_start), Num.format(reward)])
+	_report("환생 %d: %s에 역대 최고 %d, 판 길이 %s, 운명의 실 +%s" % [Rebirth.rebirth_count + 1, _clock(_t), Rebirth.best_stage(), _clock(_t - _run_start), Num.format(reward)])
 	_report("    동료 %s · 승급 %s" % [str(Party.companion_level_list()), str(Promotions.ranks)])
 	Rebirth.perform()
 	_buy_fates()
@@ -139,8 +145,18 @@ func _rebirth() -> void:
 	_new_run()
 	_report("    운명: 숙명 Lv %d (×%s), 인연 Lv %d (×%s), 예지 Lv %d, 도약 Lv %d (시작 %d), 남은 실 %s" % [
 		Rebirth.level(Balance.Fate.DESTINY), Num.format(Rebirth.damage_multiplier()),
-		Rebirth.level(Balance.Fate.BOND), Num.format(Rebirth.crystal_multiplier()),
-		Rebirth.level(Balance.Fate.FORESIGHT), Rebirth.level(Balance.Fate.LEAP), Game.stage, Num.format(Rebirth.threads)])
+		Rebirth.level(Balance.Fate.BOND), Num.format(Rebirth.crystal_multiplier()), Rebirth.level(Balance.Fate.FORESIGHT), Rebirth.level(Balance.Fate.LEAP), Game.stage, Num.format(Rebirth.threads)])
+
+
+## 초월: 최후의 마왕을 잡으면 바로. 파편으로 별의 상점을 산다
+func _transcend() -> void:
+	var reward := Transcend.star_reward()
+	_report("초월 %d: %s, 삶 길이 %s, 별의 파편 +%s (회귀 %d회, 환생 %d회)" % [Transcend.count + 1, _clock(_t), _clock(Transcend.cycle_seconds), Num.format(reward), _prestiges, Rebirth.rebirth_count])
+	Transcend.perform()
+	_buy_stars()  # 별빛 날개의 실로 운명도 산다
+	_previous_best = 0
+	_new_run()
+	_report("    별의 상점 %s, 남은 파편 %s, 시작 스테이지 %d" % [str(Transcend.star_levels), Num.format(Transcend.stars), Game.stage])
 
 
 func _new_run() -> void:
@@ -179,10 +195,6 @@ func _report(line: String) -> void:
 
 func _clock(seconds: float) -> String:
 	var total := floori(seconds)
-	@warning_ignore("integer_division")
-	var hours := total / 3600
-	@warning_ignore("integer_division")
-	var minutes := (total % 3600) / 60
-	if hours > 0:
-		return "%d시간 %02d분 %02d초" % [hours, minutes, total % 60]
-	return "%d분 %02d초" % [minutes, total % 60]
+	var hours := floori(seconds / 3600.0)
+	var minutes := floori(seconds / 60.0) % 60
+	return ("%d시간 %02d분 %02d초" % [hours, minutes, total % 60]) if hours > 0 else ("%d분 %02d초" % [minutes, total % 60])

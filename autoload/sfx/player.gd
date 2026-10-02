@@ -35,6 +35,7 @@ var _next: Dictionary = {}           # 소리 이름 → 다 차 있을 때 끊�
 var _last_msec: Dictionary = {}      # 소리 이름 → 마지막으로 낸 시각
 var _busy_until: Dictionary = {}     # 플레이어 → 소리가 끝나는 시각(ms)
 var _music: Dictionary = {}          # 곡 이름 → AudioStreamPlayer
+var _rng := RandomNumberGenerator.new()  # 음높이 전용. 소리를 낼지는 실제 시계가 정하니 전역 난수(장비 드롭)를 쓰면 실행마다 결과가 흔들린다
 var _music_on: Dictionary = {}       # 곡 이름 → 울리는 중인지 (페이드 아웃 중 포함)
 var _fades: Dictionary = {}          # 곡 이름 → Tween
 
@@ -78,7 +79,7 @@ func play(cue: String) -> bool:
 		return false
 	_last_msec[cue] = now
 	var player := _pick(cue, now)
-	last_pitch = 1.0 + randf_range(-PITCH_JITTER, PITCH_JITTER)
+	last_pitch = 1.0 + _rng.randf_range(-PITCH_JITTER, PITCH_JITTER)
 	player.pitch_scale = last_pitch
 	_busy_until[player] = now + int(player.stream.get_length() / last_pitch * 1000.0)
 	if not _silent:

@@ -1,9 +1,7 @@
-extends Node
-## 밸런스 시뮬레이션 1부: 정책. balance_sim.gd가 상속한다. 정책 인자(--이름=값)를 읽고, 언제 회귀할지, 무엇을 살지 정한다.
-## 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급. 진행 속도에 안 잡히는
-## 단련은 골드의 2% 이하일 때). 강화석은 생기는 대로 강화에, 강화가 다 차면 가장 약한 칸의 제작에 쓴다. 결정은 계획(plan)대로, 운명의 실은 싼 것에 쓴다.
+extends "res://tools/sim_buy.gd"
+## 밸런스 시뮬레이션 1부: 정책. balance_sim.gd가 상속한다. 정책 인자(--이름=값)를 읽고, 언제 회귀할지 정하며, 결정은 계획(plan)대로,
+## 운명의 실과 별의 파편은 싼 것에 쓴다. 골드로 무엇을 살지는 sim_buy.gd(0부)에 있다.
 
-var clicks_per_second: float = 4.0  # 정책 인자 taps (GDD 13절은 3~5)
 var _goal: int = 0
 var _ratio: float = 0.0
 var _skills: bool = false
@@ -11,6 +9,7 @@ var _plan: String = "sword_gold"
 var _stall: float = 180.0
 var _extra: int = 0
 var _hours: float = 10.0
+var _transcends: int = 0  # 0보다 크면 초월을 이만큼 하면 끝낸다 (목표 스테이지 대신)
 
 
 ## "--이름=값" 꼴의 사용자 인자 (godot ... -- --goal=500)
@@ -28,103 +27,12 @@ func _parse_args() -> void:
 			"extra": _extra = int(parts[1])
 			"taps": clicks_per_second = float(parts[1])
 			"hours": _hours = float(parts[1])
+			"transcends": _transcends = int(parts[1])
 
 
 ## 회귀 보상이 결정 재산의 ratio배 이상이면 지금 회귀하는 게 낫다고 본다
 func _worth_prestige() -> bool:
 	return _ratio > 0.0 and Prestige.crystal_reward() >= _ratio * maxf(_crystal_wealth(), Balance.PRESTIGE_BASE_CRYSTALS)
-
-
-## 진행 속도: (동료 DPS + 클릭 DPS) × 처치 골드 배율. 골드 대비 이 값의 상승이 큰 것부터 산다
-func _progress_rate() -> float:
-	var boss := Game.is_boss_stage()
-	var dps := Party.party_dps(boss) + Party.click_damage() * clicks_per_second
-	return dps * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
-
-
-func _buy_everything() -> void:
-	_hire_late_companions()
-	for slot in Balance.SLOT_LABELS.size():
-		while Equipment.enhance(slot):
-			pass
-	while _all_enhanced() and Equipment.craft(_weakest_slot()):
-		pass
-	while true:
-		var current := _progress_rate()
-		var best_ratio := 0.0
-		var best_kind := ""  # "hero", "companion", "training", "promotion"
-		var best_index := -1
-		var hero := Party.hero_purchase()
-		if hero.affordable:
-			Party.hero_level += 1
-			best_ratio = (_progress_rate() - current) / hero.cost
-			best_kind = "hero"
-			Party.hero_level -= 1
-		for i in Party.companion_levels.size():
-			if not Party.is_companion_unlocked(i):
-				continue
-			var purchase := Party.companion_purchase(i)
-			if not purchase.affordable:
-				continue
-			Party.companion_levels[i] += 1
-			var ratio := (_progress_rate() - current) / purchase.cost
-			Party.companion_levels[i] -= 1
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "companion"
-				best_index = i
-		for i in Training.levels.size():
-			if not Training.can_buy(i):
-				continue
-			var purchase := Training.purchase(i)
-			Training.levels[i] += 1
-			var gain := _progress_rate() - current
-			Training.levels[i] -= 1
-			# 진행 속도에 안 잡히는 효과(보스 시간, 스킬, 재등장 등)는 싸면 산다
-			var ratio := gain / purchase.cost if gain > 0.0 else (1e9 if purchase.cost <= Game.gold * 0.02 else 0.0)
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "training"
-				best_index = i
-		for i in Promotions.ranks.size():
-			if not Promotions.can_promote(i):
-				continue
-			var cost := Promotions.cost(i)
-			Promotions.ranks[i] += 1
-			var ratio := (_progress_rate() - current) / cost
-			Promotions.ranks[i] -= 1
-			if ratio > best_ratio:
-				best_ratio = ratio
-				best_kind = "promotion"
-				best_index = i
-		match best_kind:
-			"hero":
-				Party.buy_hero()
-			"companion":
-				Party.buy_companion(best_index)
-			"training":
-				Training.buy(best_index)
-			"promotion":
-				Promotions.promote(best_index)
-			_:
-				return
-
-
-## 장비가 든 칸이 모두 +10인지. 그때부터 남는 강화석을 제작에 쓴다 (강화가 남았으면 모은다)
-func _all_enhanced() -> bool:
-	for slot in Balance.SLOT_LABELS.size():
-		if Equipment.has_item(slot) and not Equipment.is_enhance_maxed(slot):
-			return false
-	return true
-
-
-## 효과가 가장 작은 칸 (빈 칸이 먼저). 제작으로 채울 자리
-func _weakest_slot() -> int:
-	var weakest := 0
-	for slot in Balance.SLOT_LABELS.size():
-		if Equipment.effect(slot) < Equipment.effect(weakest):
-			weakest = slot
-	return weakest
 
 
 ## 결정 사용 계획: sword(검술만), sword_gold(검술·황금 중 싼 것), all(일곱 개 중 싼 것. 같으면 앞의 것)
@@ -160,6 +68,18 @@ func _buy_fates() -> void:
 			return
 
 
+## 별의 파편은 별의 상점 중 싼 것부터 (같으면 앞의 것). 그 뒤 별빛 날개로 받은 실로 운명을 산다
+func _buy_stars() -> void:
+	while true:
+		var best := -1
+		for i in Balance.STARS.size():
+			if Transcend.can_buy(i) and (best < 0 or Transcend.star_cost(i) < Transcend.star_cost(best)):
+				best = i
+		if best < 0 or not Transcend.buy(best):
+			break
+	_buy_fates()
+
+
 ## 결정 재산: 가진 것 + 상점에 쓴 것 (레벨 L까지 비용 합 = 2^L − 1). 회귀 시점 판단에 쓴다
 func _crystal_wealth() -> float:
 	var spent := 0.0
@@ -168,18 +88,3 @@ func _crystal_wealth() -> float:
 	return Prestige.crystals + spent
 
 
-## 늦게 합류한 동료(용기사, 600)는 다른 동료가 수천 레벨이라 1레벨의 DPS가 부동소수에 묻혀 증가분이 0으로 나온다.
-## 한 레벨씩 견주는 탐욕 구매로는 영영 안 사므로, 사람처럼 구매 배수 최대로 한 번에 고용한다
-func _hire_late_companions() -> void:
-	for i in Party.companion_levels.size():
-		if Party.is_companion_hired(i) or not Party.is_companion_unlocked(i) or not Party.companion_purchase(i).affordable:
-			continue
-		var before := _progress_rate()
-		Party.companion_levels[i] += 1
-		var gain := _progress_rate() - before
-		Party.companion_levels[i] -= 1
-		if gain > 0.0:
-			continue
-		Party.set_buy_mode(Party.BuyMode.MAX)
-		Party.buy_companion(i)
-		Party.set_buy_mode(Party.BuyMode.ONE)
