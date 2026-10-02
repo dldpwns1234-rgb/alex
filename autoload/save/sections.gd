@@ -18,6 +18,7 @@ static func to_dict() -> Dictionary:
 		"automation": Automation.to_dict(),
 		"challenges": Challenges.to_dict(),
 		"tower": Tower.to_dict(),
+		"abyss": Abyss.to_dict(),
 		"treasure": Treasure.to_dict(),
 		"fragments": Fragments.to_dict(),
 		"transcend": Transcend.to_dict(),
@@ -41,6 +42,7 @@ static func from_dict(data: Dictionary) -> void:
 	Game.from_dict(_section(data, "game"))
 	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
 	Tower.from_dict(_section(data, "tower"))
+	Abyss.from_dict(_section(data, "abyss"))
 	Treasure.from_dict(_section(data, "treasure"))
 	Fragments.from_dict(_section(data, "fragments"))  # 업적(통계) 뒤에
 	Prefs.from_dict(_section(data, "prefs"))
@@ -64,6 +66,7 @@ static func reset_all() -> void:
 	Automation.reset()
 	Challenges.reset()
 	Tower.reset()
+	Abyss.reset()
 	Treasure.reset()
 	Fragments.reset()
 	Prefs.reset()

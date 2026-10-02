@@ -21,7 +21,9 @@ func _process(delta: float) -> void:
 	var dt := minf(delta, Balance.MAX_DELTA)
 	_tick_tap_rate(dt)
 	if in_tower:
-		Tower.tick(dt)  # 층 제한 시간. 끝나면 Tower가 본편으로 돌려보낸다
+		if dungeon.paused():  # 심연의 축복 고르기 창이 떠 있다
+			return
+		dungeon.tick(dt)  # 층 제한 시간. 끝나면 탑·심연이 본편으로 돌려보낸다
 		if not in_tower:
 			return
 	elif farming:
@@ -41,7 +43,7 @@ func _process(delta: float) -> void:
 			_fail_boss()
 			return
 	# 동료 피해: 매 프레임 DPS × delta (GDD 3절). 마법사는 보스에게 ×3
-	var dps := Party.party_dps(is_boss_stage())
+	var dps := Party.party_dps(is_boss_stage()) * Abyss.companion_scale()  # 심연의 고립이면 동료가 싸우지 않는다 (각성 몫은 그대로)
 	if dps > 0.0:
 		_damage_monster(dps * dt)
 
@@ -53,6 +55,12 @@ func _tick_tap_rate(dt: float) -> void:
 		tap_rate = _taps_in_window / Balance.TAP_RATE_WINDOW
 		_taps_in_window = 0
 		_tap_window_left = Balance.TAP_RATE_WINDOW
+
+
+## 파밍 중인 스테이지 다음의 보스(마왕 포함)를 지금 DPS(동료 + 클릭 × 최근 탭 빈도)로 제한 시간 안에 잡을 것 같은지
+func boss_looks_beatable() -> bool:
+	var dps := Party.party_dps(true) + Party.click_damage() * tap_rate
+	return Balance.boss_beatable(Balance.enemy_hp(stage + 1), dps, boss_limit(stage + 1))
 
 
 ## 자동 재도전 (GDD 3절): 실패 뒤 잠깐 파밍한 다음 잡을 수 있을 것 같으면, 또는 탭하는 중이면 한참마다, 스스로 도전한다.
@@ -73,7 +81,7 @@ func tap_attack(auto: bool = false) -> void:
 	if not is_monster_alive():
 		return
 	var amount := Party.click_damage()
-	var chance := Training.value(Balance.Effect.CLICK_CRIT)
+	var chance := 0.0 if Abyss.blocks_crit() else Training.value(Balance.Effect.CLICK_CRIT)
 	var crit := chance > 0.0 and randf() < chance
 	if crit:
 		amount *= Balance.CLICK_CRIT_MULTIPLIER
@@ -157,9 +165,9 @@ func _award_kill() -> float:
 ## 처치 뒤 진행. 탑은 10마리면 다음 층. 본편은 보스 1마리, 일반 10마리면 다음 스테이지 (파밍 중에는 처치 수만 돌고, 도전을 예약했으면 보스로)
 func _after_kill() -> void:
 	if in_tower:
-		if kills >= Balance.MONSTERS_PER_STAGE:
+		if kills >= dungeon.kills_needed():
 			kills = 0
-			Tower.clear_floor()
+			dungeon.clear_floor()
 	elif farming and boss_queued:
 		_start_boss_challenge()
 	elif is_boss_stage() or kills >= Balance.MONSTERS_PER_STAGE:

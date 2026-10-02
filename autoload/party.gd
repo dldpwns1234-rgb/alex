@@ -83,11 +83,11 @@ func companion_level_list() -> Array[int]:
 	return levels
 
 
-## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 도전 보너스 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 × 용사 마일스톤 보정 (GDD 5절)
+## 클릭 피해: 기본 × 검술의 기억 × 업적 × 무기 × 숙명 × 도전 보너스 × 심연의 분노 × 연격 (보스면 × 방패 강타) + 동료 DPS 합계 × 용사의 각성 × 용사 마일스톤 보정 (GDD 5절)
 func click_damage() -> float:
 	var boss := Game.is_boss_stage()
 	var base := Balance.hero_click_damage(hero_level) * Prestige.sword_multiplier() * Achievements.damage_multiplier()
-	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier() * Challenges.click_multiplier()
+	base *= Equipment.click_multiplier() * Rebirth.damage_multiplier() * Challenges.click_multiplier() * Abyss.click_multiplier()
 	base *= (1.0 + Training.value(Balance.Effect.CLICK_DAMAGE)) * _boss_bonus(boss)
 	return minf(base + party_dps(boss) * Prestige.awakening_share() * Balance.awakening_factor(hero_level), Balance.MAX_NUMBER)
 
@@ -116,6 +116,7 @@ func _mods() -> Dictionary:
 	var mods := Training.mods()
 	mods["promotion_ranks"] = Promotions.ranks
 	mods["demon_king"] = not Game.in_tower and Balance.is_demon_king_stage(Game.stage)
+	Abyss.apply_mods(mods)  # 심연의 사슬(동료 하나 ×0)·유대(×3)·무딘 칼날(궁수 치명타 0)
 	return mods
 
 
