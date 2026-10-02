@@ -1,8 +1,10 @@
-extends Node
+extends "res://tools/sim_gear.gd"
 ## 밸런스 시뮬레이션 0부: 무엇을 살지. sim_purchases.gd가 상속한다.
 ## 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급). 강화석은 강화에, 강화가 다 차면 제작에 쓴다.
 
 var clicks_per_second: float = 4.0  # 정책 인자 taps (GDD 13절은 3~5)
+const FLAT_RATIO: float = 1e9  # 진행 속도에 안 잡히는 단련을 싸면 먼저 사게 하는 비율
+
 var _exact: bool = true  # 정책 인자 exact=0이면 동료를 몰아 산다 (어림). 1000 도달이 1.7% 빨라지고 실행은 1.5배 빨라 기본은 하나씩 (2026-10-02)
 
 
@@ -15,15 +17,13 @@ func _progress_rate() -> float:
 
 func _buy_everything() -> void:
 	_hire_late_companions()
-	for slot in Balance.SLOT_LABELS.size():
-		while Equipment.enhance(slot):
-			pass
-	while _all_enhanced() and Equipment.craft(_weakest_slot()):
-		pass
+	_spend_stones()
 	# 골드당 진행 속도 상승을 후보마다 기억해 두고 산 것만 다시 잰다: 동료 i(c)와 그 승급(p)의 상승은 다른 동료를 사도 그대로다 (성직자 레벨은 빼고).
 	# 모두에게 곱해지는 것(단련, 용사 마일스톤의 각성 배율)을 사면 전부 다시 잰다. 레벨마다 41개를 다시 재던 것이 실행 시간의 90%였다
 	var cache := {}
+	var flat := {}  # 진행 속도에 안 잡히는 단련(보스 시간·스킬·재등장 등). 이번 판단 동안 상승이 늘 0이라 비용만 본다
 	while true:
+		# 현재 속도는 매번 다시 잰다. 산 것의 상승을 더해 가면 끝자리 오차가 싼 후보(용사)의 비율을 몇 %씩 흔들어 순서가 바뀌었다
 		var current := _progress_rate()
 		var best_ratio := 0.0
 		var best := ""
@@ -31,8 +31,12 @@ func _buy_everything() -> void:
 		for key in _buy_keys():
 			if not _can_buy_key(key):
 				continue
-			if not cache.has(key) or key[0] == "h" or key[0] == "t" or key == "c%d" % Balance.Companion.CLERIC:  # 성직자 레벨은 버프로 모두의 DPS에 곱해져 늘 다시 잰다
-				cache[key] = _key_ratio(key, current)
+			if flat.has(key):
+				cache[key] = _flat_ratio(key)
+			elif not cache.has(key) or key[0] == "t" or key == "c%d" % Balance.Companion.CLERIC or key == "h":
+				cache[key] = _key_ratio(key, current)  # 성직자 레벨은 버프로 모두에게 곱해지고, 용사는 클릭 몫이 여러 배율에 묶여 늘 다시 잰다
+				if key[0] == "t" and (cache[key] == 0.0 or cache[key] == FLAT_RATIO):
+					flat[key] = true
 			if cache[key] > best_ratio or key == "h":  # 용사는 살 수 있으면 기본으로 고른다 (예전 그대로)
 				runner_up = maxf(runner_up, best_ratio)
 				best_ratio = cache[key]
@@ -44,22 +48,27 @@ func _buy_everything() -> void:
 		var milestones := Balance.milestones(Party.hero_level)
 		var index := int(best.substr(1))
 		var cleric_before := _cleric_multiplier()
+		var bought := 1
 		match best[0]:
 			"h": Party.buy_hero()
 			"c":
-				for _k in (1 if _exact else _run_length(index, best_ratio, runner_up)):
+				bought = 1 if _exact else _run_length(index, best_ratio, runner_up)
+				for _k in bought:
 					Party.buy_companion(index)
 			"t": Training.buy(index)
 			"p": Promotions.promote(index)
-		cache.erase("c%d" % index)
-		cache.erase("p%d" % index)
-		if best[0] == "t" or Balance.milestones(Party.hero_level) != milestones:
+		cache.erase(best)
+		if best[0] != "h":
+			cache.erase("c%d" % index)
+			cache.erase("p%d" % index)
+		if best[0] == "t" or Balance.milestones(Party.hero_level) != milestones or bought > 1:
 			cache.clear()
 		elif best == "c%d" % Balance.Companion.CLERIC:
 			# 성직자 버프는 다른 동료·승급의 상승에 똑같이 곱해진다: 지우지 않고 배율만큼 곱한다 (후반 구매의 절반이 성직자라 지우면 느렸다)
 			var factor := _cleric_multiplier() / cleric_before
 			for key: String in cache:
-				cache[key] *= factor
+				if key[0] == "c" or key[0] == "p":  # 용사의 상승(자기 클릭)과 단련은 버프와 따로 논다
+					cache[key] *= factor
 
 
 ## 몰아 사기: 이 동료를 연달아 몇 레벨 살지. 다음 레벨의 상승은 공식(Balance.companion_dps의 차)에 지금 잰 공통 배율을 곱해 어림하고,
@@ -136,26 +145,14 @@ func _key_ratio(key: String, current: float) -> float:
 		"c": Party.companion_levels[i] -= 1
 		"t": Training.levels[i] -= 1
 		"p": Promotions.ranks[i] -= 1
-	if key[0] == "t" and gain <= 0.0:
-		return 1e9 if cost <= Game.gold * 0.02 else 0.0
+	if key[0] == "t" and gain <= absf(current) * 1e-12:  # 부동소수 끝자리 오차로 0이 1e-14가 되는 것을 0으로 본다
+		return _flat_ratio(key)
 	return gain / cost
 
 
-## 장비가 든 칸이 모두 +10인지. 그때부터 남는 강화석을 제작에 쓴다 (강화가 남았으면 모은다)
-func _all_enhanced() -> bool:
-	for slot in Balance.SLOT_LABELS.size():
-		if Equipment.has_item(slot) and not Equipment.is_enhance_maxed(slot):
-			return false
-	return true
-
-
-## 효과가 가장 작은 칸 (빈 칸이 먼저). 제작으로 채울 자리
-func _weakest_slot() -> int:
-	var weakest := 0
-	for slot in Balance.SLOT_LABELS.size():
-		if Equipment.effect(slot) < Equipment.effect(weakest):
-			weakest = slot
-	return weakest
+## 진행 속도에 안 잡히는 단련은 싸면(골드의 2% 이하) 산다
+func _flat_ratio(key: String) -> float:
+	return FLAT_RATIO if Training.purchase(int(key.substr(1))).cost <= Game.gold * 0.02 else 0.0
 
 
 ## 늦게 합류한 동료(용기사, 600)는 다른 동료가 수천 레벨이라 1레벨의 DPS가 부동소수에 묻혀 증가분이 0으로 나온다.
