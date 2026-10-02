@@ -55,7 +55,7 @@ res://
     trials.gd    (Trials) 별자리 시련: 도전 판 제한 둘씩 × 단계 5개, 단계 보상. Challenges가 제한(_has)과 보상을 함께 묻는다. 화면은 tabs/trial_panel.gd
     dungeon.gd   별도 모드의 공통 틀: 층, 제한 시간(tick), 몬스터 체력, 그림 스테이지, 두목 층, 멈춤, 층 돌파. Tower·Abyss가 상속하고 Game은 들어온 모드(Game.dungeon)에만 묻는다
     tower.gd     (Tower) 시련의 탑: 입장권(하루 3장, 날짜), 층과 제한 시간, 돌파 보상. 전투는 Game이 탑 모드(in_tower)로 돌린다
-    abyss.gd     (Abyss) 심연: 하루 원정 2회, 1층부터 끝없는 층(피해량 비례 체력), 심연석·별의 파편 보상, 심연 각인, 기록. abyss/run.gd(1부: 이번 원정의 저주·축복과 효과 조회, Game·Party·Skills가 묻는다)를 상속한다
+    abyss.gd     (Abyss) 심연: 하루 원정 2회, 1층부터 끝없는 층(피해량 비례 체력), 심연석·별의 파편 보상, 심연 각인, 기록. abyss/run.gd(1부: 이번 원정의 저주·축복과 효과 조회, Game·Party·Skills가 묻는다) ← abyss/marks.gd(2부: 심연석·각인 상점과 모드 조회)를 상속한다
     prefs.gd     (Prefs) 화면·소리 설정: 하단 메뉴 시트 높이, 효과음·배경음 켬/끔과 음량. 회귀·환생해도 남고 데이터 초기화에서만 기본값으로
     save.gd      (Save) 저장, 불러오기, 오프라인 보상. 저장할 절과 불러오기·초기화 순서는 save/sections.gd 한 곳에 있다. save/web_hooks.gd가 브라우저 이벤트(visibilitychange·pagehide)로 저장한다
     num.gd       (Num) 한국식 숫자 표기

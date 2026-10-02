@@ -1,4 +1,4 @@
-extends "res://autoload/abyss/run.gd"
+extends "res://autoload/abyss/marks.gd"
 ## 심연 (GDD 7.13절): 첫 초월 뒤에 여는 끝없는 층. 하루 원정 2회, 원정은 늘 1층부터 60초 안에 10마리씩(10층마다 두목 1마리) 내려간다.
 ## 몬스터 체력은 들어갈 때 잰 플레이어 피해량에 비례하고 층마다 ×1.1이라 숫자 한계 안에서 끝이 없다. 층마다 오늘 날짜를 시드로 저주가 붙고,
 ## 10층마다 축복 셋 중 하나를 고른다. 층마다 심연석, 처음 닿은 10층마다 별의 파편. 심연석으로 심연 안에서만 듣는 각인을 산다.
@@ -7,8 +7,6 @@ extends "res://autoload/abyss/run.gd"
 signal abyss_changed()                                     # 입장·퇴장, 남은 원정, 기록, 층
 signal floor_cleared(floor: int, stones: float, stars: float)
 signal failed(floor: int)                                  # 시간이 다 되어 원정이 끝났다
-signal stones_changed(stones: float)
-signal mark_changed(index: int, level: int)
 
 const REFILL_CHECK_INTERVAL: float = 60.0  # 초. 열어 둔 채 날이 바뀌어도 원정이 차도록 이만큼마다 날짜를 본다
 
@@ -16,8 +14,6 @@ var runs: int = 0              # 오늘 남은 원정
 var run_date: String = ""      # 원정을 채운 날짜 (기기 시간). 날짜가 앞으로 갈 때만 다시 채운다
 var best_floor: int = 0        # 개인 최고 깊이 (돌파한 층)
 var today_best: int = 0        # 오늘의 최고 깊이. 원정을 채울 때 0으로
-var stones: float = 0.0        # 심연석
-var marks: Array[int] = []     # 심연 각인 레벨 (Balance.Mark 순서)
 var _check_left: float = REFILL_CHECK_INTERVAL
 
 
@@ -173,70 +169,6 @@ func _begin_floor() -> void:
 	time_left = time_limit()
 	floor_started.emit(floor)
 	timer_changed.emit(time_left)
-
-
-func time_limit() -> float:
-	return Balance.abyss_time_limit(level(Balance.Mark.TIME), time_blessings, curses.has(Balance.Curse.SHORT))
-
-
-# 별도 모드의 틀 (dungeon.gd)
-
-func mode_name() -> String:
-	return "심연"
-
-
-func monster_hp() -> float:
-	return Balance.abyss_monster_hp(base_damage, floor, level(Balance.Mark.POWER), curses.has(Balance.Curse.TOUGH), is_boss_floor())
-
-
-func visual_stage() -> int:
-	return Balance.abyss_visual_stage(floor)
-
-
-func kills_needed() -> int:
-	return 1 if is_boss_floor() else Balance.ABYSS_MONSTERS
-
-
-func is_boss_floor() -> bool:
-	return Balance.abyss_is_boss_floor(floor)
-
-
-func paused() -> bool:
-	return not offers.is_empty()
-
-
-# 심연 각인
-
-func level(index: int) -> int:
-	return marks[index] if index < marks.size() else 0
-
-
-func is_maxed(index: int) -> bool:
-	var cap := Balance.mark_max_level(index)
-	return cap > 0 and marks[index] >= cap
-
-
-func mark_cost(index: int) -> float:
-	return Balance.mark_cost(index, marks[index])
-
-
-func can_buy(index: int) -> bool:
-	return not is_maxed(index) and stones >= mark_cost(index)
-
-
-func buy(index: int) -> bool:
-	if not can_buy(index):
-		return false
-	stones -= mark_cost(index)
-	marks[index] += 1
-	stones_changed.emit(stones)
-	mark_changed.emit(index, marks[index])
-	return true
-
-
-func _cap(index: int) -> int:
-	var cap := Balance.mark_max_level(index)
-	return cap if cap > 0 else 1000000
 
 
 func _on_run_reset(_reward: float) -> void:
