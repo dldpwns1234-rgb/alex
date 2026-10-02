@@ -24,11 +24,11 @@ func set_buy_mode(mode: BuyMode) -> void:
 	buy_mode_changed.emit(mode)
 
 
-## 현재 구매 배수로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다. 레벨 상한을 넘는 수는 자른다
-func _purchase(base_cost: float, level: int) -> Purchase:
+## 구매 배수(기본은 지금 배수)로 살 레벨 수와 비용. 최대 모드에서 하나도 못 사면 1레벨 비용을 보여준다. 레벨 상한을 넘는 수는 자른다
+func _purchase(base_cost: float, level: int, mode: BuyMode = buy_mode) -> Purchase:
 	var room := maxi(Balance.MAX_LEVEL - level, 0)
 	var count := 1
-	match buy_mode:
+	match mode:
 		BuyMode.TEN:
 			count = Balance.BULK_COUNT
 		BuyMode.MAX:

@@ -56,7 +56,7 @@ func _test_auto_upgrade() -> void:
 	Automation.set_enabled(U, true)
 	Automation._process(FRAME)
 	_equal(Party.companion_levels[C], 107, "골드 효율 최고인 성직자를 한 레벨 (남은 골드로는 아무것도 못 산다)")
-	_equal(Party.companion_level_list(), [181, 161, 128, 107], "다른 동료는 그대로")
+	_equal(Party.companion_level_list(), [181, 161, 128, 107, 0], "다른 동료는 그대로")
 	_close(Game.gold, 1.0, "비용만큼 썼다")
 
 	# 승급이 레벨업보다 골드 효율이 좋으면 승급을 산다 (전사 70레벨: 승급 1단계가 DPS의 절반을 더해 주고, 75의 마일스톤은 아직 멀다)
@@ -88,7 +88,7 @@ func _test_auto_upgrade() -> void:
 	Challenges.start(0)
 	Game.gold = 1e9
 	Automation._process(FRAME)
-	_equal(Party.companion_level_list(), [0, 0, 0, 0], "홀로 서기 중에는 고용도 레벨업도 안 한다")
+	_equal(Party.companion_level_list(), [0, 0, 0, 0, 0], "홀로 서기 중에는 고용도 레벨업도 안 한다")
 	Challenges.give_up()
 
 	# 저장: 토글이 셋뿐이던 저장은 넷째가 켬

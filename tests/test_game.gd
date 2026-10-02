@@ -54,7 +54,7 @@ func _test_party() -> void:
 	var W: int = Balance.Companion.WARRIOR
 	var A: int = Balance.Companion.ARCHER
 	_equal(Party.hero_level, 1, "용사 1레벨 시작")
-	_equal(Party.companion_levels, [0, 0, 0, 0], "동료는 모두 미고용")
+	_equal(Party.companion_levels, [0, 0, 0, 0, 0], "동료는 모두 미고용")
 	_close(Party.party_dps(false), 0.0, "동료 없으면 DPS 0")
 
 	_equal(Party.buy_hero(), false, "골드가 모자라면 못 산다")

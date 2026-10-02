@@ -2,17 +2,21 @@ extends "res://autoload/balance/leveling.gd"
 ## Balance 2부: 동료 (GDD 6절)
 
 # 동료 (GDD 6절). 레벨 0은 미고용. 순서는 Companion 열거형과 같다
-enum Companion { WARRIOR, ARCHER, MAGE, CLERIC }
+enum Companion { WARRIOR, ARCHER, MAGE, CLERIC, DRAGON_KNIGHT }
 const COMPANIONS: Array[Dictionary] = [
 	{"name": "전사", "unlock_stage": 1, "base_cost": 10.0, "base_damage": 3.0},
 	{"name": "궁수", "unlock_stage": 10, "base_cost": 100.0, "base_damage": 16.0},
 	{"name": "마법사", "unlock_stage": 25, "base_cost": 1000.0, "base_damage": 110.0},
 	{"name": "성직자", "unlock_stage": 50, "base_cost": 10000.0, "base_damage": 200.0},
+	{"name": "용기사", "unlock_stage": 600, "base_cost": 1000000.0, "base_damage": 50000.0},
 ]
 const ARCHER_CRIT_CHANCE: float = 0.1
 const ARCHER_CRIT_MULTIPLIER: float = 5.0
 const MAGE_BOSS_MULTIPLIER: float = 3.0
 const CLERIC_BUFF_PER_LEVEL: float = 0.02
+# 용기사 (GDD 6절): 마왕성 입성(600)에 합류하는 후반 동료. 마왕(1000의 배수 보스)에게 피해 ×10.
+# 공격력 5만은 600 무렵 다른 동료보다 레벨이 200쯤 낮아(비용이 커서) 성직자와 비슷한 몫이 되는 값이다. 15만(상시 ×3 상당)은 파티 DPS의 70~90%를 차지했다. docs/BALANCE_SIM.md
+const DRAGON_KNIGHT_KING_MULTIPLIER: float = 10.0
 
 # 승급 (GDD 6.6절): 동료 레벨 50마다 골드를 내고 한 단계씩 승급한다. 단계마다 그 동료의 DPS ×1.5, 최대 5단계 (×7.6).
 # ×2(5단계 ×32)는 첫 회귀가 155에서 200으로, 판당 상승이 +40에서 +85로 뛰어 GDD 13절 목표를 벗어났다. docs/BALANCE_SIM.md
@@ -48,7 +52,7 @@ func cleric_multiplier(cleric_level: int, buff_per_level: float = CLERIC_BUFF_PE
 	return 1.0 + buff_per_level * cleric_level
 
 
-## 동료 한 명의 DPS (성직자 버프 제외). 마법사의 ×3은 현재 적이 보스일 때만.
+## 동료 한 명의 DPS (성직자 버프 제외). 마법사의 ×3은 현재 적이 보스일 때만, 용기사의 ×10은 마왕일 때만(mods의 demon_king).
 ## mods는 단련이 바꾼 값(Training.mods())에 승급 단계(promotion_ranks)를 얹은 것. 비어 있으면 기본 상수를 쓴다
 func companion_dps(index: int, level: int, boss: bool, mods: Dictionary = {}) -> float:
 	var dps := attack(COMPANIONS[index]["base_damage"], level)
@@ -60,6 +64,9 @@ func companion_dps(index: int, level: int, boss: bool, mods: Dictionary = {}) ->
 			var chance: float = mods.get("archer_crit_chance", ARCHER_CRIT_CHANCE)
 			var multiplier: float = mods.get("archer_crit_mult", ARCHER_CRIT_MULTIPLIER)
 			dps *= archer_expected_multiplier(chance, multiplier)
+		Companion.DRAGON_KNIGHT:
+			if mods.get("demon_king", false):
+				dps *= DRAGON_KNIGHT_KING_MULTIPLIER
 		Companion.MAGE:
 			if boss:
 				var boss_multiplier: float = mods.get("mage_boss_mult", MAGE_BOSS_MULTIPLIER)
@@ -88,6 +95,8 @@ func companion_note(index: int) -> String:
 			return "보스에게 피해 ×%d" % roundi(MAGE_BOSS_MULTIPLIER)
 		Companion.CLERIC:
 			return "동료 전체 공격력 +%d%%/레벨" % roundi(CLERIC_BUFF_PER_LEVEL * 100.0)
+		Companion.DRAGON_KNIGHT:
+			return "마왕에게 피해 ×%d" % roundi(DRAGON_KNIGHT_KING_MULTIPLIER)
 	return "꾸준한 기본 피해"
 
 

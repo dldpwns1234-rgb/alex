@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- 용기사: 붉은 용 날개를 단 검붉은 갑옷, 용 뿔 투구, 뒤로 치켜든 창. 오른쪽을 본다 -->
+  <g stroke="#2b2438" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M90 168 C40 150 22 104 34 70 C48 92 60 98 74 100 C62 120 70 140 92 150 Z" fill="#c23b3b"/>
+    <path d="M40 84 L74 128 M50 110 L82 140" fill="none" stroke-width="4"/>
+    <path d="M70 176 L58 40 L46 52 L58 18 L72 50 L64 42 L80 174 Z" fill="#dfe3ea"/>
+    <rect x="58" y="164" width="30" height="12" rx="4" fill="#f2c94c"/>
+    <rect x="86" y="148" width="78" height="84" rx="24" fill="#6b2a3a"/>
+    <path d="M104 158 L146 158 L138 200 L112 200 Z" fill="#a8424f" stroke="none"/>
+    <circle cx="125" cy="176" r="9" fill="#f2c94c"/>
+    <ellipse cx="108" cy="232" rx="17" ry="9" fill="#3a2a3a"/>
+    <ellipse cx="142" cy="232" rx="17" ry="9" fill="#3a2a3a"/>
+    <circle cx="124" cy="98" r="58" fill="#ffd9b3"/>
+    <path d="M66 100 C66 22 182 22 182 100 L182 92 C182 76 66 76 66 92 Z" fill="#6b2a3a"/>
+    <path d="M66 92 C66 76 182 76 182 92 L182 100 C182 108 172 108 168 100 L80 100 C76 108 66 108 66 100 Z" fill="#4e1f2b" stroke="none"/>
+    <path d="M150 44 C170 24 190 22 200 10 C200 34 184 52 166 58 Z" fill="#f2c94c"/>
+    <path d="M98 44 C84 28 70 26 62 16 C60 38 72 52 86 58 Z" fill="#f2c94c"/>
+    <path d="M112 34 L124 18 L136 34 Z" fill="#c23b3b"/>
+  </g>
+  <ellipse cx="112" cy="110" rx="6" ry="8" fill="#2b2438"/>
+  <ellipse cx="146" cy="110" rx="6" ry="8" fill="#2b2438"/>
+  <circle cx="114" cy="107" r="2.5" fill="#fff"/>
+  <circle cx="148" cy="107" r="2.5" fill="#fff"/>
+  <path d="M118 130 l16 -2" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <path d="M104 96 l14 4 M140 100 l14 -4" fill="none" stroke="#2b2438" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="96" cy="124" r="7" fill="#ff9aa2" opacity="0.4"/>
+  <circle cx="160" cy="126" r="7" fill="#ff9aa2" opacity="0.4"/>
+</svg>

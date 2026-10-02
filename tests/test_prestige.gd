@@ -53,7 +53,7 @@ func _test_prestige() -> void:
 	_equal(Game.highest_stage, 1, "이번 판 최고 스테이지도 1로")
 	_close(Game.gold, 0.0, "골드 0으로")
 	_equal(Party.hero_level, 1, "용사 1레벨로")
-	_equal(Party.companion_levels, [0, 0, 0, 0], "동료 미고용으로")
+	_equal(Party.companion_levels, [0, 0, 0, 0, 0], "동료 미고용으로")
 	_equal(Skills.is_ready(Balance.Skill.STORM_SLASH), true, "스킬 쿨타임 초기화")
 	_equal(Prestige.can_prestige(), false, "회귀 직후엔 다시 불가")
 

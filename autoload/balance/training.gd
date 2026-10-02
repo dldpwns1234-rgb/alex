@@ -37,6 +37,11 @@ const TRAININGS: Array[Dictionary] = [
 	{"owner": 3, "unlock": 50, "name": "안식", "effect": Effect.OFFLINE_RATE, "per_level": 0.04, "max_level": 5},
 	{"owner": 3, "unlock": 75, "name": "신성한 빛", "effect": Effect.COMPANION_DAMAGE, "per_level": 0.2, "max_level": 10},
 	{"owner": 3, "unlock": 100, "name": "기적", "effect": Effect.GOLDEN_TOUCH, "per_level": 0.2, "max_level": 5},
+	{"owner": 4, "unlock": 10, "name": "용린", "effect": Effect.COMPANION_DAMAGE, "per_level": 0.2, "max_level": 10},
+	{"owner": 4, "unlock": 25, "name": "용의 보물", "effect": Effect.KILL_GOLD, "per_level": 0.05, "max_level": 10},
+	{"owner": 4, "unlock": 50, "name": "역린", "effect": Effect.BOSS_DAMAGE, "per_level": 0.1, "max_level": 5},
+	{"owner": 4, "unlock": 75, "name": "비룡의 날개", "effect": Effect.RESPAWN_DELAY, "per_level": -0.02, "max_level": 5},
+	{"owner": 4, "unlock": 100, "name": "용혈", "effect": Effect.PARTY_DAMAGE, "per_level": 0.05, "max_level": 10},
 ]
 ## 효과 종류별 이름. 동료 DPS는 %s 자리에 동료 이름이 들어간다
 const EFFECT_LABELS: Dictionary = {

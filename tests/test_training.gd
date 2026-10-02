@@ -11,7 +11,7 @@ func run() -> void:
 
 
 func _test_table() -> void:
-	_equal(Balance.TRAININGS.size(), 25, "단련 25종")
+	_equal(Balance.TRAININGS.size(), 30, "단련 30종 (용기사 5종 포함)")
 	for owner in range(-1, 4):
 		var unlocks: Array[int] = []
 		for i in Balance.TRAININGS.size():

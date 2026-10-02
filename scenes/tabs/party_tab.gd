@@ -1,5 +1,5 @@
 extends MarginContainer
-## 동료 탭: 동료 4명의 고용과 레벨업, 승급, 골드 효율(지금 구매로 파티 DPS가 골드당 얼마나 느는지, 최고 대비 %) (GDD 6절·6.6절). 줄은 코드로 생성한다.
+## 동료 탭: 동료 5명의 고용(늘 최대로)과 레벨업, 승급, 골드 효율(지금 구매로 파티 DPS가 골드당 얼마나 느는지, 최고 대비 %) (GDD 6절·6.6절). 줄은 코드로 생성한다.
 ## Game·Party·Promotions의 시그널을 받아 표시만 하고, 구매는 Party.buy_companion()과 Promotions.promote()를 부른다.
 
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
@@ -8,6 +8,7 @@ const PORTRAITS: Array[Texture2D] = [  # Balance.Companion 순서
 	preload("res://assets/sprites/archer.svg"),
 	preload("res://assets/sprites/mage.svg"),
 	preload("res://assets/sprites/cleric.svg"),
+	preload("res://assets/sprites/dragon_knight.svg"),
 ]
 
 const MARGIN: int = 16
@@ -132,7 +133,7 @@ func _make_button(size: Vector2, callback: Callable) -> Button:
 
 
 func _on_buy_pressed(index: int) -> void:
-	Party.buy_companion(index)
+	Party.buy_companion(index, Party.BuyMode.MAX if not Party.is_companion_hired(index) else Party.buy_mode)  # 고용은 늘 최대로
 
 
 func _on_promote_pressed(index: int) -> void:
@@ -150,7 +151,10 @@ func _refresh() -> void:
 		var value := _value_labels[i]
 		value.remove_theme_color_override("font_color")
 		value.add_theme_color_override("font_color", NOTE_COLOR)
-		if gains[i] <= 0.0:
+		if Party.is_companion_unlocked(i) and not Party.is_companion_hired(i):
+			value.text = "새 동료 · 고용 추천"
+			value.add_theme_color_override("font_color", BEST_COLOR)
+		elif gains[i] <= 0.0:
 			value.text = ""
 		elif gains[i] >= best:
 			value.text = "골드 효율 최고 · 자동" if Automation.is_active(Balance.Auto.UPGRADE) else "골드 효율 최고"
@@ -169,7 +173,7 @@ func _refresh() -> void:
 			_buttons[i].text = "잠김"
 			_buttons[i].disabled = true
 			continue
-		var purchase := Party.companion_purchase(i)
+		var purchase := Party.companion_purchase(i, Party.BuyMode.MAX if level == 0 else Party.buy_mode)
 		var stars := Balance.promotion_stars(Promotions.rank(i))
 		_title_labels[i].text = name + (" " + stars if not stars.is_empty() else "")
 		_dps_labels[i].text = "Lv %d · DPS %s" % [level, Num.format(Party.companion_dps(i, false))]

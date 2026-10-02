@@ -44,7 +44,7 @@ func _test_roundtrip() -> void:
 	_equal(Game.kills, 3, "처치 수 복원")
 	_equal(Game.farming, true, "파밍 모드 복원")
 	_equal(Party.hero_level, 12, "용사 레벨 복원")
-	_equal(Party.companion_levels, [5, 2, 0, 0], "동료 레벨 복원")
+	_equal(Party.companion_levels, [5, 2, 0, 0, 0], "동료 레벨 복원")
 	_equal(Party.buy_mode, Party.BuyMode.TEN, "구매 배수 복원")
 	_close(Game.monster_max_hp, Balance.monster_hp(7), "불러온 스테이지의 몬스터가 새로 나온다")
 	_equal(Game.is_monster_alive(), true, "몬스터가 살아 있다")
@@ -53,7 +53,7 @@ func _test_roundtrip() -> void:
 	_fresh_run()
 	_equal(Save.apply_json(JSON.stringify(data)), true, "JSON 적용")
 	_equal(Game.stage, 7, "JSON을 거친 스테이지")
-	_equal(Party.companion_levels, [5, 2, 0, 0], "JSON을 거친 동료 레벨")
+	_equal(Party.companion_levels, [5, 2, 0, 0, 0], "JSON을 거친 동료 레벨")
 	_equal(typeof(Party.companion_levels[0]), TYPE_INT, "레벨은 int로 돌아온다")
 
 	# 자동 재도전 설정도 저장된다
@@ -71,14 +71,14 @@ func _test_defaults() -> void:
 	_close(Game.gold, 0.0, "필드가 없으면 골드 0")
 	_equal(Game.stage, 1, "필드가 없으면 1스테이지")
 	_equal(Party.hero_level, 1, "필드가 없으면 용사 1레벨")
-	_equal(Party.companion_levels, [0, 0, 0, 0], "필드가 없으면 동료 미고용")
+	_equal(Party.companion_levels, [0, 0, 0, 0, 0], "필드가 없으면 동료 미고용")
 	_equal(Party.buy_mode, Party.BuyMode.ONE, "필드가 없으면 ×1")
 	_equal(Game.auto_retry, true, "필드가 없으면 자동 재도전 켜짐")
 
 	# 동료가 3명이던 옛 저장: 네 번째는 미고용. 이상한 값은 기본값
 	Save.from_dict({"save_version": 1, "party": {"companion_levels": [1, 2, 3], "buy_mode": 99},
 		"game": {"stage": 0, "highest_stage": -5, "kills": 42}})
-	_equal(Party.companion_levels, [1, 2, 3, 0], "모자란 동료는 0으로")
+	_equal(Party.companion_levels, [1, 2, 3, 0, 0], "모자란 동료는 0으로")
 	_equal(Party.buy_mode, Party.BuyMode.MAX, "범위를 벗어난 배수는 잘라낸다")
 	_equal(Game.stage, 1, "0스테이지는 1로")
 	_equal(Game.highest_stage, 1, "최고 스테이지는 현재 스테이지 이상")
@@ -113,7 +113,7 @@ func _test_export_import() -> void:
 	_fresh_run()
 	_equal(Save.import_string(" " + exported + "\n"), true, "앞뒤 공백이 있어도 가져온다")
 	_equal(Game.stage, 7, "가져온 스테이지")
-	_equal(Party.companion_levels, [5, 2, 0, 0], "가져온 동료 레벨")
+	_equal(Party.companion_levels, [5, 2, 0, 0, 0], "가져온 동료 레벨")
 	_equal(FileAccess.file_exists(TEST_SAVE_PATH), true, "가져오면 바로 저장한다")
 
 	_equal(Save.import_string(""), false, "빈 문자열은 거부")
@@ -129,7 +129,7 @@ func _test_reset() -> void:
 	_equal(Game.stage, 1, "초기화하면 1스테이지")
 	_close(Game.gold, 0.0, "초기화하면 골드 0")
 	_equal(Party.hero_level, 1, "초기화하면 용사 1레벨")
-	_equal(Party.companion_levels, [0, 0, 0, 0], "초기화하면 동료 미고용")
+	_equal(Party.companion_levels, [0, 0, 0, 0, 0], "초기화하면 동료 미고용")
 	_fresh_run()
 	Game.stage = 3
 	_equal(Save.load_game(), true, "초기화 상태가 저장돼 있다")

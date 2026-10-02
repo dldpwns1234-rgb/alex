@@ -132,6 +132,7 @@ func _rebirth() -> void:
 	var reward := Rebirth.thread_reward()
 	_report("환생 %d: %s에 역대 최고 %d, 판 길이 %s, 운명의 실 +%s" % [
 		Rebirth.rebirth_count + 1, _clock(_t), Rebirth.best_stage(), _clock(_t - _run_start), Num.format(reward)])
+	_report("    동료 %s · 승급 %s" % [str(Party.companion_level_list()), str(Promotions.ranks)])
 	Rebirth.perform()
 	_buy_fates()
 	_previous_best = 0

@@ -11,7 +11,7 @@ func _test_gain_per_gold() -> void:
 	_fresh_run()
 	Game.highest_stage = 100
 	Game.gold = 1e12
-	var levels: Array[int] = [181, 161, 128, 106]  # 시뮬레이션 첫 판 100스테이지의 레벨
+	var levels: Array[int] = [181, 161, 128, 106, 0]  # 시뮬레이션 첫 판 100스테이지의 레벨 (용기사는 600 합류)
 	for i in levels.size():
 		Party.companion_levels[i] = levels[i]
 	var gains: Array[float] = []

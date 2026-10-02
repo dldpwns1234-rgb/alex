@@ -103,8 +103,12 @@ func upgrade_companions() -> void:
 			return
 
 
-## 살 수 있는 레벨업·승급 중 골드 효율이 가장 좋은 것 하나를 산다. 살 것이 없으면 false
+## 살 수 있는 레벨업·승급 중 골드 효율이 가장 좋은 것 하나를 산다. 살 것이 없으면 false.
+## 고용 전 동료가 합류했으면 먼저 최대로 고용한다: 용기사(600)의 1레벨은 수천 레벨 동료 곁에서 효율이 0으로 나와 영영 안 산다
 func _buy_best_upgrade() -> bool:
+	for i in Balance.COMPANIONS.size():
+		if Party.is_companion_unlocked(i) and not Party.is_companion_hired(i) and Party.companion_purchase(i, Party.BuyMode.MAX).affordable:
+			return Party.buy_companion(i, Party.BuyMode.MAX)
 	var best := 0.0
 	var pick := -1
 	var promote := false

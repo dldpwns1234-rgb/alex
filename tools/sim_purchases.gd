@@ -43,6 +43,7 @@ func _progress_rate() -> float:
 
 
 func _buy_everything() -> void:
+	_hire_late_companions()
 	for slot in Balance.SLOT_LABELS.size():
 		while Equipment.enhance(slot):
 			pass
@@ -165,3 +166,20 @@ func _crystal_wealth() -> float:
 	for i in Balance.MEMORIES.size():
 		spent += pow(Balance.MEMORY_COST_BASE, Prestige.level(i)) - 1.0
 	return Prestige.crystals + spent
+
+
+## 늦게 합류한 동료(용기사, 600)는 다른 동료가 수천 레벨이라 1레벨의 DPS가 부동소수에 묻혀 증가분이 0으로 나온다.
+## 한 레벨씩 견주는 탐욕 구매로는 영영 안 사므로, 사람처럼 구매 배수 최대로 한 번에 고용한다
+func _hire_late_companions() -> void:
+	for i in Party.companion_levels.size():
+		if Party.is_companion_hired(i) or not Party.is_companion_unlocked(i) or not Party.companion_purchase(i).affordable:
+			continue
+		var before := _progress_rate()
+		Party.companion_levels[i] += 1
+		var gain := _progress_rate() - before
+		Party.companion_levels[i] -= 1
+		if gain > 0.0:
+			continue
+		Party.set_buy_mode(Party.BuyMode.MAX)
+		Party.buy_companion(i)
+		Party.set_buy_mode(Party.BuyMode.ONE)

@@ -115,6 +115,7 @@ func companion_dps(index: int, boss: bool) -> float:
 func _mods() -> Dictionary:
 	var mods := Training.mods()
 	mods["promotion_ranks"] = Promotions.ranks
+	mods["demon_king"] = not Game.in_tower and Balance.is_demon_king_stage(Game.stage)
 	return mods
 
 
@@ -142,8 +143,9 @@ func hero_purchase() -> Purchase:
 	return _purchase(Balance.HERO_BASE_COST, hero_level)
 
 
-func companion_purchase(index: int) -> Purchase:
-	return _purchase(Balance.companion_base_cost(index), companion_levels[index])
+## mode를 주면 그 배수로 (고용은 늘 최대로 산다: 늦게 합류한 동료의 1레벨은 다른 동료에 비해 0에 가깝다)
+func companion_purchase(index: int, mode: BuyMode = buy_mode) -> Purchase:
+	return _purchase(Balance.companion_base_cost(index), companion_levels[index], mode)
 
 
 ## 레벨 상한이면(살 레벨 0) 사지 않는다
@@ -157,10 +159,10 @@ func buy_hero() -> bool:
 
 
 ## 산 레벨 0이면 고용, 아니면 레벨업 (비용은 산 레벨 기준). 합류 전이거나 골드가 모자라면 false
-func buy_companion(index: int) -> bool:
+func buy_companion(index: int, mode: BuyMode = buy_mode) -> bool:
 	if not is_companion_unlocked(index) or Challenges.blocks_companions():
 		return false
-	var purchase := companion_purchase(index)
+	var purchase := companion_purchase(index, mode)
 	if purchase.count <= 0 or not Game.spend(purchase.cost):
 		return false
 	companion_levels[index] += purchase.count
