@@ -15,10 +15,10 @@ func run() -> void:
 
 
 func _test_formula() -> void:
-	_close(Balance.star_reward(21600.0), 3.0, "6시간이면 파편 3개")
+	_close(Balance.star_reward(21600.0), 3.0, "6시간이면 파편 3개 (기준 6시간 30분)")
 	_close(Balance.star_reward(5400.0), 6.0, "1시간 30분이면 6개")
 	_close(Balance.star_reward(86400.0), 1.0, "24시간이면 1개 (최소)")
-	_close(Balance.star_reward(0.0), floor(3.0 * sqrt(21600.0 / 60.0)), "0초는 60초로 본다")
+	_close(Balance.star_reward(0.0), floor(3.0 * sqrt(23400.0 / 60.0)), "0초는 60초로 본다")
 	_close(Balance.star_cost(0), 1.0, "첫 레벨 1파편")
 	_close(Balance.star_cost(4), 5.0, "다섯째 레벨 5파편")
 

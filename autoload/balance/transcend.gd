@@ -2,8 +2,8 @@ extends "res://autoload/balance/story.gd"
 ## Balance 11부: 초월과 별의 상점 (GDD 7.12절). 최후의 마왕(4000)을 잡은 삶에서 운명까지 내려놓고 별의 파편을 받는다.
 ## 순서는 Star 열거형과 같다
 
-const STAR_BASE: float = 3.0                   # 6시간 걸린 삶이면 파편 3개
-const STAR_REFERENCE_SECONDS: float = 21600.0  # 6시간: 사람 정책 봇의 4000 도달 시간 (docs/BALANCE_SIM.md)
+const STAR_BASE: float = 3.0                   # 6시간 30분 걸린 삶이면 파편 3개
+const STAR_REFERENCE_SECONDS: float = 23400.0  # 6시간 30분: 사람 정책 봇의 첫 초월이 6시간 2분이라, 첫 초월에 3개가 나오게 (docs/BALANCE_SIM.md)
 const STAR_MIN_SECONDS: float = 60.0           # 0에 가까운 시간으로 나누지 않게
 
 enum Star { WINGS, ECHO, SHORTCUT, AUTO_REBIRTH, AWAKEN, BLESSING }
