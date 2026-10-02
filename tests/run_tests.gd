@@ -41,6 +41,7 @@ const SUITES: Array[GDScript] = [
 	preload("res://tests/test_run_record.gd"),
 	preload("res://tests/test_dragon_knight.gd"),
 	preload("res://tests/test_fragments.gd"),
+	preload("res://tests/test_release_fixes.gd"),
 ]
 
 

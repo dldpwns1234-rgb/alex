@@ -85,6 +85,7 @@ func give_up() -> void:
 
 
 func _reset_run() -> void:
+	Tower.leave()  # 탑 안에서 시작하면 Game.reset이 탑 밖으로 내보내지만 층 기록은 남는다
 	Party.reset()
 	Skills.reset()
 	Training.reset()

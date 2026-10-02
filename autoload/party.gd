@@ -144,8 +144,11 @@ func hero_purchase() -> Purchase:
 
 
 ## mode를 주면 그 배수로 (고용은 늘 최대로 산다: 늦게 합류한 동료의 1레벨은 다른 동료에 비해 0에 가깝다)
+## 홀로 서기 도전 중에는 살 수 없다(affordable false): 버튼이 켜진 채 눌러도 반응이 없고 탭 점이 찍히던 것을 막는다
 func companion_purchase(index: int, mode: BuyMode = buy_mode) -> Purchase:
-	return _purchase(Balance.companion_base_cost(index), companion_levels[index], mode)
+	var purchase := _purchase(Balance.companion_base_cost(index), companion_levels[index], mode)
+	purchase.affordable = purchase.affordable and not Challenges.blocks_companions()
+	return purchase
 
 
 ## 레벨 상한이면(살 레벨 0) 사지 않는다

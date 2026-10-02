@@ -82,11 +82,13 @@ func from_dict(data: Dictionary) -> void:
 	farming = bool(data.get("farming", false))
 	auto_retry = bool(data.get("auto_retry", true))
 	_farm_seconds = 0.0
+	boss_queued = false  # 가져오기 전 세션의 보스 예약이 남으면 보스 실패 뒤 첫 처치에 곧바로 재도전한다
 	gold_changed.emit(gold)
 	stage_changed.emit(stage)
 	kills_changed.emit(kills)
 	farming_changed.emit(farming)
 	auto_retry_changed.emit(auto_retry)
+	boss_queued_changed.emit(boss_queued)
 	_spawn_monster()
 
 
@@ -186,7 +188,7 @@ func _advance_stage() -> void:
 
 func _spawn_monster() -> void:
 	respawn_left = 0.0
-	if cleared:
+	if cleared and not in_tower:  # 돌파 뒤에도 탑은 그대로 오른다 (탑 몬스터는 본편 스테이지와 무관)
 		monster_hp = 0.0
 		return
 	var boss := is_boss_stage()

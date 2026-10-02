@@ -60,13 +60,14 @@ func cost(index: int) -> float:
 	return Balance.promotion_cost(index, ranks[index] + 1)
 
 
+## 홀로 서기 도전 중에는 동료가 싸우지 않으므로 승급도 막는다 (골드만 나가던 것)
 func can_promote(index: int) -> bool:
-	return is_unlocked(index) and Game.gold >= cost(index)
+	return is_unlocked(index) and Game.gold >= cost(index) and not Challenges.blocks_companions()
 
 
-## 승급. 레벨이 모자라거나 최고 단계이거나 골드가 모자라면 false
+## 승급. 레벨이 모자라거나 최고 단계이거나 골드가 모자라거나 홀로 서기 중이면 false
 func promote(index: int) -> bool:
-	if not is_unlocked(index) or not Game.spend(cost(index)):
+	if not can_promote(index) or not Game.spend(cost(index)):
 		return false
 	ranks[index] += 1
 	promotion_changed.emit(index, ranks[index])

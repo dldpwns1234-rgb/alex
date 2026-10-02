@@ -10,18 +10,19 @@ const DEFAULT_SAVE_PATH: String = "user://save.json"
 const AUTOSAVE_INTERVAL: float = 30.0  # 초. 게임 수치가 아니라 저장 주기
 const BASE64_PATTERN: String = "^[A-Za-z0-9+/]+={0,2}$"
 const WebHooks := preload("res://autoload/save/web_hooks.gd")
+const GapClock := preload("res://autoload/save/gap_clock.gd")
 
 var save_path: String = DEFAULT_SAVE_PATH  # 테스트에서 다른 파일로 바꾼다
 ## 테스트와 시뮬레이션이 켠다. 저장과 오프라인 보상을 막는다 (시뮬레이션은 _ready 한 번에 수십 초를 써서 공백으로 잡힌다)
 var blocked: bool = false
 var _autosave_left: float = AUTOSAVE_INTERVAL
-var _last_unix: float = Time.get_unix_time_from_system()
+var _clock := GapClock.new()  # 실행 중 공백 (유닉스 시각과 단조 시계 중 작은 쪽)
 var _base64_regex := RegEx.create_from_string(BASE64_PATTERN)
 var _web_hooks: WebHooks  # 브라우저 이벤트로 저장 (웹). 참조를 잃으면 콜백이 수거된다
 
 
 func _ready() -> void:
-	_last_unix = Time.get_unix_time_from_system()
+	_clock.reset()
 	_web_hooks = WebHooks.new(save_game)
 	load_game()
 
@@ -29,9 +30,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if blocked:
 		return
-	var now := Time.get_unix_time_from_system()
-	var gap := now - _last_unix
-	_last_unix = now
+	var gap := _clock.gap()
 	if gap >= Balance.OFFLINE_MIN_GAP:
 		grant_offline(gap)
 	_autosave_left -= delta
@@ -89,6 +88,7 @@ func to_dict() -> Dictionary:
 
 ## 저장 데이터를 적용한다. 없는 부분은 각 오토로드가 기본값으로 채운다. 업적은 회귀 기록(Prestige) 뒤, 통계를 시그널로 받는 Party·Game 앞
 func from_dict(data: Dictionary) -> void:
+	Challenges.from_dict(_section(data, "challenges"))  # 맨 앞: 지금 세션의 도전으로 가져온 스테이지를 달성 판정하지 않게
 	Rebirth.from_dict(_section(data, "rebirth"))
 	Prestige.from_dict(_section(data, "prestige"))
 	Achievements.from_dict(_section(data, "achievements"))
@@ -99,7 +99,6 @@ func from_dict(data: Dictionary) -> void:
 	Training.from_dict(_section(data, "training"))
 	Game.from_dict(_section(data, "game"))
 	Automation.from_dict(_section(data, "automation"))  # 정체 시계가 이번 판 최고에서 시작하도록 Game 뒤에
-	Challenges.from_dict(_section(data, "challenges"))
 	Tower.from_dict(_section(data, "tower"))
 	Treasure.from_dict(_section(data, "treasure"))
 	Fragments.from_dict(_section(data, "fragments"))  # 업적(통계) 뒤에
@@ -170,6 +169,8 @@ func reset_data() -> void:
 	Training.reset()
 	Promotions.reset()
 	Game.reset()
+	Game.set_auto_retry(true)  # 회귀가 지우지 않는 화면 설정도 기본값으로 ("모든 데이터를 지운다")
+	Party.set_buy_mode(Party.BuyMode.ONE)
 	Automation.reset()
 	Challenges.reset()
 	Tower.reset()
