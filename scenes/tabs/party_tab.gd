@@ -178,7 +178,7 @@ func _refresh() -> void:
 		_title_labels[i].text = name + (" " + stars if not stars.is_empty() else "")
 		_dps_labels[i].text = "Lv %d · DPS %s" % [level, Num.format(Party.companion_dps(i, false))]
 		var verb := "고용" if level == 0 else "레벨업"
-		_buttons[i].text = "최대 레벨" if purchase.count == 0 else "%s ×%d (%s 골드)" % [verb, purchase.count, Num.format(purchase.cost)]
+		_buttons[i].text = "최대 레벨" if purchase.count == 0 else "%s ×%d (%s)" % [verb, purchase.count, Num.format(purchase.cost)]
 		_buttons[i].disabled = not purchase.affordable
 
 
@@ -194,7 +194,7 @@ func _refresh_promote(index: int) -> void:
 		button.text = "승급 %d단계: Lv %d 필요" % [next, Promotions.next_level(index)]
 		button.disabled = true
 	else:
-		button.text = "승급 %d단계 (%s 골드)" % [next, Num.format(Promotions.cost(index))]
+		button.text = "승급 %d단계 (%s)" % [next, Num.format(Promotions.cost(index))]
 		button.disabled = not Promotions.can_promote(index)
 		if not button.disabled:
 			button.theme_type_variation = "AccentButton"

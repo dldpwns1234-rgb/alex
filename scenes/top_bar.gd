@@ -13,6 +13,8 @@ const CRYSTAL_COLOR := Color("7fd1f0")
 const TIMER_WIDTH: float = 150.0   # 보스 시간 알림 자리. 보스전이 아닐 때도 비워 두어 결정 아이콘이 움직이지 않는다
 const STAGE_WIDTH: float = 190.0   # "스테이지 999"까지 자릿수가 늘어도 다른 것이 밀리지 않는 폭
 const RATE_FONT_SIZE: int = 17
+const LONG_TEXT: int = 7         # 글자가 이보다 길면("1.00불가사의") 한 단계 작은 글꼴로 칸에 맞춘다
+const LONG_FONT_SIZE: int = 18
 const GOLD_STRETCH: float = 1.6  # 골드 칸을 결정 칸보다 넓게: "+10.1억/초"가 잘렸다 (결정은 자릿수가 짧다)
 const RATE_COLOR := Color("d9c87a")
 const RATE_WINDOW: float = 10.0   # 초당 골드는 최근 10초(게임 시간)의 처치 골드로 잰다. 1초 칸으로 나눠 굴린다
@@ -113,11 +115,20 @@ func _make_value_label() -> Label:
 
 
 func _on_gold_changed(gold: float) -> void:
-	_gold_label.text = Num.format(gold)
+	_fit(_gold_label, Num.format(gold))
 
 
 func _on_crystals_changed(crystals: float) -> void:
-	_crystal_label.text = Num.format(crystals)
+	_fit(_crystal_label, Num.format(crystals))
+
+
+## 긴 단위(항하사·불가사의·무량대수)가 붙으면 글꼴을 줄여 말줄임 없이 보인다
+func _fit(label: Label, text: String) -> void:
+	label.text = text
+	if text.length() > LONG_TEXT:
+		label.add_theme_font_size_override("font_size", LONG_FONT_SIZE)
+	else:
+		label.remove_theme_font_size_override("font_size")
 
 
 func _on_stage_changed(stage: int) -> void:

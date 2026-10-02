@@ -112,5 +112,5 @@ func _refresh() -> void:
 			_buttons[i].disabled = true
 			continue
 		var purchase := Training.purchase(i)
-		_buttons[i].text = "강화 ×%d (%s 골드)" % [purchase.count, Num.format(purchase.cost)]
+		_buttons[i].text = "강화 ×%d (%s)" % [purchase.count, Num.format(purchase.cost)]
 		_buttons[i].disabled = not purchase.affordable
