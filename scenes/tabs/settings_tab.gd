@@ -2,6 +2,7 @@ extends MarginContainer
 ## 설정 탭 (GDD 9절): 맨 위에 소리(sound_panel.gd: 효과음·배경음 켬/끔과 음량), 그 아래 저장 문자열 내보내기(TextEdit와 복사 버튼), 가져오기, 데이터 초기화(두 번 확인).
 ## Save의 함수만 부르고 결과를 표시한다. 접힌 패널(440px)보다 길어 끌어 스크롤한다 (tap_scroll). 아래 상수는 배치용이다.
 
+const BUILD_INFO_PATH: String = "res://build_info.txt"
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
 const SoundPanel := preload("res://scenes/tabs/sound_panel.gd")
 
@@ -61,6 +62,12 @@ func _ready() -> void:
 	danger_row.add_child(_make_button("지금 저장", Save.save_game))
 	_reset_button = _make_button(RESET_STEPS[0], _on_reset_pressed)
 	danger_row.add_child(_reset_button)
+	# 빌드 시각: 배포(.github/workflows/web.yml)가 build_info.txt를 쓴다. 폰이 예전 빌드를 쥐고 있는지 확인할 때 본다
+	var build := Label.new()
+	var info := FileAccess.get_file_as_string(BUILD_INFO_PATH).strip_edges()
+	build.text = "빌드 " + (info if not info.is_empty() else "개발")
+	build.add_theme_color_override("font_color", STATUS_COLOR)
+	column.add_child(build)
 	scroll.release_buttons()
 
 	Save.saved.connect(_on_saved)

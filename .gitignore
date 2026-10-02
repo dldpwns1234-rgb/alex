@@ -15,3 +15,6 @@
 
 # Claude Code 하위 에이전트 작업 트리
 .claude/
+
+# 배포가 쓰는 빌드 정보 (설정 탭에 보인다)
+build_info.txt
