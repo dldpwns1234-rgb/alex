@@ -28,6 +28,7 @@ func _parse_args() -> void:
 			"taps": clicks_per_second = float(parts[1])
 			"hours": _hours = float(parts[1])
 			"transcends": _transcends = int(parts[1])
+			"exact": _exact = int(parts[1]) != 0
 
 
 ## 회귀 보상이 결정 재산의 ratio배 이상이면 지금 회귀하는 게 낫다고 본다

@@ -3,6 +3,7 @@ extends Node
 ## 골드 대비 진행 속도(DPS × 골드 배율) 상승이 가장 큰 것부터 산다 (용사·동료 레벨, 단련, 승급). 강화석은 강화에, 강화가 다 차면 제작에 쓴다.
 
 var clicks_per_second: float = 4.0  # 정책 인자 taps (GDD 13절은 3~5)
+var _exact: bool = true  # 정책 인자 exact=0이면 동료를 몰아 산다 (어림). 1000 도달이 1.7% 빨라지고 실행은 1.5배 빨라 기본은 하나씩 (2026-10-02)
 
 
 ## 진행 속도: (동료 DPS + 클릭 DPS) × 처치 골드 배율. 골드 대비 이 값의 상승이 큰 것부터 산다
@@ -26,14 +27,18 @@ func _buy_everything() -> void:
 		var current := _progress_rate()
 		var best_ratio := 0.0
 		var best := ""
+		var runner_up := 0.0  # 두 번째로 좋은 비율. 몰아 살 때 이보다 나빠지기 전까지 산다
 		for key in _buy_keys():
 			if not _can_buy_key(key):
 				continue
 			if not cache.has(key) or key[0] == "h" or key[0] == "t" or key == "c%d" % Balance.Companion.CLERIC:  # 성직자 레벨은 버프로 모두의 DPS에 곱해져 늘 다시 잰다
 				cache[key] = _key_ratio(key, current)
 			if cache[key] > best_ratio or key == "h":  # 용사는 살 수 있으면 기본으로 고른다 (예전 그대로)
+				runner_up = maxf(runner_up, best_ratio)
 				best_ratio = cache[key]
 				best = key
+			else:
+				runner_up = maxf(runner_up, cache[key])
 		if best.is_empty():
 			return
 		var milestones := Balance.milestones(Party.hero_level)
@@ -41,7 +46,9 @@ func _buy_everything() -> void:
 		var cleric_before := _cleric_multiplier()
 		match best[0]:
 			"h": Party.buy_hero()
-			"c": Party.buy_companion(index)
+			"c":
+				for _k in (1 if _exact else _run_length(index, best_ratio, runner_up)):
+					Party.buy_companion(index)
 			"t": Training.buy(index)
 			"p": Promotions.promote(index)
 		cache.erase("c%d" % index)
@@ -53,6 +60,33 @@ func _buy_everything() -> void:
 			var factor := _cleric_multiplier() / cleric_before
 			for key: String in cache:
 				cache[key] *= factor
+
+
+## 몰아 사기: 이 동료를 연달아 몇 레벨 살지. 다음 레벨의 상승은 공식(Balance.companion_dps의 차)에 지금 잰 공통 배율을 곱해 어림하고,
+## 두 번째 후보의 비율 아래로 떨어지거나 골드가 모자라면 멈춘다. 다른 후보의 값은 그동안 그대로라고 본다 (그래서 어림이다).
+## 성직자는 버프가 모두에게 곱해져 공통 배율이 바뀌므로 하나씩 산다. 사람이 '최대'로 몰아 사는 것에 가깝다
+func _run_length(index: int, ratio: float, runner_up: float) -> int:
+	if index == Balance.Companion.CLERIC:
+		return 1
+	var mods := Party._mods()
+	var boss := Game.is_boss_stage()
+	var level := Party.companion_level(index)
+	var bought := Party.companion_levels[index]
+	var first := Party.companion_purchase(index).cost
+	var gain := Balance.companion_dps(index, level + 1, boss, mods) - Balance.companion_dps(index, level, boss, mods)
+	if gain <= 0.0:
+		return 1
+	var scale := ratio * first / gain  # 공식 상승 → 진행 속도 상승
+	var gold := Game.gold - first
+	var count := 1
+	while count < Balance.MAX_LEVEL - level:
+		var cost := Balance.companion_cost(index, bought + count)
+		var next := Balance.companion_dps(index, level + count + 1, boss, mods) - Balance.companion_dps(index, level + count, boss, mods)
+		if cost > gold or next * scale / cost < runner_up:
+			break
+		gold -= cost
+		count += 1
+	return count
 
 
 func _cleric_multiplier() -> float:
