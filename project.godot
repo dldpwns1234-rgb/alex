@@ -10,6 +10,11 @@ config/description="용사가 동료 파티와 함께 마왕군을 뚫고 나아
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+; 부팅·로딩 화면: 테마 바탕색(tools/make_theme.gd의 BACKGROUND)에 파티 그림 (tools/make_splash.gd가 만든다). 웹 로딩 화면도 이 색을 쓴다
+boot_splash/bg_color=Color(0.133333, 0.117647, 0.188235, 1)
+boot_splash/image="res://assets/ui/splash.png"
+boot_splash/fullsize=false
+boot_splash/use_filter=true
 
 [autoload]
 
