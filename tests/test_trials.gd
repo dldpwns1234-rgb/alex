@@ -20,8 +20,9 @@ func _test_table() -> void:
 	for i in Balance.TRIALS.size():
 		_equal(Balance.trial_restrictions(i).size(), 2, "%d번 시련은 제한 둘" % i)
 		_equal(Balance.trial_goal(i, 4) > Balance.trial_goal(i, 0), true, "%d번 시련은 단계마다 목표가 오른다" % i)
-	_equal(Balance.trial_goal(0, 0), 300, "침묵의 시간 1단계 300")
-	_equal(Balance.trial_goal(0, 4), 1800, "5단계는 ×6")
+		_equal(Balance.trial_goal(i, 4) < Balance.FINAL_STAGE, true, "%d번 시련 5단계도 최종 스테이지 안" % i)
+	_equal(Balance.trial_goal(0, 0), 1500, "침묵의 시간 1단계 1500")
+	_equal(Balance.trial_goal(0, 4), 3750, "5단계는 ×2.5")
 
 
 func _test_unlock_and_start() -> void:
@@ -42,18 +43,18 @@ func _test_unlock_and_start() -> void:
 
 
 func _test_complete_and_rewards() -> void:
-	Trials.start(1)  # 고독한 맨손: 목표 150
+	Trials.start(1)  # 고독한 맨손: 목표 450
 	_equal(Challenges.blocks_companions() and Challenges.blocks_equipment(), true, "동료·장비 제한")
 	var before := Challenges.click_multiplier()
-	Game.highest_stage = 149
-	Game.stage_changed.emit(149)
+	Game.highest_stage = 449
+	Game.stage_changed.emit(449)
 	_equal(Trials.tiers[1], 0, "목표 전에는 그대로")
-	Game.highest_stage = 150
-	Game.stage_changed.emit(150)
+	Game.highest_stage = 450
+	Game.stage_changed.emit(450)
 	_equal(Trials.tiers[1], 1, "목표에 닿으면 1단계")
 	_equal(Trials.active, -1, "제한이 풀린다")
 	_close(Challenges.click_multiplier(), before * 2.0, "보상: 클릭 피해 ×2")
-	_equal(Trials.goal(1), 240, "2단계 목표 240")
+	_equal(Trials.goal(1), 585, "2단계 목표 585")
 	Trials.tiers[4] = 2
 	_close(Trials.star_bonus(), 2.0, "홀로 잊힌 자 2단계: 파편 +2")
 	Transcend.cycle_seconds = 21600.0

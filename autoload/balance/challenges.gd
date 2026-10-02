@@ -66,13 +66,14 @@ func perk_note(perk: int) -> String:
 
 enum TrialReward { BOSS_TIME, CLICK, CRYSTALS, STONES, STARS }
 const TRIALS: Array[Dictionary] = [
-	{"name": "침묵의 시간", "restrictions": [Restriction.NO_SKILLS, Restriction.HALF_BOSS_TIME], "goal": 300, "reward": TrialReward.BOSS_TIME},
-	{"name": "고독한 맨손", "restrictions": [Restriction.NO_COMPANIONS, Restriction.NO_EQUIPMENT], "goal": 150, "reward": TrialReward.CLICK},
-	{"name": "망각의 침묵", "restrictions": [Restriction.NO_MEMORIES, Restriction.NO_SKILLS], "goal": 250, "reward": TrialReward.CRYSTALS},
-	{"name": "맨손의 질주", "restrictions": [Restriction.NO_EQUIPMENT, Restriction.HALF_BOSS_TIME], "goal": 300, "reward": TrialReward.STONES},
-	{"name": "홀로 잊힌 자", "restrictions": [Restriction.NO_COMPANIONS, Restriction.NO_MEMORIES], "goal": 120, "reward": TrialReward.STARS},
+	{"name": "침묵의 시간", "restrictions": [Restriction.NO_SKILLS, Restriction.HALF_BOSS_TIME], "goal": 1500, "reward": TrialReward.BOSS_TIME},
+	{"name": "고독한 맨손", "restrictions": [Restriction.NO_COMPANIONS, Restriction.NO_EQUIPMENT], "goal": 450, "reward": TrialReward.CLICK},
+	{"name": "망각의 침묵", "restrictions": [Restriction.NO_MEMORIES, Restriction.NO_SKILLS], "goal": 1500, "reward": TrialReward.CRYSTALS},
+	{"name": "맨손의 질주", "restrictions": [Restriction.NO_EQUIPMENT, Restriction.HALF_BOSS_TIME], "goal": 1500, "reward": TrialReward.STONES},
+	{"name": "홀로 잊힌 자", "restrictions": [Restriction.NO_COMPANIONS, Restriction.NO_MEMORIES], "goal": 450, "reward": TrialReward.STARS},
 ]
-const TRIAL_TIER_SCALES: Array[float] = [1.0, 1.6, 2.5, 4.0, 6.0]  # 단계마다 목표 배율 (단계 수 = 이 배열의 길이)
+const TRIAL_TIER_SCALES: Array[float] = [1.0, 1.3, 1.6, 2.0, 2.5]  # 단계마다 목표 배율 (단계 수 = 이 배열의 길이). 5단계 3750은 최종 4000 안
+# 기준: 두 번째 삶 2000 무렵에 제한을 걸면 동료를 안 막는 셋은 2100, 막는 둘은 630까지 간다 (별빛 시뮬 2026-10-02). 그 상태에서 1단계가 20~30분
 const TRIAL_BOSS_SECONDS: float = 3.0     # 단계마다 보스 제한 시간 +3초
 const TRIAL_CLICK_MULTIPLIER: float = 2.0  # 단계마다 클릭 피해 ×2 (복리)
 const TRIAL_CRYSTAL_MULTIPLIER: float = 2.0
