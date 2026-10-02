@@ -1,11 +1,14 @@
 extends MarginContainer
-## 설정 탭 (GDD 9절): 저장 문자열 내보내기(TextEdit와 복사 버튼), 가져오기, 데이터 초기화(두 번 확인).
-## Save의 함수만 부르고 결과를 표시한다. 아래 상수는 배치용이다.
+## 설정 탭 (GDD 9절): 맨 위에 소리(sound_panel.gd: 효과음·배경음 켬/끔과 음량), 그 아래 저장 문자열 내보내기(TextEdit와 복사 버튼), 가져오기, 데이터 초기화(두 번 확인).
+## Save의 함수만 부르고 결과를 표시한다. 접힌 패널(440px)보다 길어 끌어 스크롤한다 (tap_scroll). 아래 상수는 배치용이다.
+
+const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const SoundPanel := preload("res://scenes/tabs/sound_panel.gd")
 
 const TEXT_BLOCK_HEIGHT: float = 40.0  # 상태 글 한 줄 높이. 비어 있을 때도 자리를 잡아 아래 버튼이 밀리지 않는다
 const MARGIN: int = 16
 const GAP: int = 12
-const TEXT_HEIGHT: float = 170.0  # 탭 전체가 패널 최소 높이(440) 안에 들어가야 화면이 흔들리지 않는다
+const TEXT_HEIGHT: float = 170.0  # 저장 문자열 칸. 탭은 스크롤이라 패널 높이를 밀어내지 않는다
 const BUTTON_HEIGHT: float = 72.0
 const RESET_ARM_SECONDS: float = 6.0   # 확인을 기다리는 시간. 지나면 처음으로 돌아간다
 const RESET_STEPS: PackedStringArray = ["데이터 초기화", "정말 초기화할까요?", "마지막 확인: 한 번 더"]
@@ -22,9 +25,14 @@ var _reset_left: float = 0.0
 func _ready() -> void:
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
+	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
+	add_child(scroll)
 	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", GAP)
-	add_child(column)
+	scroll.add_child(column)
+	column.add_child(SoundPanel.new())
+	column.add_child(HSeparator.new())
 
 	_text = TextEdit.new()
 	_text.custom_minimum_size = Vector2(0.0, TEXT_HEIGHT)
@@ -53,6 +61,7 @@ func _ready() -> void:
 	danger_row.add_child(_make_button("지금 저장", Save.save_game))
 	_reset_button = _make_button(RESET_STEPS[0], _on_reset_pressed)
 	danger_row.add_child(_reset_button)
+	scroll.release_buttons()
 
 	Save.saved.connect(_on_saved)
 
