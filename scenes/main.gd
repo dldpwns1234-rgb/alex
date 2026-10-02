@@ -11,6 +11,7 @@ const TreasureView := preload("res://scenes/battle/treasure_view.gd")
 const HERO_TAB: int = 0
 const PARTY_TAB: int = 1
 const TRAINING_TAB: int = 2
+const PRESTIGE_TAB: int = 3
 const ACHIEVEMENTS_TAB: int = 4
 const OFFLINE_POPUP_SIZE := Vector2i(600, 320)
 const ENDING_POPUP_SIZE := Vector2i(600, 420)
@@ -61,6 +62,8 @@ func _ready() -> void:
 	Promotions.promoted.connect(_on_promoted)
 	Equipment.equipment_changed.connect(_refresh_badges.unbind(1))
 	Equipment.stones_changed.connect(_refresh_badges.unbind(1))
+	Prestige.crystals_changed.connect(_refresh_badges.unbind(1))
+	Game.stage_changed.connect(_on_stage_changed)
 	Equipment.item_dropped.connect(_on_item_received.bind("획득"))
 	Equipment.item_crafted.connect(_on_item_received.bind("제작"))
 	Rebirth.reborn.connect(_on_reborn)
@@ -80,11 +83,28 @@ func _show_panel(index: int) -> void:
 		(_panels.get_child(i) as Control).visible = i == index
 
 
-## 골드, 레벨, 강화석이 바뀔 때마다: 강화할 수 있는 장비, 승급할 수 있는 동료, 살 수 있는 단련
+## 골드, 레벨, 강화석, 결정이 바뀔 때마다: 강화할 수 있는 장비, 고용·승급할 수 있는 동료, 살 수 있는 단련,
+## 회귀 탭은 처음 회귀할 수 있게 됐을 때와 기억의 상점에서 살 것이 있을 때 (첫 경험 안내, 2026-10-02)
 func _refresh_badges() -> void:
 	_nav.set_badge(HERO_TAB, Equipment.any_enhanceable())
-	_nav.set_badge(PARTY_TAB, Promotions.any_affordable())
+	_nav.set_badge(PARTY_TAB, Promotions.any_affordable() or _any_hire_affordable())
 	_nav.set_badge(TRAINING_TAB, Training.any_affordable())
+	var first_prestige := Prestige.can_prestige() and Prestige.prestige_count == 0 and Rebirth.rebirth_count == 0
+	_nav.set_badge(PRESTIGE_TAB, first_prestige or Prestige.any_affordable())
+
+
+func _any_hire_affordable() -> bool:
+	for i in Balance.COMPANIONS.size():
+		if Party.is_companion_unlocked(i) and not Party.is_companion_hired(i) and Party.companion_purchase(i).affordable:
+			return true
+	return false
+
+
+## 처음으로 회귀 조건에 닿으면 한 번 알린다. 회귀 버튼이 탭 안에 있어 모르고 지나치기 쉽다
+func _on_stage_changed(_stage: int) -> void:
+	if Game.highest_stage == Balance.PRESTIGE_MIN_STAGE and Prestige.prestige_count == 0 and Rebirth.rebirth_count == 0:
+		_toast.show_message("회귀가 열렸다 · 회귀 탭에서 기억을 가져오자")
+	_refresh_badges()
 
 
 func _refresh_achievement_badge() -> void:

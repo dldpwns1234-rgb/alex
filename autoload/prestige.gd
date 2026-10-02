@@ -128,6 +128,14 @@ func can_buy(index: int) -> bool:
 	return not is_maxed(index) and crystals >= memory_cost(index)
 
 
+## 기억의 상점에서 지금 살 수 있는 것이 있는지 (회귀 탭 점)
+func any_affordable() -> bool:
+	for i in memory_levels.size():
+		if can_buy(i):
+			return true
+	return false
+
+
 func buy(index: int) -> bool:
 	if not can_buy(index):
 		return false
