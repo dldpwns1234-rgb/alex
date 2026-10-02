@@ -10,6 +10,7 @@ func run() -> void:
 	await _test_tap()
 	_test_dialog_buttons()
 	await _test_toggle()
+	await _test_drag()
 
 
 ## 토글 버튼(자동화 켬·끔)은 탭할 때마다 상태가 바뀌고 toggled 시그널이 난다
@@ -111,3 +112,37 @@ func _test_tap() -> void:
 	scroll._on_gui_input(_mouse(false, inside))
 	_equal(_presses, 1, "누른 적 없이 떼기만 하면 무시")
 	scroll.queue_free()
+
+
+## 끌기는 손가락과 1:1 (엔진의 끌기는 폰에서 화면이 손가락보다 빨랐다), 놓으면 미끄러지다 멈춘다
+func _test_drag() -> void:
+	var scroll: ScrollContainer = TapScroll.new()
+	scroll.size = Vector2(400, 300)
+	add_child(scroll)
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(400, 2000)
+	scroll.add_child(holder)
+	await get_tree().process_frame
+	scroll.scroll_vertical = 500
+	scroll._on_gui_input(_mouse(true, Vector2(200, 250)))
+	scroll._on_gui_input(_motion(Vector2(200, 240)))
+	_equal(scroll.scroll_vertical, 500, "탭 판정 거리 안에서는 움직이지 않는다")
+	scroll._on_gui_input(_motion(Vector2(200, 150)))
+	_equal(scroll.scroll_vertical, 600, "손가락을 100 올리면 정확히 100 내려간다")
+	scroll._on_gui_input(_motion(Vector2(200, 300)))
+	_equal(scroll.scroll_vertical, 450, "되돌리면 그만큼 돌아온다")
+	scroll._on_gui_input(_mouse(false, Vector2(200, 300)))
+	scroll._fling = -2000.0
+	for i in 120:
+		scroll._process(1.0 / 60.0)
+	_equal(scroll._fling, 0.0, "미끄러짐은 2초 안에 멈춘다")
+	_equal(scroll.scroll_vertical < 450, true, "놓은 방향으로 조금 더 간다")
+	scroll.queue_free()
+
+
+func _motion(position: Vector2) -> InputEventMouseMotion:
+	var event := InputEventMouseMotion.new()
+	event.global_position = position
+	event.position = position
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT
+	return event
