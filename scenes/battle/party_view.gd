@@ -39,6 +39,11 @@ func _ready() -> void:
 		var actor := Actor.new(COMPANION_TEXTURES[i], FIGURE_SIZE, true)
 		add_child(actor)
 		_actors.append(actor)
+	_hero = Actor.new(HERO_TEXTURE, HERO_SIZE, true)
+	add_child(_hero)
+	# 이름표는 그림을 다 더한 뒤에 더해 늘 그림 위에 그린다 (지그재그라 이웃 열의 그림이 겹친다).
+	# z_index를 쓰면 펼친 하단 메뉴 시트 위에까지 그려진다
+	for i in Balance.COMPANIONS.size():
 		var label := Label.new()
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.size = Vector2(FIGURE_SIZE.x, NAME_HEIGHT)
@@ -46,12 +51,10 @@ func _ready() -> void:
 		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
 		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.z_index = 1  # 지그재그라 이웃 열의 그림이 이름표 위에 겹친다. 이름(과 별)은 늘 그림 위에
 		add_child(label)
 		_labels.append(label)
+	for i in Balance.COMPANIONS.size():
 		set_hired(i, false)
-	_hero = Actor.new(HERO_TEXTURE, HERO_SIZE, true)
-	add_child(_hero)
 	Game.stage_changed.connect(_refresh_labels.unbind(1))
 	Promotions.promotion_changed.connect(_refresh_labels.unbind(2))
 
