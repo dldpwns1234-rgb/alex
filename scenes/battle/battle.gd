@@ -8,6 +8,7 @@ const MonsterView := preload("res://scenes/battle/monster_view.gd")
 const PartyView := preload("res://scenes/battle/party_view.gd")
 const BossControls := preload("res://scenes/battle/boss_controls.gd")
 const TowerControls := preload("res://scenes/battle/tower_controls.gd")
+const AbyssControls := preload("res://scenes/battle/abyss_controls.gd")
 const Zones := preload("res://scenes/battle/zones.gd")
 
 const TAP_TEXT_COLOR := Color("ffe66d")
@@ -72,7 +73,7 @@ func _process(delta: float) -> void:
 	if not Game.is_monster_alive():
 		return
 	for i in _attack_clocks.size():
-		if not Party.is_companion_hired(i) or Challenges.blocks_companions():  # 홀로 서기 도전 중에는 동료가 싸우지 않는다
+		if not Party.is_companion_hired(i) or Challenges.blocks_companions() or Abyss.silences(i):  # 홀로 서기 도전, 심연의 고립·사슬
 			continue
 		_attack_clocks[i] += delta
 		if _attack_clocks[i] < ATTACK_INTERVAL:
@@ -104,19 +105,18 @@ func _build() -> void:
 	_stage.add_child(_party_view)
 	_monster_view = MonsterView.new()
 	_stage.add_child(_monster_view)
-
 	_kill_label = Label.new()
 	_kill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_kill_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_kill_label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
 	_kill_label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
 	add_child(_kill_label)
-
 	# 파밍 중에만 보인다. 버튼이 탭을 삼키므로 누를 때 공격이 나가지 않는다
 	_boss_controls = BossControls.new()
 	add_child(_boss_controls)
 	_tower_controls = TowerControls.new()  # 오른쪽 아래. 역대 최고 100부터 보인다
 	add_child(_tower_controls)
+	add_child(AbyssControls.new())  # 탑 입구 위의 심연 입구와 심연 안의 저주 줄 (첫 초월부터)
 
 	_attack_clocks.resize(Balance.COMPANIONS.size())
 	for i in _attack_clocks.size():
@@ -139,7 +139,7 @@ func _layout() -> void:
 func _on_monster_spawned(max_hp: float, boss: bool) -> void:
 	var stage := Game.visual_stage()
 	_monster_view.spawn(max_hp, boss, stage)
-	_backdrop.set_palette(Zones.TOWER_PALETTE if Game.in_tower else Zones.palette(stage))
+	_backdrop.set_palette(Zones.mode_palette(Game.dungeon == Abyss) if Game.in_tower else Zones.palette(stage))
 	_backdrop.set_castle(Game.in_tower or Zones.is_castle(stage))
 
 
@@ -181,7 +181,7 @@ func _on_chain_killed(count: int, _reward: float) -> void:
 func _refresh_progress() -> void:
 	if Game.cleared:
 		_kill_label.text = "최종 스테이지 돌파 · 회귀로 새 삶을"
-	elif Game.is_boss_stage():
+	elif Game.is_boss_stage() or (Abyss.active and Abyss.is_boss_floor()):
 		_kill_label.text = "보스전"
 	elif Game.farming:
 		_kill_label.text = "파밍 중 · 처치 %d / %d" % [Game.kills, Balance.MONSTERS_PER_STAGE]

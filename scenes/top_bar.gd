@@ -88,6 +88,7 @@ func _ready() -> void:
 	Challenges.challenge_changed.connect(_refresh_timer)
 	Trials.trial_changed.connect(_refresh_timer)
 	Tower.timer_changed.connect(_on_tower_timer_changed)
+	Abyss.timer_changed.connect(_on_tower_timer_changed)  # 심연도 같은 자리 ("심연 42초")
 	Game.tower_changed.connect(_on_tower_changed)
 	# Game은 오토로드라 이미 준비돼 있으므로 현재 값을 직접 읽어 채운다
 	_on_gold_changed(Game.gold)
@@ -133,7 +134,7 @@ func _fit(label: Label, text: String) -> void:
 
 
 func _on_stage_changed(stage: int) -> void:
-	_stage_label.text = "탑 %d층" % Tower.floor if Game.in_tower else "스테이지 %d" % stage
+	_stage_label.text = "%s %d층" % [Game.dungeon.mode_name(), Game.dungeon.floor] if Game.in_tower else "스테이지 %d" % stage
 
 
 func _on_tower_changed(_inside: bool) -> void:
@@ -142,7 +143,8 @@ func _on_tower_changed(_inside: bool) -> void:
 
 
 func _on_tower_timer_changed(seconds_left: float) -> void:
-	_timer_label.text = "탑 %d초" % ceili(seconds_left)
+	if Game.in_tower:
+		_timer_label.text = "%s %d초" % [Game.dungeon.mode_name(), ceili(seconds_left)]
 	_on_stage_changed(Game.stage)  # 층이 오르면 라벨도 따라간다
 
 
@@ -150,13 +152,13 @@ func _on_boss_timer_changed(seconds_left: float) -> void:
 	_timer_label.text = "보스 %d초" % ceili(seconds_left)
 
 
-## 탑 안이면 층 남은 시간, 보스가 살아 있으면 남은 시간, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다
+## 탑·심연 안이면 층 남은 시간, 보스가 살아 있으면 남은 시간, 아니면 진행 중인 도전 이름을 보인다. 자리는 늘 차지하고 투명하게만 숨긴다
 func _refresh_timer() -> void:
 	var boss := Game.is_boss_stage() and Game.is_monster_alive()
 	var challenge := Challenges.any_active()  # 도전 판이나 별자리 시련
 	_timer_label.modulate.a = 1.0 if boss or challenge or Game.in_tower else 0.0
 	if Game.in_tower:
-		_on_tower_timer_changed(Tower.time_left)
+		_on_tower_timer_changed(Game.dungeon.time_left)
 	elif boss:
 		_on_boss_timer_changed(Game.boss_time_left)
 	elif challenge:

@@ -49,5 +49,6 @@ func _fresh_run() -> void:
 	Automation.reset()
 	Challenges.reset()
 	Tower.reset()
+	Abyss.reset()
 	Treasure.reset()
 	Prefs.reset()

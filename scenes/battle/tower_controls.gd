@@ -1,5 +1,5 @@
 extends Control
-## 전투 화면 오른쪽 아래의 시련의 탑 입구 (GDD 7.10절): 입장권 수가 붙은 버튼, 탑 안에서는 "나가기". 역대 최고 100 전에는 보이지 않는다.
+## 전투 화면 오른쪽 아래의 시련의 탑 입구 (GDD 7.10절): 입장권 수가 붙은 버튼, 탑 안에서는 "나가기". 역대 최고 100 전과 심연 안에서는 보이지 않는다.
 ## Tower의 함수만 부르고 표시만 한다. 상수는 배치용이다.
 
 const BUTTON_SIZE := Vector2(170, 56)
@@ -28,12 +28,13 @@ func _ready() -> void:
 	Game.monster_spawned.connect(_refresh.unbind(2))
 	Game.monster_killed.connect(_refresh.unbind(1))
 	Game.boss_failed.connect(_refresh)
+	Abyss.abyss_changed.connect(_refresh)
 	Achievements.stat_changed.connect(_refresh.unbind(2))
 	_refresh()
 
 
 func _on_pressed() -> void:
-	if Game.in_tower:
+	if Tower.floor > 0:
 		Tower.leave()
 		return
 	if not Tower.can_enter():
@@ -46,8 +47,8 @@ func _on_pressed() -> void:
 
 
 func _refresh() -> void:
-	visible = Tower.is_unlocked()
-	if Game.in_tower:
+	visible = Tower.is_unlocked() and not Abyss.active
+	if Tower.floor > 0:
 		_button.text = "%d층 · 나가기" % Tower.floor
 		_button.disabled = false
 		_button.theme_type_variation = ""

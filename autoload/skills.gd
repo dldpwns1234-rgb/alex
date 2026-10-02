@@ -85,7 +85,7 @@ func is_ready(index: int) -> bool:
 
 ## 침묵의 검 도전 중에는 봉인된다
 func is_sealed() -> bool:
-	return Challenges.blocks_skills()
+	return Challenges.blocks_skills() or Abyss.blocks_skills()  # 심연의 침묵
 
 
 func can_activate(index: int) -> bool:

@@ -46,6 +46,8 @@ Fragments="*res://autoload/fragments.gd"
 Transcend="*res://autoload/transcend.gd"
 ; 별자리 시련은 초월 뒤에 열리고 Game·Prestige·Rebirth·Transcend의 시그널을 받는다. Challenges가 제한과 보상을 묻는다
 Trials="*res://autoload/trials.gd"
+; 심연은 첫 초월 뒤에 열리고 Game이 별도 모드로 돌린다. Game·Party·Skills가 저주와 축복을 묻고, 별의 파편은 Transcend에 넣는다
+Abyss="*res://autoload/abyss.gd"
 ; 화면·소리 설정(하단 메뉴 시트 높이, 효과음·배경음 음량)은 Save가 불러오므로 그 앞에
 Prefs="*res://autoload/prefs.gd"
 Save="*res://autoload/save.gd"
