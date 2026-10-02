@@ -37,9 +37,11 @@ Tower="*res://autoload/tower.gd"
 Treasure="*res://autoload/treasure.gd"
 ; 기억 조각은 업적 통계로 열리므로 Achievements 뒤에, Save가 불러오므로 그 앞에
 Fragments="*res://autoload/fragments.gd"
-; 화면 설정(하단 메뉴 시트 높이)은 Save가 불러오므로 그 앞에
+; 화면·소리 설정(하단 메뉴 시트 높이, 효과음·배경음 음량)은 Save가 불러오므로 그 앞에
 Prefs="*res://autoload/prefs.gd"
 Save="*res://autoload/save.gd"
+; 효과음·배경음은 위 오토로드들의 시그널만 받고 음량은 Prefs에서 읽는다. Save가 불러온 뒤라 시작 음량과 곡이 저장대로 정해진다
+Sfx="*res://autoload/sfx.gd"
 
 [display]
 
