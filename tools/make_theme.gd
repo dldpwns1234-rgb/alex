@@ -31,8 +31,7 @@ const SCROLL_GRABBER := Color("574f7a")
 const RADIUS: int = 12
 const BORDER: int = 2
 const BUTTON_PADDING := Vector2(16, 10)
-# 기본 글꼴 크기. project.godot의 gui/theme/default_font_size는 사용자 테마(gui/theme/custom)를 쓰면 적용되지 않아
-# 테마에 직접 둔다. 없으면 고도의 대체 크기 16이 되어 폰에서 글씨가 너무 작다 (UX 점검 2026-10-02)
+# 기본 글꼴 크기. project.godot의 default_font_size는 사용자 테마를 쓰면 안 먹어 16이 되므로 테마에 둔다 (UX 점검 2026-10-02)
 const DEFAULT_FONT_SIZE: int = 22
 const BUTTON_FONT_SIZE: int = 20  # 버튼은 "레벨업 ×10 (1.23경 골드)"가 250px에 들어가야 해서 한 단계 작게
 const NAV_FONT_SIZE: int = 24
@@ -173,7 +172,9 @@ func _scrollbars(theme: Theme) -> void:
 func _dialogs(theme: Theme) -> void:
 	for dialog: String in ["AcceptDialog", "ConfirmationDialog"]:
 		theme.set_stylebox("panel", dialog, _flat(PANEL, PANEL_BORDER, BORDER, 0, Vector2(16, 16)))
-	theme.set_stylebox("embedded_border", "Window", _flat(TOP_BAR, PANEL_BORDER, BORDER, 0, Vector2(0, 0)))
+	var border := _flat(TOP_BAR, PANEL_BORDER, BORDER, 0, Vector2(0, 0))
+	border.expand_margin_top = 44.0  # 창 제목 줄까지 테두리가 덮게. 없으면 제목이 창 밖 전투 화면 위에 떠 몬스터 이름과 겹쳤다
+	theme.set_stylebox("embedded_border", "Window", border)
 	theme.set_color("title_color", "Window", TEXT)
 
 

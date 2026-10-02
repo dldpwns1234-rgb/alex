@@ -80,7 +80,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_omlnh"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ib6tx"]
 
 [sub_resource type="StyleBoxFlat" id="style_2"]
 content_margin_left = 16.0
@@ -130,6 +130,10 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fenpc"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_omlnh"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lvrds"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_im0sm"]
@@ -137,10 +141,6 @@ corner_radius_bottom_left = 12
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7h6bm"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_86uey"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5jbdf"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_unkgg"]
 
 [sub_resource type="StyleBoxFlat" id="style_41"]
 content_margin_left = 16.0
@@ -592,6 +592,7 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.27058825, 0.24313726, 0.36078432, 1)
+expand_margin_top = 44.0
 anti_aliasing = false
 
 [resource]
@@ -612,7 +613,7 @@ Button/colors/font_hover_pressed_color = Color(0.16862746, 0.14117648, 0.2196078
 Button/colors/font_pressed_color = Color(0.16862746, 0.14117648, 0.21960784, 1)
 Button/font_sizes/font_size = 20
 Button/styles/disabled = SubResource("style_4")
-Button/styles/focus = SubResource("StyleBoxEmpty_omlnh")
+Button/styles/focus = SubResource("StyleBoxEmpty_ib6tx")
 Button/styles/hover = SubResource("style_2")
 Button/styles/normal = SubResource("style_1")
 Button/styles/pressed = SubResource("style_3")
@@ -626,12 +627,12 @@ CheckButton/icons/checked = ExtResource("1_ib6tx")
 CheckButton/icons/checked_disabled = ExtResource("1_ib6tx")
 CheckButton/icons/unchecked = ExtResource("2_fenpc")
 CheckButton/icons/unchecked_disabled = ExtResource("2_fenpc")
-CheckButton/styles/disabled = SubResource("StyleBoxEmpty_lvrds")
-CheckButton/styles/focus = SubResource("StyleBoxEmpty_im0sm")
-CheckButton/styles/hover = SubResource("StyleBoxEmpty_7h6bm")
-CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_86uey")
-CheckButton/styles/normal = SubResource("StyleBoxEmpty_5jbdf")
-CheckButton/styles/pressed = SubResource("StyleBoxEmpty_unkgg")
+CheckButton/styles/disabled = SubResource("StyleBoxEmpty_fenpc")
+CheckButton/styles/focus = SubResource("StyleBoxEmpty_omlnh")
+CheckButton/styles/hover = SubResource("StyleBoxEmpty_lvrds")
+CheckButton/styles/hover_pressed = SubResource("StyleBoxEmpty_im0sm")
+CheckButton/styles/normal = SubResource("StyleBoxEmpty_7h6bm")
+CheckButton/styles/pressed = SubResource("StyleBoxEmpty_86uey")
 ConfirmationDialog/styles/panel = SubResource("style_41")
 DangerPill/base_type = &"Label"
 DangerPill/colors/font_color = Color(0.9490196, 0.93333334, 0.972549, 1)

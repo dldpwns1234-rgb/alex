@@ -3,7 +3,7 @@ extends AcceptDialog
 ## auto가 켜져 있으면(메인 화면의 카드) 새로 열린 조각을 하나씩 띄우고 닫을 때 본 것으로 표시한다.
 ## 꺼져 있으면(기억의 서) show_fragment()로 부를 때만 다시 보여 준다. Fragments의 함수만 부르고 표시만 한다.
 
-const CARD_SIZE := Vector2i(600, 300)
+const CARD_SIZE := Vector2i(600, 260)
 
 @export var auto: bool = true
 var _showing: int = -1
