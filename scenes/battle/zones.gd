@@ -52,6 +52,7 @@ const CASTLE_PALETTE: Array = [Color("1a0b1e"), Color("5a1030"), Color("120810")
 const DEMON_KING_TEXTURE: Texture2D = preload("res://assets/sprites/monsters/demon_king.svg")
 # 시련의 탑: 잿빛 돌탑. 몬스터는 층에 해당하는 스테이지의 것이 나온다
 const TOWER_PALETTE: Array = [Color("2a2a3a"), Color("55566a"), Color("1e1e2a"), Color("3a3a4a"), Color("d0d4e0")]
+const ABYSS_PALETTE: Array = [Color("0e0a1c"), Color("2c1d4a"), Color("090612"), Color("1c1430"), Color("9a7cff")]  # 심연: 검보라 하늘과 보랏빛 달
 const DEMON_KING_NAME: String = "마왕"
 
 
@@ -107,6 +108,11 @@ static func monster_tint(stage: int) -> Color:
 		return Color.WHITE
 	var laps := castle_lap(stage) if is_castle(stage) else lap(stage)
 	return LAP_TINTS[laps % LAP_TINTS.size()]
+
+
+## 별도 모드의 배경: 심연이면 검보라, 탑이면 잿빛 돌탑
+static func mode_palette(abyss: bool) -> Array:
+	return ABYSS_PALETTE if abyss else TOWER_PALETTE
 
 
 static func palette(stage: int) -> Array:

@@ -7,6 +7,7 @@ extends Control
 
 const Toast := preload("res://scenes/toast.gd")
 const TreasureView := preload("res://scenes/battle/treasure_view.gd")
+const AbyssPopups := preload("res://scenes/abyss_popups.gd")
 
 const HERO_TAB: int = 0
 const PARTY_TAB: int = 1
@@ -42,6 +43,7 @@ func _ready() -> void:
 	add_child(_ending_dialog)
 	_toast = Toast.new()
 	add_child(_toast)  # 시트보다 뒤에 더해 펼친 시트 위에도 그려진다
+	add_child(AbyssPopups.new(_toast))  # 심연의 축복 고르기 창과 알림
 	_sheet_space.custom_minimum_size = Vector2(0.0, _sheet.collapsed_height())
 	_sheet.height_changed.connect(_on_sheet_height_changed)
 	_sheet.set_top_inset(_top_bar.get_combined_minimum_size().y)

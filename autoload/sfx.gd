@@ -37,6 +37,8 @@ func _ready() -> void:
 	Treasure.caught.connect(func(_reward: int, _amount: float) -> void: play("fairy_catch"))
 	Tower.floor_cleared.connect(func(_floor: int, _stones: float, _threads: float) -> void: play("boss_kill"))
 	Tower.failed.connect(func(_floor: int) -> void: play("boss_fail"))
+	Abyss.floor_cleared.connect(func(floor: int, _stones: float, _stars: float) -> void: play("boss_kill" if Balance.abyss_is_boss_floor(floor) else "kill"))
+	Abyss.failed.connect(func(_floor: int) -> void: play("boss_fail"))
 	get_tree().node_added.connect(_on_node_added)
 	set_process_input(not unlocked)
 	_update_music()
