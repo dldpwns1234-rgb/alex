@@ -138,13 +138,14 @@ func _drop_tower() -> void:
 		tower_changed.emit(false)
 
 
+## 몬스터를 먼저 바꾸고 알린다: 나올 때 알림이 먼저 가면 상단 바가 아직 남은 탑 몬스터를 본편 보스로 읽어 '보스 0초'를 띄웠다
 func _switch_tower(inside: bool) -> void:
 	in_tower = inside
 	kills = 0
 	boss_queued = false
+	_spawn_monster()
 	tower_changed.emit(inside)
 	boss_queued_changed.emit(boss_queued)
-	_spawn_monster()
 	kills_changed.emit(kills)
 
 

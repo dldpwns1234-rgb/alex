@@ -79,9 +79,26 @@ func _test_final_stage() -> void:
 	_advance(Game.respawn_delay() + 1.0)
 	_equal(Game.is_monster_alive(), false, "몬스터가 더 나오지 않는다")
 	_equal(Game.stage, Balance.FINAL_STAGE, "나아가지 않는다")
+	_test_mode_after_final()
 	_equal(Prestige.perform(), true, "회귀는 된다")
 	_equal(Game.cleared, false, "새 판은 돌파 상태가 아니다")
 	_equal(Game.is_monster_alive(), true, "몬스터가 다시 나온다")
+
+
+
+## 돌파 뒤 탑에 다녀와도 본편에는 몬스터가 없다. 나온다는 알림은 몬스터를 정리한 뒤에 간다
+## (먼저 가면 상단 바가 남은 탑 몬스터를 보스로 읽어 '보스 0초'를 띄우고, 화면에 탑 몬스터 그림이 남았다)
+func _test_mode_after_final() -> void:
+	Achievements.raise(Balance.Stat.STAGE, 100.0)
+	_equal(Tower.enter(), true, "돌파 뒤에도 탑에 들어간다")
+	_equal(Game.is_monster_alive(), true, "탑에는 몬스터가 있다")
+	var alive_at_signal: Array[bool] = []
+	var probe := func(_inside: bool) -> void: alive_at_signal.append(Game.is_monster_alive())
+	Game.tower_changed.connect(probe)
+	Tower.leave()
+	Game.tower_changed.disconnect(probe)
+	_equal(alive_at_signal, [false] as Array[bool], "나온다는 알림 때 이미 본편 상태 (몬스터 없음)")
+	_equal(Game.cleared, true, "돌파 상태 그대로")
 
 
 func _test_tower_top() -> void:

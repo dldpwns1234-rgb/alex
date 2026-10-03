@@ -57,6 +57,7 @@ func _ready() -> void:
 	Game.stage_changed.connect(_refresh_progress.unbind(1))
 	Game.farming_changed.connect(_refresh_progress.unbind(1))
 	Game.cleared_changed.connect(_refresh_progress.unbind(1))
+	Game.tower_changed.connect(_backdrop.restore_after_mode.bind(_monster_view))  # 돌파 뒤 탑·심연에서 돌아오면 그림 치우기
 	Party.companion_changed.connect(_on_companion_changed)
 	Promotions.promoted.connect(_on_promoted)
 	_layout()

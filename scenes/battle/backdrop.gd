@@ -2,6 +2,7 @@ extends Control
 ## 전투 배경: 하늘, 해, 먼 언덕, 땅. 지역 팔레트(Zones.palette)가 바뀌면 색이 부드럽게 넘어간다.
 ## 마왕성(set_castle)이면 언덕 대신 흉벽이 있는 검은 성벽을 그린다. 상수는 연출용이다.
 
+const Zones := preload("res://scenes/battle/zones.gd")
 const HORIZON: float = 0.22       # 땅이 시작하는 높이 (높이 비율). 인물들은 땅 위에 선다
 const HILL_RADIUS: float = 0.5    # 폭 비율
 const SUN_RADIUS: float = 30.0
@@ -84,3 +85,14 @@ func _draw_castle(horizon: float) -> void:
 		for k in 3:
 			draw_rect(Rect2(x + tooth * (k * 2), top - tooth * MERLON, tooth, tooth * MERLON), _color(2))
 		x += width + size.x * TOWER_GAP
+
+
+## 최종 스테이지를 돌파한 본편으로 돌아오면 새 몬스터가 없어 monster_spawned가 오지 않는다 (battle.gd가 Game.tower_changed에 잇는다).
+## 그대로 두면 탑·심연 몬스터 그림과 배경이 남아, 몬스터 그림을 치우고 배경을 본편 것으로 되돌린다
+func restore_after_mode(inside: bool, monster: Node) -> void:
+	if inside or not Game.cleared:
+		return
+	monster.call("set_hp", 0.0)
+	monster.call("vanish", 0.0)
+	set_palette(Zones.palette(Game.stage))
+	set_castle(Zones.is_castle(Game.stage))
