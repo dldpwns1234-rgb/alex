@@ -4,6 +4,7 @@ extends MarginContainer
 
 const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const NameStars := preload("res://scenes/name_stars.gd")  # 이름과 승급 별 (6단계부터 각성 색)
 const PORTRAITS: Array[Texture2D] = [  # Balance.Companion 순서
 	preload("res://assets/sprites/warrior.svg"),
 	preload("res://assets/sprites/archer.svg"),
@@ -27,7 +28,7 @@ const LOCKED_PORTRAIT_COLOR := Color(0.5, 0.48, 0.6)
 
 var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
 var _portraits: Array[TextureRect] = []
-var _title_labels: Array[Label] = []
+var _title_labels: Array[NameStars] = []
 var _dps_labels: Array[Label] = []
 var _note_labels: Array[Label] = []
 var _value_labels: Array[Label] = []
@@ -86,7 +87,7 @@ func _make_row(index: int) -> PanelContainer:
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(text)
-	var title := _make_line(0, Color.WHITE)
+	var title := NameStars.new()
 	text.add_child(title)
 	var dps := _make_line(0, Color.WHITE)
 	text.add_child(dps)
@@ -168,14 +169,13 @@ func _refresh() -> void:
 		_note_labels[i].text = Balance.companion_note(i)
 		_refresh_promote(i)
 		if not Party.is_companion_unlocked(i):
-			_title_labels[i].text = name
+			_title_labels[i].show_name(name)
 			_dps_labels[i].text = "스테이지 %d에 합류" % Balance.companion_unlock_stage(i)
 			_buttons[i].text = "잠김"
 			_buttons[i].disabled = true
 			continue
 		var purchase := Party.companion_purchase(i, Party.BuyMode.MAX if level == 0 else Party.buy_mode)
-		var stars := Balance.promotion_stars(Promotions.rank(i))
-		_title_labels[i].text = name + (" " + stars if not stars.is_empty() else "")
+		_title_labels[i].show_name(name, Promotions.rank(i))
 		_dps_labels[i].text = "Lv %d · DPS %s" % [level, Num.format(Party.companion_dps(i, false))]
 		var verb := "고용" if level == 0 else "레벨업"
 		_buttons[i].text = "최대 레벨" if purchase.count == 0 else "%s ×%d (%s)" % [verb, purchase.count, Num.format(purchase.cost)]

@@ -20,6 +20,12 @@ func _test_balance() -> void:
 	_close(Balance.promotion_multiplier(2), 2.25, "2단계 배율 1.5² = 2.25")
 	_equal(Balance.promotion_stars(3), "★★★", "별 3개")
 	_equal(Balance.promotion_stars(0), "", "0단계는 별 없음")
+	_equal(Balance.promotion_stars(5), "★★★★★", "5단계는 기본 별 5개")
+	_equal(Balance.promotion_awakened_stars(5), 0, "5단계까지는 각성 별 없음")
+	_equal(Balance.promotion_stars(7), "★★★", "7단계: 기본 별 3개")
+	_equal(Balance.promotion_awakened_stars(7), 2, "7단계: 각성 색 별 2개 (별은 5개 안에서)")
+	_equal(Balance.promotion_stars(10), "", "10단계: 기본 별 없음")
+	_equal(Balance.promotion_awakened_stars(10), 5, "10단계: 각성 별 5개")
 
 
 func _test_promote() -> void:

@@ -22,6 +22,7 @@ const DRAGON_KNIGHT_KING_MULTIPLIER: float = 10.0
 # ×2(5단계 ×32)는 첫 회귀가 155에서 200으로, 판당 상승이 +40에서 +85로 뛰어 GDD 13절 목표를 벗어났다. docs/BALANCE_SIM.md
 const PROMOTION_LEVEL_STEP: int = 50
 const PROMOTION_MAX_RANK: int = 5
+const PROMOTION_STAR_SLOTS: int = 5  # 이름 옆 별 칸 수. 동료 각성으로 10단계까지 가도 별은 5개 안에서 색으로 나타낸다 (방장 2026-10-03)
 const PROMOTION_COST_FACTOR: float = 50.0  # 승급 비용 = 필요 레벨의 레벨업 비용 × 50 (레벨업 25개 값과 비슷하다)
 const PROMOTION_MULTIPLIER: float = 1.5
 
@@ -115,6 +116,11 @@ func promotion_multiplier(rank: int) -> float:
 	return pow(PROMOTION_MULTIPLIER, rank)
 
 
-## 이름 옆에 붙이는 별. 0단계면 빈 문자열
+## 이름 옆에 붙이는 기본 색 별. 0단계면 빈 문자열. 별은 PROMOTION_STAR_SLOTS개까지만 보이고, 넘는 단계는 앞쪽 별을 각성 색으로 바꾼다
 func promotion_stars(rank: int) -> String:
-	return "★".repeat(rank)
+	return "★".repeat(mini(rank, PROMOTION_STAR_SLOTS) - promotion_awakened_stars(rank))
+
+
+## 각성 색으로 칠할 앞쪽 별 수: 6단계면 1, 10단계면 5 (동료 각성, 별의 상점)
+func promotion_awakened_stars(rank: int) -> int:
+	return clampi(rank - PROMOTION_STAR_SLOTS, 0, PROMOTION_STAR_SLOTS)

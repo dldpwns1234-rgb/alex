@@ -4,6 +4,7 @@ extends Control
 ## 고용 전의 동료는 어두운 실루엣이고, 아직 합류 스테이지에 못 미쳤으면 그 스테이지를 적는다.
 ## 승급한 동료는 이름 옆에 별을 단다. 상수는 배치와 연출용이다.
 
+const NameStars := preload("res://scenes/name_stars.gd")
 const Actor := preload("res://scenes/battle/actor.gd")
 const HERO_TEXTURE := preload("res://assets/sprites/hero.svg")
 ## Balance.Companion 순서
@@ -30,7 +31,7 @@ const LOCKED_TEXT_COLOR := Color("b8b4c8")
 
 var _hero: Actor
 var _actors: Array[Actor] = []
-var _labels: Array[Label] = []
+var _labels: Array[NameStars] = []
 
 
 func _ready() -> void:
@@ -44,13 +45,10 @@ func _ready() -> void:
 	# 이름표는 그림을 다 더한 뒤에 더해 늘 그림 위에 그린다 (지그재그라 이웃 열의 그림이 겹친다).
 	# z_index를 쓰면 펼친 하단 메뉴 시트 위에까지 그려진다
 	for i in Balance.COMPANIONS.size():
-		var label := Label.new()
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var label := NameStars.new()
+		label.alignment = BoxContainer.ALIGNMENT_CENTER
 		label.size = Vector2(FIGURE_SIZE.x, NAME_HEIGHT)
-		label.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
-		label.add_theme_constant_override("outline_size", OUTLINE_SIZE)
-		label.add_theme_color_override("font_outline_color", OUTLINE_COLOR)
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.set_font(NAME_FONT_SIZE, OUTLINE_SIZE, OUTLINE_COLOR)
 		add_child(label)
 		_labels.append(label)
 	for i in Balance.COMPANIONS.size():
@@ -83,15 +81,14 @@ func set_hired(index: int, hired: bool) -> void:
 func _refresh_labels() -> void:
 	for i in _labels.size():
 		if Party.is_companion_hired(i):
-			var stars := Balance.promotion_stars(Promotions.rank(i))
-			_labels[i].text = Balance.companion_name(i) + (" " + stars if not stars.is_empty() else "")
-			_labels[i].remove_theme_color_override("font_color")
+			_labels[i].show_name(Balance.companion_name(i), Promotions.rank(i))
+			_labels[i].set_name_color(null)
 			continue
-		_labels[i].add_theme_color_override("font_color", LOCKED_TEXT_COLOR)
+		_labels[i].set_name_color(LOCKED_TEXT_COLOR)
 		if Party.is_companion_unlocked(i):
-			_labels[i].text = Balance.companion_name(i)
+			_labels[i].show_name(Balance.companion_name(i))
 		else:
-			_labels[i].text = "스테이지 %d" % Balance.companion_unlock_stage(i)
+			_labels[i].show_name("스테이지 %d" % Balance.companion_unlock_stage(i))
 
 
 func play_attack(index: int) -> void:

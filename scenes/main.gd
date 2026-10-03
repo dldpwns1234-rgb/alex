@@ -121,7 +121,8 @@ func _on_achievement_unlocked(index: int) -> void:
 
 
 func _on_promoted(index: int, rank: int) -> void:
-	_toast.show_message("%s 승급 · %s" % [Balance.companion_name(index), Balance.promotion_stars(rank)])
+	var stars := Balance.promotion_stars(rank) if rank <= Balance.PROMOTION_STAR_SLOTS else "각성 %d단계" % rank  # 알림은 한 색이라 각성은 단계로
+	_toast.show_message("%s 승급 · %s" % [Balance.companion_name(index), stars])
 
 
 ## 장비 알림: 등급 색으로 이름을 보이고, 획득(드롭)인지 제작인지, 장착했는지 분해했는지 적는다
