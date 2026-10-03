@@ -80,6 +80,15 @@ func _test_fail_and_reset() -> void:
 	_equal(Game.in_tower, false, "회귀하면 나온다")
 	_equal(Abyss.active, false, "원정 끝")
 	_equal(Abyss.runs, 0, "원정 둘을 다 썼다")
+	# 회귀할 수 없는 판(초월 직후 등)에서 별자리 시련을 시작해도 심연·탑에서 나온다 (Game.run_started)
+	Abyss.runs = 1
+	Game.highest_stage = 31
+	Prestige.best_stage = 31
+	_equal(Abyss.enter(), true, "다시 원정")
+	_equal(Prestige.can_prestige(), false, "회귀할 수 없는 판")
+	_equal(Trials.start(0), true, "심연 안에서 시련 시작")
+	_equal(Abyss.active or Game.in_tower, false, "시련의 새 판은 심연 밖")
+	Trials.reset()
 
 
 func _test_marks() -> void:

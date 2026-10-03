@@ -19,6 +19,7 @@ var _check_left: float = REFILL_CHECK_INTERVAL
 func _ready() -> void:
 	reset()
 	Prestige.prestiged.connect(_on_run_reset)
+	Game.run_started.connect(leave.unbind(1))  # 도전·별자리 시련 시작처럼 회귀 없이 새 판이 되어도 나온다 (버그 점검 2026-10-03)
 	Rebirth.reborn.connect(_on_run_reset)
 
 
