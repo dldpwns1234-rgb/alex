@@ -11,7 +11,7 @@ const NOTE_COLOR := Color("b8b4c8")
 const STAR_COLOR := Color("fff3b0")
 const BUTTON_HEIGHT: float = 72.0
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
-const CONFIRM_SIZE := Vector2i(600, 380)
+const CONFIRM_SIZE := Vector2i(600, 440)
 const REFRESH_INTERVAL: float = 1.0  # 초. 이번 삶의 시간과 받을 파편을 다시 적는다
 
 var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
@@ -102,8 +102,9 @@ func _make_row(index: int) -> PanelContainer:
 func _on_pressed() -> void:
 	if not Transcend.can_transcend():
 		return
-	_confirm.dialog_text = "별의 파편 %s개를 받고 운명까지 내려놓습니다. 이번 삶 %s.\n\n내려놓음: 운명의 실과 운명의 상점, 환생 횟수, 기억의 결정과 기억의 상점, 회귀 기록, 판 전체, 시련의 탑 최고층\n유지: 별의 파편과 별의 상점, 장비와 강화석, 업적, 기억 조각, 도전 달성, 자동화 해금, 설정" % [
-		Num.format(Transcend.star_reward()), Num.format_duration(Transcend.cycle_seconds)]
+	_confirm.dialog_text = "별의 파편 %s개를 받고 운명까지 내려놓습니다. 이번 삶 %s.\n\n내려놓음: 운명의 실과 운명의 상점, 환생 횟수, 기억의 결정과 기억의 상점, 회귀 기록, 판 전체, 시련의 탑 최고층\n유지: 별의 파편과 별의 상점, 장비와 강화석, 업적, 기억 조각, 도전 달성, 자동화 해금, 설정\n가져감: 이번 삶에 탑에서 받은 실의 %d%% (운명의 실 %s개)" % [
+		Num.format(Transcend.star_reward()), Num.format_duration(Transcend.cycle_seconds),
+		roundi(Balance.TOWER_THREAD_KEEP * 100.0), Num.format(Balance.tower_kept_threads(Tower.best_floor))]
 	_confirm.popup_centered(CONFIRM_SIZE)
 
 

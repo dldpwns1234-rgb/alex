@@ -76,6 +76,7 @@ func perform() -> bool:
 	if not can_transcend():
 		return false
 	var reward := star_reward()
+	var kept := Balance.tower_kept_threads(Tower.best_floor)  # 탑 층을 지우기 전에 잰다
 	stars = minf(stars + reward, Balance.MAX_NUMBER)
 	count += 1
 	cycle_seconds = 0.0
@@ -90,6 +91,7 @@ func perform() -> bool:
 	Promotions.reset()
 	Game.reset()
 	grant_start_bonus()
+	Rebirth.add_threads(kept)  # 입장권으로 모은 실이 다 사라지면 허무하다 (방장 2026-10-03)
 	stars_changed.emit(stars)
 	ready_changed.emit(false)
 	transcended.emit(reward)

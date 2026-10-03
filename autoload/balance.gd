@@ -36,6 +36,7 @@ const TOWER_STAGE_BASE: int = 100          # f층 몬스터 = 스테이지 (100 
 const TOWER_STAGE_STEP: int = 10
 const TOWER_STONES_PER_FLOOR: float = 1.0  # 첫 돌파 보상 강화석 = 층 × 1
 const TOWER_THREAD_FLOOR_STEP: int = 10    # 10층마다 운명의 실 (층 ÷ 10)
+const TOWER_THREAD_KEEP: float = 0.4       # 초월해도 이번 삶에 탑에서 받은 실의 40%는 새 삶에 가져간다 (방장 2026-10-03: 30~50%)
 # 최종 스테이지 (GDD 7.8절): 마왕성 최심부. 1000의 배수라 최후의 마왕이 지키고, 잡으면 진정한 엔딩. 체력 10^274로 float 한계(스테이지 4507) 앞이다.
 # 그 뒤로는 몬스터가 나오지 않고 회귀·환생으로만 이어진다
 const FINAL_STAGE: int = 4000
@@ -158,3 +159,11 @@ func tower_stones(floor: int) -> float:
 func tower_threads(floor: int) -> float:
 	@warning_ignore("integer_division")
 	return float(floor / TOWER_THREAD_FLOOR_STEP) if floor % TOWER_THREAD_FLOOR_STEP == 0 else 0.0
+
+
+## 초월할 때 가져가는 실: 최고층까지 받은 탑 실의 합 × 40%, 내림. 탑 최고층은 초월이 지우므로 그 삶에 받은 실과 같다
+func tower_kept_threads(best_floor: int) -> float:
+	var total := 0.0
+	for step in range(TOWER_THREAD_FLOOR_STEP, best_floor + 1, TOWER_THREAD_FLOOR_STEP):
+		total += tower_threads(step)
+	return floor(total * TOWER_THREAD_KEEP)

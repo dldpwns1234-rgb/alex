@@ -21,6 +21,9 @@ func _test_formula() -> void:
 	_close(Balance.star_reward(0.0), floor(3.0 * sqrt(23400.0 / 60.0)), "0초는 60초로 본다")
 	_close(Balance.star_cost(0), 1.0, "첫 레벨 1파편")
 	_close(Balance.star_cost(4), 5.0, "다섯째 레벨 5파편")
+	_close(Balance.tower_kept_threads(0), 0.0, "탑에 안 올랐으면 가져갈 실 없음")
+	_close(Balance.tower_kept_threads(39), 2.0, "30층까지 실 6개의 40% → 2 (내림)")
+	_close(Balance.tower_kept_threads(100), 22.0, "100층까지 실 55개의 40% → 22")
 
 
 func _test_condition() -> void:
@@ -50,7 +53,7 @@ func _test_perform() -> void:
 	_equal(Transcend.count, 1, "초월 1회")
 	_close(Transcend.cycle_seconds, 0.0, "이번 삶 시간이 0부터")
 	_equal(Transcend.can_transcend(), false, "다시 최후의 마왕을 잡아야 한다")
-	_close(Rebirth.threads, 0.0, "운명의 실을 내려놓는다")
+	_close(Rebirth.threads, 4.0, "운명의 실을 내려놓고 탑 실(40층까지 10개)의 40%만 가져간다")
 	_equal(Rebirth.level(Balance.Fate.DESTINY), 0, "운명의 상점을 내려놓는다")
 	_equal(Rebirth.rebirth_count, 0, "환생 횟수를 내려놓는다")
 	_close(Prestige.crystals, 0.0, "결정을 내려놓는다")
