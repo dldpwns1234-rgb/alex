@@ -8,7 +8,6 @@ const ROW_PADDING: int = 10
 const ROW_HEIGHT: float = 128.0  # 세 줄. 글이 바뀌어도 줄 높이와 버튼 자리가 변하지 않는다
 const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
-const HEADER_COLOR := Color("ffe66d")
 const DONE_COLOR := Color("fff3b0")
 const ACTIVE_COLOR := Color("ff8a80")
 const BUTTON_SIZE := Vector2(170, 64)
@@ -26,10 +25,6 @@ func _ready() -> void:
 	_gate = RefreshGate.new(_refresh, self, true)
 	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
-	var header := Label.new()
-	header.text = "별자리 시련"
-	header.add_theme_color_override("font_color", HEADER_COLOR)
-	add_child(header)
 	for i in Balance.TRIALS.size():
 		add_child(_make_row(i))
 	_confirm = ConfirmationDialog.new()

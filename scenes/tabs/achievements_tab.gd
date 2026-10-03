@@ -1,9 +1,12 @@
 extends MarginContainer
-## 업적 탭 (GDD 7.5절): 통계별로 묶은 업적 목록과 진행 막, 위에는 달성 수와 보너스 합계, 목록 맨 위에 도전 판(challenge_panel.gd). 줄은 코드로 생성한다.
-## Achievements의 함수만 부르고 표시만 한다. 탭이 보이면 달성을 본 것으로 표시해 내비게이션의 점을 지운다. 상수는 배치용이다.
+## 업적 탭 (GDD 7.5절): 칩 줄로 [업적] [도전] [시련] [기억]을 나눈다 (sub_tabs.gd, 방장 2026-10-03).
+## [업적]은 통계별로 묶은 목록과 진행 막, 위에 달성 수와 보너스 합계. [도전] challenge_panel.gd · [시련] trial_panel.gd · [기억] 기억의 서(fragment_panel.gd).
+## Achievements의 함수만 부르고 표시만 한다. [업적] 칸이 보이면 달성을 본 것으로 표시해 내비게이션의 점을 지운다. 상수는 배치용이다.
 
 const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
 const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const SubTabs := preload("res://scenes/tabs/sub_tabs.gd")
+const FragmentPanel := preload("res://scenes/tabs/fragment_panel.gd")
 const ChallengePanel := preload("res://scenes/tabs/challenge_panel.gd")
 const TrialPanel := preload("res://scenes/tabs/trial_panel.gd")
 
@@ -20,7 +23,8 @@ const SUMMARY_COLOR := Color("b8b4c8")
 const BAR_HEIGHT: float = 12.0
 const PROGRESS_WIDTH: float = 190.0
 
-var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
+var _gate: RefreshGate  # 시그널이 오면 표시만, [업적] 칸이 보일 때 프레임당 한 번 갱신
+var _list_page: VBoxContainer
 var _summary: Label
 var _titles: Array[Label] = []
 var _bars: Array[ProgressBar] = []
@@ -28,13 +32,16 @@ var _progress: Array[Label] = []
 
 
 func _ready() -> void:
-	_gate = RefreshGate.new(_refresh, self)
-	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
+	var tabs := SubTabs.new()
+	add_child(tabs)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", GAP)
-	add_child(column)
+	_list_page = column
+	tabs.add_page("업적", column, Callable(), Achievements.has_unseen)
+	_gate = RefreshGate.new(_refresh, column)
+	add_child(_gate)
 
 	_summary = Label.new()
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -50,8 +57,6 @@ func _ready() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", GAP)
 	scroll.add_child(list)
-	list.add_child(ChallengePanel.new())  # 도전 판은 환생 1회부터 목록 맨 위에 (GDD 7.9절)
-	list.add_child(TrialPanel.new())  # 별자리 시련은 초월 1회부터 그 아래에 (GDD 7.12절)
 	var last_stat := -1
 	for i in Balance.ACHIEVEMENTS.size():
 		var stat := Balance.achievement_stat(i)
@@ -60,9 +65,12 @@ func _ready() -> void:
 			list.add_child(_make_header(Balance.stat_label(stat)))
 		list.add_child(_make_row(i))
 	scroll.release_buttons()
+	tabs.add_scroll_page("도전", [ChallengePanel.new()], Challenges.is_unlocked)  # 환생 1회부터 (GDD 7.9절)
+	tabs.add_scroll_page("시련", [TrialPanel.new()], Trials.is_unlocked)  # 초월 1회부터 (GDD 7.12절)
+	tabs.add_scroll_page("기억", [FragmentPanel.new()], func() -> bool: return Fragments.unlocked_count > 0)  # 기억의 서 (GDD 7.11절)
 
 	Achievements.stat_changed.connect(_gate.queue)
-	visibility_changed.connect(_on_visibility_changed)
+	column.visibility_changed.connect(_on_visibility_changed)
 	_refresh()
 
 
@@ -129,7 +137,7 @@ func _on_visibility_changed() -> void:
 
 ## 보일 때만 갱신한다. 보이는 동안의 달성은 (열려 있는 채로 달성한 것도) 본 것으로 친다
 func _refresh() -> void:
-	if not is_visible_in_tree():
+	if not _list_page.is_visible_in_tree():
 		return
 	if Achievements.has_unseen():
 		Achievements.mark_seen()

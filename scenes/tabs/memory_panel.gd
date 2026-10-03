@@ -1,0 +1,154 @@
+extends VBoxContainer
+## 회귀 탭의 [회귀] 칸 (GDD 7절): 결정과 기록, 회귀 버튼과 확인 창, 기억의 상점 7종. 다른 칸은 prestige_tab.gd가 칩으로 묶는다.
+## Prestige의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
+
+const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
+
+const TEXT_BLOCK_HEIGHT: float = 80.0  # 글 두 줄 높이
+const GAP: int = 10
+const ROW_PADDING: int = 10
+const NOTE_FONT_SIZE: int = 20
+const NOTE_COLOR := Color("b8b4c8")
+const CRYSTAL_COLOR := Color("7fd1f0")
+const BUTTON_HEIGHT: float = 72.0
+const SHOP_BUTTON_SIZE := Vector2(210, 64)
+const CONFIRM_SIZE := Vector2i(600, 300)
+
+var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
+var _summary: Label
+var _prestige_button: Button
+var _confirm: ConfirmationDialog
+var _titles: Array[Label] = []
+var _buttons: Array[Button] = []
+var _shown_minute: int = -1  # 판 시간은 분이 바뀔 때만 다시 쓴다
+
+
+func _ready() -> void:
+	_gate = RefreshGate.new(_refresh, self)
+	add_child(_gate)
+	add_theme_constant_override("separation", GAP)
+
+	_summary = Label.new()
+	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_summary.custom_minimum_size = Vector2(0.0, TEXT_BLOCK_HEIGHT)  # 두 줄로 접혀도 아래가 밀리지 않게
+	_summary.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_summary.add_theme_color_override("font_color", CRYSTAL_COLOR)
+	add_child(_summary)
+
+	_prestige_button = Button.new()
+	_prestige_button.custom_minimum_size = Vector2(0.0, BUTTON_HEIGHT)
+	_prestige_button.clip_text = true
+	_prestige_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_prestige_button.pressed.connect(_on_prestige_pressed)
+	add_child(_prestige_button)
+	for i in Balance.MEMORIES.size():
+		add_child(_make_row(i))
+
+	# 회귀 전에 받을 결정 수를 보여주는 확인 창 (GDD 7절)
+	_confirm = ConfirmationDialog.new()
+	_confirm.title = "회귀"
+	_confirm.ok_button_text = "회귀한다"
+	_confirm.cancel_button_text = "취소"
+	_confirm.dialog_autowrap = true  # 긴 설명이 창 밖으로 잘리지 않게
+	_confirm.confirmed.connect(Prestige.perform)
+	add_child(_confirm)
+
+	Prestige.crystals_changed.connect(_gate.queue)
+	Prestige.memory_changed.connect(_gate.queue)
+	Prestige.prestiged.connect(_gate.queue)
+	Game.stage_changed.connect(_gate.queue)
+	Game.run_started.connect(_gate.queue)  # Prestige가 판 기록을 바꾼 뒤 (먼저 연결돼 있다)
+	_refresh()
+
+
+## 판 시간이 흐르므로 보이는 동안 분이 바뀌면 요약을 다시 쓴다
+func _process(_delta: float) -> void:
+	var minute := floori(Prestige.run_seconds / 60.0)
+	if is_visible_in_tree() and minute != _shown_minute:
+		_refresh_summary()
+
+
+func _make_row(index: int) -> PanelContainer:
+	var panel := PanelContainer.new()
+	var margin := MarginContainer.new()
+	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		margin.add_theme_constant_override(side, ROW_PADDING)
+	panel.add_child(margin)
+	var row := HBoxContainer.new()
+	margin.add_child(row)
+
+	var text := VBoxContainer.new()
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(text)
+	var title := Label.new()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.add_child(title)
+	var note := Label.new()
+	note.text = Balance.memory_note(index)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", NOTE_FONT_SIZE)
+	note.add_theme_color_override("font_color", NOTE_COLOR)
+	text.add_child(note)
+
+	var button := Button.new()
+	button.custom_minimum_size = SHOP_BUTTON_SIZE
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.pressed.connect(Prestige.buy.bind(index))
+	row.add_child(button)
+
+	_titles.append(title)
+	_buttons.append(button)
+	return panel
+
+
+func _on_prestige_pressed() -> void:
+	if not Prestige.can_prestige():
+		return
+	_confirm.dialog_text = "기억의 결정 %s개를 받고 처음부터 시작합니다.\n\n초기화: 스테이지, 골드, 용사와 동료 레벨, 스킬 쿨타임\n유지: 기억의 결정, 상점 레벨, 기록" % Num.format(Prestige.crystal_reward())
+	_confirm.popup_centered(CONFIRM_SIZE)
+
+
+## 둘째 줄은 판 기록: 이번 판 시간과 지난 판 최고 대비 (회귀할지 판단하게. docs/LATEGAME_REFERENCES.md 3절)
+func _refresh_summary() -> void:
+	_shown_minute = floori(Prestige.run_seconds / 60.0)
+	var record := "이번 판 %d분" % _shown_minute
+	if Prestige.last_run_best > 0:
+		var gain := Prestige.run_gain()
+		record += "  ·  지난 판 최고 %d 대비 %s%d" % [Prestige.last_run_best, "+" if gain >= 0 else "−", absi(gain)]
+	else:
+		record += "  ·  첫 판"
+	_summary.text = "기억의 결정 %s  ·  회귀 %d회  ·  역대 최고 스테이지 %d\n%s" % [
+		Num.format(Prestige.crystals), Prestige.prestige_count, maxi(Prestige.best_stage, Game.highest_stage), record]  # 역대 기록은 회귀 때 굳으니 이번 판도 친다
+
+
+func _refresh() -> void:
+	_refresh_summary()
+	if Prestige.can_prestige():
+		# 가진 결정이 몇 배가 되는지 보여 "지금 회귀할까"를 계산할 수 있게 한다 (UX 점검 2026-10-02)
+		var reward := Prestige.crystal_reward()
+		if Prestige.crystals > 0.0:
+			_prestige_button.text = "회귀  ·  결정 %s → %s (%s)" % [Num.format(Prestige.crystals),
+				Num.format(Prestige.crystals + reward), Num.multiplier((Prestige.crystals + reward) / Prestige.crystals)]
+		else:
+			_prestige_button.text = "회귀  (결정 +%s)" % Num.format(reward)
+		_prestige_button.disabled = false
+		_prestige_button.theme_type_variation = "AccentButton"
+	else:
+		_prestige_button.text = "회귀: 스테이지 %d 도달 시  (이번 판 최고 %d)" % [
+			Balance.PRESTIGE_MIN_STAGE, Game.highest_stage]
+		_prestige_button.disabled = true
+		_prestige_button.theme_type_variation = ""
+	for i in _buttons.size():
+		var cap := Balance.memory_max_level(i)
+		var level_text := "Lv %d / %d" % [Prestige.level(i), cap] if cap > 0 else "Lv %d" % Prestige.level(i)
+		var total := Balance.memory_total(i, Prestige.level(i))
+		_titles[i].text = "%s  %s" % [Balance.memory_name(i), level_text] + ("  ·  지금 " + total if not total.is_empty() else "")
+		if Prestige.is_maxed(i):
+			_buttons[i].text = "최대"
+			_buttons[i].disabled = true
+		else:
+			_buttons[i].text = "구매 (%s 결정)" % Num.format(Prestige.memory_cost(i))
+			_buttons[i].disabled = not Prestige.can_buy(i)

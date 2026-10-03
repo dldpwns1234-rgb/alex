@@ -8,7 +8,6 @@ const GAP: int = 10
 const ROW_PADDING: int = 10
 const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
-const HEADER_COLOR := Color("ffe66d")
 const STAR_COLOR := Color("fff3b0")
 const BUTTON_HEIGHT: float = 72.0
 const SHOP_BUTTON_SIZE := Vector2(210, 64)
@@ -28,10 +27,6 @@ func _ready() -> void:
 	_gate = RefreshGate.new(_refresh, self, true)
 	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
-	var header := Label.new()
-	header.text = "초월"
-	header.add_theme_color_override("font_color", HEADER_COLOR)
-	add_child(header)
 
 	_summary = Label.new()
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

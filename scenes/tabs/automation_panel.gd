@@ -8,7 +8,6 @@ const ROW_PADDING: int = 10
 const ROW_HEIGHT: float = 92.0  # 제목 한 줄 + 설명 한 줄. 글이 바뀌어도 줄 높이가 변하지 않는다
 const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
-const HEADER_COLOR := Color("ffe66d")
 const TOGGLE_SIZE := Vector2(130, 56)
 
 var _gate: RefreshGate  # 시그널이 오면 표시만, 보일 때 프레임당 한 번 갱신
@@ -21,10 +20,6 @@ func _ready() -> void:
 	_gate = RefreshGate.new(_refresh, self, true)
 	add_child(_gate)
 	add_theme_constant_override("separation", GAP)
-	var header := Label.new()
-	header.text = "자동화"
-	header.add_theme_color_override("font_color", HEADER_COLOR)
-	add_child(header)
 	for kind in Balance.AUTO_NAMES.size():
 		add_child(_make_row(kind))
 	Automation.settings_changed.connect(_gate.queue)
