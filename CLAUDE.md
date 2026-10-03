@@ -68,7 +68,7 @@ res://
     battle/      battle(배치, 탭 공격, 연출 타이밍), monster_view(몬스터, 체력바, 피해 숫자), party_view(용사와 동료 4명), boss_controls(보스 도전·자동 재도전), tower_controls(시련의 탑 입구), abyss_controls(그 위의 심연 입구·확인 창, 심연 안의 저주 줄), treasure_view(보물 요정 비행·잡기, 축복 남은 시간)
                  actor(인물 하나의 그림과 Tween 연출), backdrop(지역별 배경, 마왕성 성벽), zones(스테이지→몬스터 종류·색조·팔레트, 마왕성과 마왕)
                  stage(흔들리는 무대, 자국·불꽃을 띄우고 개수 상한), slash_fx(검격 자국 플립북, 프레임 6장), impact_fx(접촉 불꽃과 처치 고리)
-    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training, prestige(하위 탭: memory_panel 회귀, rebirth_panel 환생, transcend_panel 초월, abyss_panel 심연 각인, automation_panel 자동), achievements(하위 탭: 업적, challenge_panel 도전, trial_panel 시련, fragment_panel 기억의 서), settings(+sound_panel 소리). 하위 탭(칩 줄)은 sub_tabs, 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
+    tabs/        hero(레벨업, 장비 3칸의 강화·제작), party, training(하위 탭: 주인 6명), prestige(하위 탭: memory_panel 회귀, rebirth_panel 환생, transcend_panel 초월, abyss_panel 심연 각인, automation_panel 자동), achievements(하위 탭: 업적, challenge_panel 도전, trial_panel 시련, fragment_panel 기억의 서), settings(+sound_panel 소리). 하위 탭(칩 줄)은 sub_tabs, 스크롤 목록은 tap_scroll(버튼 위에서도 끌어 스크롤, 탭 판정)을 쓴다
   assets/fonts/  한글 폰트만 둔다 (고도 기본 폰트에 한글이 없어서 웹에서 네모로 나온다)
   assets/sprites/ 손으로 짠 SVG 캐릭터(용사, 동료 5), monsters/(6종 + 마왕성 3종 + 마왕), fx/(왕관, 파편, 검격 프레임 slash_0~5, 보물 요정), ui/(아이콘). .import 파일도 커밋한다 (svg/scale 1.5, 밉맵)
   tools/make_slash_frames.gd  검격 프레임 생성기. slash_N.svg는 손으로 고치지 않는다: 상수를 고치고 다시 만든다 (`--script tools/make_slash_frames.gd`)

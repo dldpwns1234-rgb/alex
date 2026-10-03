@@ -1,9 +1,10 @@
 extends MarginContainer
-## 단련 탭 (GDD 6.5절): 주인별로 묶은 단련 25종의 해금·강화. 줄은 코드로 생성한다.
+## 단련 탭 (GDD 6.5절): 단련 30종의 해금·강화를 주인별 칩 [용사][전사][궁수][마법사][성직자][용기사]으로 나눈다 (sub_tabs.gd, 방장 2026-10-03).
+## 동료 칩은 고용한 뒤에 보이고, 살 수 있는 단련이 있는 주인의 칩엔 점. 줄은 코드로 생성한다.
 ## Training의 함수만 부르고 표시만 한다. 아래 상수는 배치용이다.
 
 const RefreshGate := preload("res://scenes/tabs/refresh_gate.gd")
-const TapScroll := preload("res://scenes/tabs/tap_scroll.gd")
+const SubTabs := preload("res://scenes/tabs/sub_tabs.gd")
 
 const MARGIN: int = 16
 const GAP: int = 8
@@ -11,7 +12,6 @@ const ROW_PADDING: int = 10
 const NOTE_FONT_SIZE: int = 20
 const NOTE_COLOR := Color("b8b4c8")
 const LOCKED_COLOR := Color("7a7690")
-const HEADER_COLOR := Color("ffe66d")
 const BUTTON_SIZE := Vector2(230, 64)
 const ROW_HEIGHT: float = 128.0  # 설명이 두 줄이 되어도 줄 높이가 변하지 않게 (버튼 자리가 움직이면 누르기 불편하다)
 
@@ -26,21 +26,18 @@ func _ready() -> void:
 	add_child(_gate)
 	for side: String in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
 		add_theme_constant_override(side, MARGIN)
-	var scroll := TapScroll.new()  # 버튼 위에서 시작한 드래그도 스크롤되게 (모바일)
-	add_child(scroll)
-	var column := VBoxContainer.new()
-	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", GAP)
-	scroll.add_child(column)
-
-	var last_owner := -2
+	var owners: Array[int] = []
+	var rows: Dictionary = {}  # 주인 → 그 주인의 단련 줄
 	for i in Balance.TRAININGS.size():
 		var owner := Balance.training_owner(i)
-		if owner != last_owner:
-			last_owner = owner
-			column.add_child(_make_header(Balance.owner_name(owner)))
-		column.add_child(_make_row(i))
-	scroll.release_buttons()
+		if not rows.has(owner):
+			owners.append(owner)
+			rows[owner] = [] as Array[Control]
+		(rows[owner] as Array[Control]).append(_make_row(i))  # 줄 번호가 단련 번호와 같게 순서대로 만든다
+	var tabs := SubTabs.new()
+	add_child(tabs)
+	for owner in owners:
+		tabs.add_scroll_page(Balance.owner_name(owner), rows[owner], _owner_open.bind(owner), _owner_dot.bind(owner))
 
 	Game.gold_changed.connect(_gate.queue)
 	Training.training_changed.connect(_gate.queue)
@@ -50,11 +47,16 @@ func _ready() -> void:
 	_refresh()
 
 
-func _make_header(text: String) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_color_override("font_color", HEADER_COLOR)
-	return label
+## 용사는 늘, 동료는 고용한 뒤에 칩이 보인다
+func _owner_open(owner: int) -> bool:
+	return owner == Balance.OWNER_HERO or Party.is_companion_hired(owner)
+
+
+func _owner_dot(owner: int) -> bool:
+	for i in Balance.TRAININGS.size():
+		if Balance.training_owner(i) == owner and Training.can_buy(i):
+			return true
+	return false
 
 
 func _make_row(index: int) -> PanelContainer:
