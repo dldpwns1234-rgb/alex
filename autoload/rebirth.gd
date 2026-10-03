@@ -121,7 +121,7 @@ func buy(index: int) -> bool:
 
 ## 숙명 × 별의 축복 (초월, GDD 7.12절). Party가 클릭과 동료 피해에 곱한다
 func damage_multiplier() -> float:
-	return Balance.destiny_multiplier(level(Balance.Fate.DESTINY)) * Transcend.damage_multiplier()
+	return minf(Balance.destiny_multiplier(level(Balance.Fate.DESTINY)) * Transcend.damage_multiplier(), Balance.MAX_NUMBER)
 
 
 func crystal_multiplier() -> float:

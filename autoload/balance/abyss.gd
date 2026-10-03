@@ -175,7 +175,7 @@ func mark_cost(index: int, level: int) -> float:
 
 
 func mark_power_multiplier(level: int) -> float:
-	return pow(MARK_POWER_MULTIPLIER, level)
+	return minf(pow(MARK_POWER_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 func mark_note(index: int) -> String:

@@ -49,15 +49,15 @@ func memory_max_level(index: int) -> int:
 
 ## 다음 레벨 비용: 2^현재 레벨 (1, 2, 4, 8…)
 func memory_cost(level: int) -> float:
-	return pow(MEMORY_COST_BASE, level)
+	return minf(pow(MEMORY_COST_BASE, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 func sword_multiplier(level: int) -> float:
-	return pow(SWORD_MULTIPLIER, level)
+	return minf(pow(SWORD_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 func gold_memory_multiplier(level: int) -> float:
-	return pow(GOLD_MEMORY_MULTIPLIER, level)
+	return minf(pow(GOLD_MEMORY_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 func sand_bonus(level: int) -> float:

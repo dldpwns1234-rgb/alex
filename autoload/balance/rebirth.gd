@@ -60,11 +60,11 @@ func fate_cost(level: int) -> float:
 
 
 func destiny_multiplier(level: int) -> float:
-	return pow(DESTINY_MULTIPLIER, level)
+	return minf(pow(DESTINY_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 func bond_multiplier(level: int) -> float:
-	return pow(BOND_MULTIPLIER, level)
+	return minf(pow(BOND_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 ## 회귀 뒤 시작 스테이지: 1 + 25 × 예지 레벨

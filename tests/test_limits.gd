@@ -9,6 +9,7 @@ func run() -> void:
 	_test_final_stage()
 	_test_tower_top()
 	_test_income_cap()
+	_test_huge_multipliers()
 	_fresh_run()
 
 
@@ -134,3 +135,22 @@ func _test_income_cap() -> void:
 	var before := Achievements.value(Balance.Stat.GOLD)
 	Save.grant_offline(3600.0)
 	_equal(is_finite(Achievements.value(Balance.Stat.GOLD) - before), true, "오프라인 보상도 상한 안")
+
+
+## 배율이 무한대가 되지 않는다 (숙명 3^L은 646레벨, 인연 2^L은 1024레벨에서 ∞였다). ∞와 0을 곱하면 NaN이 나서
+## 동료가 없는데도 DPS가 상한으로 읽히고, 운명의 상점에 '지금 ×∞'가 떴다 (방장 2026-10-03 무한대 점검)
+func _test_huge_multipliers() -> void:
+	_fresh_run()
+	for value: float in [Balance.destiny_multiplier(5000), Balance.bond_multiplier(5000), Balance.sword_multiplier(5000),
+			Balance.gold_memory_multiplier(5000), Balance.blessing_multiplier(500), Balance.memory_cost(5000)]:
+		_equal(is_inf(value) or is_nan(value), false, "큰 레벨의 배율도 유한하다")
+		_close(value, Balance.MAX_NUMBER, "상한에서 멈춘다")
+	Rebirth.fate_levels[Balance.Fate.DESTINY] = 5000
+	Transcend.star_levels[Balance.Star.BLESSING] = 500
+	_equal(is_inf(Rebirth.damage_multiplier()), false, "숙명 × 별의 축복도 유한하다")
+	_close(Party.party_dps(false), 0.0, "동료가 없으면 배율이 커도 DPS 0")
+	_close(Party.companion_dps(Balance.Companion.WARRIOR, false), 0.0, "안 고용한 동료는 0")
+	Party.companion_levels[Balance.Companion.WARRIOR] = 1
+	_close(Party.party_dps(false), Balance.MAX_NUMBER, "고용하면 상한까지")
+	_equal(Num.format(Balance.destiny_multiplier(5000)).contains("∞"), false, "표시에 ∞가 없다")
+	Transcend.reset()

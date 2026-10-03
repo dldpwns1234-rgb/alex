@@ -53,7 +53,7 @@ func shortcut_stages(level: int) -> int:
 
 
 func blessing_multiplier(level: int) -> float:
-	return pow(BLESSING_MULTIPLIER, level)
+	return minf(pow(BLESSING_MULTIPLIER, level), MAX_NUMBER)  # 레벨이 아주 높으면 무한대가 되어 0과 곱할 때 NaN이 난다
 
 
 ## 상점에 보여줄 레벨당 효과

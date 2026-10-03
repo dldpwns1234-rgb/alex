@@ -1,6 +1,5 @@
 extends "res://autoload/party/purchases.gd"
-## 용사와 동료의 레벨과 구매 (GDD 5·6절). 골드는 Game이 갖고 있어 Game.spend()로 치른다. 구매 배수와 구매 계산은 party/purchases.gd에.
-## Game이 200줄을 넘지 않도록 나눴다. 상태 변경은 Game과 Party의 함수로만 하고 UI는 표시만 한다.
+## 용사와 동료의 레벨과 구매 (GDD 5·6절). 골드는 Game이 갖고 있어 Game.spend()로 치른다. 구매 배수와 구매 계산은 party/purchases.gd에. Game이 200줄을 넘지 않도록 나눴다. 상태 변경은 Game과 Party의 함수로만 하고 UI는 표시만 한다.
 
 signal hero_changed(level: int)
 signal companion_changed(index: int, level: int)
@@ -92,12 +91,13 @@ func click_damage() -> float:
 	return minf(base + party_dps(boss) * Prestige.awakening_share() * Balance.awakening_factor(hero_level), Balance.MAX_NUMBER)
 
 
-## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지.
-## 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다. 홀로 서기 도전 중에는 0
+## 동료 DPS 합계 × 검술의 기억 × 단련 × 전투의 함성 (GDD 6절). boss는 현재 적이 보스인지. 오프라인 보상처럼 스킬을 빼고 볼 때는 with_skills를 끈다. 홀로 서기 도전 중에는 0
 func party_dps(boss: bool, with_skills: bool = true) -> float:
 	if Challenges.blocks_companions():
 		return 0.0
-	var dps := Balance.party_dps(companion_level_list(), boss, _mods()) * _party_bonus(boss)
+	var base := Balance.party_dps(companion_level_list(), boss, _mods())
+	if base <= 0.0: return 0.0  # 동료가 없으면 0. 배율이 ∞이면 0 × ∞ = NaN이 상한으로 읽혔다
+	var dps := base * _party_bonus(boss)
 	return minf(dps * Skills.party_multiplier() if with_skills else dps, Balance.MAX_NUMBER)
 
 
@@ -108,6 +108,7 @@ func companion_dps(index: int, boss: bool) -> float:
 	var mods := _mods()
 	var cleric := Balance.cleric_multiplier(companion_level(Balance.Companion.CLERIC), mods["cleric_buff"])
 	var dps := Balance.companion_dps(index, companion_level(index), boss, mods) * cleric
+	if dps <= 0.0: return 0.0  # 안 고용한 동료: 0 × ∞ = NaN을 막는다
 	return minf(dps * _party_bonus(boss) * Skills.party_multiplier(), Balance.MAX_NUMBER)
 
 
@@ -144,8 +145,7 @@ func hero_purchase() -> Purchase:
 	return _purchase(Balance.HERO_BASE_COST, hero_level)
 
 
-## mode를 주면 그 배수로 (고용은 늘 최대로 산다: 늦게 합류한 동료의 1레벨은 다른 동료에 비해 0에 가깝다)
-## 홀로 서기 도전 중에는 살 수 없다(affordable false): 버튼이 켜진 채 눌러도 반응이 없고 탭 점이 찍히던 것을 막는다
+## mode를 주면 그 배수로 (고용은 늘 최대로 산다: 늦게 합류한 동료의 1레벨은 다른 동료에 비해 0에 가깝다) 홀로 서기 도전 중에는 살 수 없다(affordable false): 버튼이 켜진 채 눌러도 반응이 없고 탭 점이 찍히던 것을 막는다
 func companion_purchase(index: int, mode: BuyMode = buy_mode) -> Purchase:
 	var purchase := _purchase(Balance.companion_base_cost(index), companion_levels[index], mode)
 	purchase.affordable = purchase.affordable and not Challenges.blocks_companions()
