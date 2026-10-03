@@ -43,7 +43,11 @@ func _test_auto_fates() -> void:
 
 	# 넉넉하면 다 찬 해금형은 건너뛰고 무한 운명은 계속 산다
 	Rebirth.add_threads(1000.0)
+	var levels_before := _total_levels()
 	Automation._process(FRAME)
+	_equal(_total_levels() - levels_before, Balance.AUTO_UPGRADE_BUYS_PER_FRAME, "한 프레임에 %d번까지 (실이 아주 많아도 멈추지 않게)" % Balance.AUTO_UPGRADE_BUYS_PER_FRAME)
+	for _i in 200:
+		Automation._process(FRAME)
 	for i in Balance.FATES.size():
 		_equal(Rebirth.can_buy(i), false, "%s: 살 수 있는 게 남지 않는다" % Balance.fate_name(i))
 	_equal(Rebirth.level(Balance.Fate.AUTO_UPGRADE), 1, "자동 강화는 1/1에서 멈춘다")
@@ -54,3 +58,10 @@ func _test_auto_fates() -> void:
 	_equal(Automation.is_enabled(F), true, "옛 저장은 운명 자동 구매가 켬")
 	_equal(Automation.is_enabled(Balance.Auto.TRAINING), false, "있는 값은 그대로")
 	Automation.reset()
+
+
+func _total_levels() -> int:
+	var total := 0
+	for level in Rebirth.fate_levels:
+		total += level
+	return total

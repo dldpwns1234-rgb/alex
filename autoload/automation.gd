@@ -99,9 +99,10 @@ func buy_memories() -> void:
 			return
 
 
-## 운명을 싼 것부터 산다 (같으면 앞의 것). 다 찬 운명(해금형 자동화 등)은 건너뛴다
+## 운명을 싼 것부터 산다 (같으면 앞의 것). 다 찬 운명(해금형 자동화 등)은 건너뛴다.
+## 한 프레임에 상한까지 (실이 아주 많으면 한 프레임에 끝없이 사서 게임이 멈췄다, 버그 점검 2026-10-03)
 func buy_fates() -> void:
-	while true:
+	for _i in Balance.AUTO_UPGRADE_BUYS_PER_FRAME:
 		var pick := -1
 		for i in Balance.FATES.size():
 			if Rebirth.can_buy(i) and (pick < 0 or Rebirth.fate_cost(i) < Rebirth.fate_cost(pick)):
