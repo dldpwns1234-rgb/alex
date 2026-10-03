@@ -66,7 +66,15 @@ func _test_fail_and_reset() -> void:
 	_equal(Game.stage, 31, "본편 스테이지 그대로")
 	_close(Game.monster_max_hp, Balance.enemy_hp(31), "본편 몬스터")
 	Abyss.failed.disconnect(_on_failed)
+	# 오프라인 보상은 본편 기준: 원정 중에 앱을 내려 둬도 저주·축복을 곱하지 않는다 (Save.grant_offline이 Abyss.outside로 잰다)
+	Party.companion_levels[Balance.Companion.WARRIOR] = 100
+	var outside: float = Save._offline_gold_per_second()
 	Abyss.enter()
+	Abyss.bond.fill(3)
+	Abyss.curses = [Balance.Curse.SLOW]
+	_equal(is_equal_approx(Save._offline_gold_per_second(), outside), false, "원정 안에서 그냥 재면 저주·축복이 든다")
+	_close(Abyss.outside(Save._offline_gold_per_second), outside, "오프라인 보상의 초당 골드 = 밖과 같다 (유대·느린 숨 빼고)")
+	_equal(Abyss.has_curse(Balance.Curse.SLOW), true, "잰 뒤에는 저주가 다시 듣는다")
 	Game.highest_stage = 150
 	_equal(Prestige.perform(), true, "심연 안에서 회귀")
 	_equal(Game.in_tower, false, "회귀하면 나온다")

@@ -45,6 +45,15 @@ func measure_damage() -> float:
 	return clampf(damage / Skills.party_multiplier(), Balance.ABYSS_MIN_BASE, Balance.MAX_NUMBER)
 
 
+## 저주·축복을 끈 채로 잰다 (오프라인 보상은 본편 기준이다. 원정 중에 앱을 내려 두면 축복이 곱해졌다, 버그 점검 2026-10-03)
+func outside(measure: Callable) -> Variant:
+	var was := _measuring
+	_measuring = true
+	var result: Variant = measure.call()
+	_measuring = was
+	return result
+
+
 ## 저주·축복이 듣는 때: 원정 중이고 Game이 이 모드로 싸우는 중 (회귀·초월로 막 빠져나온 순간이나 재는 동안은 아니다)
 func _live() -> bool:
 	return active and not _measuring and Game.in_tower and Game.dungeon == self

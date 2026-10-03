@@ -40,13 +40,12 @@ func _process(delta: float) -> void:
 		save_game()
 
 
-## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다. 동료 DPS와 처치 골드에 기억·업적·장비 효과는 넣고 스킬은 뺀다
+## 공백 시간을 오프라인 보상으로 바꾼다. 스테이지는 진행하지 않는다. 동료 DPS와 처치 골드에 기억·업적·장비 효과는 넣고 스킬은 뺀다.
+## 탑·심연 안이어도 본편 기준이다 (심연의 저주·축복은 빼고 잰다)
 func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
-	var dps := Party.party_dps(false, false)
-	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Game.gold_multiplier()
-	per_second *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
+	var per_second: float = Abyss.outside(_offline_gold_per_second)
 	var gold := Balance.offline_reward(per_second, seconds, Prestige.effect_level(Balance.Memory.NAP),
 		Training.value(Balance.Effect.OFFLINE_RATE))
 	if gold > 0.0:
@@ -55,6 +54,12 @@ func grant_offline(seconds: float) -> void:
 	# 시작할 때 불러오면서 부르면 아직 UI가 없으므로 프레임 끝에 알린다
 	offline_reward.emit.call_deferred(minf(seconds, Balance.OFFLINE_MAX_SECONDS), gold)
 	save_game()
+
+
+func _offline_gold_per_second() -> float:
+	var dps := Party.party_dps(false, false)
+	var per_second := Balance.offline_gold_per_second(Game.stage, dps, Game.respawn_delay()) * Game.gold_multiplier()
+	return per_second * (1.0 + Training.value(Balance.Effect.KILL_GOLD))
 
 
 ## 창이나 탭의 포커스를 잃을 때, 창을 닫을 때, 모바일에서 앱이 뒤로 갈 때 저장한다
