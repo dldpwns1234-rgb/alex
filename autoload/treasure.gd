@@ -76,7 +76,7 @@ func catch() -> bool:
 	var amount := 0.0
 	match reward:
 		Reward.GOLD:
-			amount = Balance.treasure_gold(Game.stage, Game.gold_multiplier())
+			amount = Balance.cap(Balance.treasure_gold(Game.stage, Game.gold_multiplier()))
 			Game.add_gold(amount)
 		Reward.COOLDOWN:
 			Skills.reset_cooldowns()

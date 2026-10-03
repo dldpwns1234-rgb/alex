@@ -157,6 +157,7 @@ func _award_kill() -> float:
 	reward *= 1.0 + Training.value(Balance.Effect.KILL_GOLD)
 	if is_boss_stage():
 		reward *= 1.0 + Training.value(Balance.Effect.BOSS_GOLD)
+	reward = Balance.cap(reward)  # 후반엔 체력 ÷ 15 × 황금의 기억이 1.8e308을 넘는다
 	gold = minf(gold + reward, Balance.MAX_NUMBER)
 	gold_changed.emit(gold)
 	return reward

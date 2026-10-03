@@ -46,8 +46,8 @@ func grant_offline(seconds: float) -> void:
 	if seconds < Balance.OFFLINE_MIN_GAP:
 		return
 	var per_second: float = Abyss.outside(_offline_gold_per_second)
-	var gold := Balance.offline_reward(per_second, seconds, Prestige.effect_level(Balance.Memory.NAP),
-		Training.value(Balance.Effect.OFFLINE_RATE))
+	var gold := Balance.cap(Balance.offline_reward(per_second, seconds, Prestige.effect_level(Balance.Memory.NAP),
+		Training.value(Balance.Effect.OFFLINE_RATE)))
 	if gold > 0.0:
 		Game.add_gold(gold)
 		Achievements.add(Balance.Stat.GOLD, gold)

@@ -89,7 +89,7 @@ func can_prestige() -> bool:
 
 ## 지금 회귀하면 받을 결정 (인연과 맨몸의 회귀 보너스가 곱해진다)
 func crystal_reward() -> float:
-	return Balance.crystal_reward(Game.highest_stage) * Rebirth.crystal_multiplier() * Challenges.crystal_multiplier()
+	return Balance.cap(Balance.crystal_reward(Game.highest_stage) * Rebirth.crystal_multiplier() * Challenges.crystal_multiplier())
 
 
 ## 회귀: 결정을 받고 새 판을 시작한다. 결정, 상점 레벨, 통계, 업적, 장비는 남는다

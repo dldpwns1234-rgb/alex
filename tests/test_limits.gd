@@ -8,6 +8,7 @@ func run() -> void:
 	_test_load_clamps()
 	_test_final_stage()
 	_test_tower_top()
+	_test_income_cap()
 	_fresh_run()
 
 
@@ -113,3 +114,23 @@ func _test_tower_top() -> void:
 	_equal(Game.in_tower, false, "꼭대기를 돌파하면 본편으로")
 	_equal(Tower.best_floor, Balance.tower_max_floor(), "최고층 기록")
 	_equal(Tower.can_enter(), false, "더 오를 곳이 없다")
+
+
+## 수입·보상 글도 상한 안에서: 처치 골드 = 체력(1e291) ÷ 15 × 황금의 기억이 1.8e308을 넘어 금화 수입이 ∞로 보였다 (방장 2026-10-03)
+func _test_income_cap() -> void:
+	_close(Balance.cap(INF), Balance.MAX_NUMBER, "∞는 상한으로")
+	_close(Balance.cap(0.0 * INF), 0.0, "0 × ∞(NaN)는 0으로")
+	_fresh_run()
+	Prestige.memory_levels[Balance.Memory.GOLD] = 600
+	Rebirth.fate_levels[Balance.Fate.BOND] = 400
+	Game.stage = Balance.FINAL_STAGE - 1
+	Game.highest_stage = Balance.FINAL_STAGE - 1
+	Game._spawn_monster()
+	var reward := Game._award_kill()
+	_equal(is_finite(reward) and reward <= Balance.MAX_NUMBER, true, "처치 골드는 상한 안")
+	_close(Game.gold, Balance.MAX_NUMBER, "가진 골드는 상한")
+	_equal(is_finite(Prestige.crystal_reward()), true, "회귀 보상 결정도 상한 안 (인연 2^400)")
+	Party.companion_levels[Balance.Companion.WARRIOR] = 5000
+	var before := Achievements.value(Balance.Stat.GOLD)
+	Save.grant_offline(3600.0)
+	_equal(is_finite(Achievements.value(Balance.Stat.GOLD) - before), true, "오프라인 보상도 상한 안")

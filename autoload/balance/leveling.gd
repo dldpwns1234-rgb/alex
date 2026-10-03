@@ -21,6 +21,12 @@ const MAX_NUMBER: float = 1e300
 const MAX_LEVEL: int = 10000
 
 
+## 큰 수 상한: MAX_NUMBER에서 자르고, 0 × ∞ 같은 계산이 낸 NaN은 0으로 (minf(NaN, 상한)은 상한을 돌려준다).
+## 가진 양만 자르면 화면의 수입·보상 글에 ∞가 남는다 (방장 2026-10-03: 금화 수입이 ∞)
+func cap(value: float) -> float:
+	return 0.0 if is_nan(value) else minf(value, MAX_NUMBER)
+
+
 ## 마일스톤 수 m(L): 10레벨에 1, 이후 25레벨마다 +1
 func milestones(level: int) -> int:
 	var first := 1 if level >= MILESTONE_FIRST_LEVEL else 0
