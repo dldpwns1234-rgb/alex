@@ -26,8 +26,8 @@ const FORESIGHT_STAGES: int = 25          # 예지: 레벨당 회귀 후 시작 
 # 환생 직후 검술을 잃어도 50스테이지쯤이라 여유 150 안이다. 도전 판은 목표를 건너뛰지 않게 도약을 쉰다
 const LEAP_BASE_GAP: int = 550
 const LEAP_GAP_PER_LEVEL: int = 50
-enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE, REBIRTH, TRAINING }  # Automation의 토글. 자동 회귀 운명이 앞 둘을, 자동 스킬이 하나, 자동 강화가 동료·단련 둘을, 자동 환생은 별의 상점이 연다. 저장 순서라 뒤에만 붙인다
-const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화", "자동 환생", "단련 자동 구매"]
+enum Auto { PRESTIGE, MEMORIES, SKILLS, UPGRADE, REBIRTH, TRAINING, FATES }  # Automation의 토글. 자동 회귀 운명이 앞 둘과 운명 자동 구매를, 자동 스킬이 하나, 자동 강화가 동료·단련 둘을, 자동 환생은 별의 상점이 연다. 저장 순서라 뒤에만 붙인다
+const AUTO_NAMES: Array[String] = ["자동 회귀", "결정 자동 구매", "스킬 자동 사용", "동료 자동 강화", "자동 환생", "단련 자동 구매", "운명 자동 구매"]
 const AUTO_UPGRADE_BUYS_PER_FRAME: int = 10  # 동료 자동 강화: 한 프레임에 사는 횟수 상한 (유산·오프라인 골드를 몇 프레임에 나눠 쓴다)
 const AUTO_TRAINING_GOLD_SHARE: float = 0.1  # 단련 자동 구매: 다음 레벨 비용이 가진 골드의 이 몫 이하인 단련을 싼 것부터 (동료 강화에 쓸 골드를 남긴다)
 const AUTO_PRESTIGE_STALL: float = 30.0   # 자동 회귀: 최고 스테이지가 이만큼(초) 오르지 않으면 회귀 (13절의 사람 정책)
@@ -153,4 +153,6 @@ func auto_note(kind: int) -> String:
 			return "환생할 수 있고 %d초 안 오르면 회귀 대신 환생" % roundi(AUTO_PRESTIGE_STALL)
 		Auto.TRAINING:
 			return "골드의 %d%% 이하인 단련을 싼 것부터 산다" % roundi(AUTO_TRAINING_GOLD_SHARE * 100.0)
+		Auto.FATES:
+			return "운명의 실이 생기면 운명을 싼 것부터 산다"
 	return "살 수 있는 것 중 골드 효율 최고를 산다"

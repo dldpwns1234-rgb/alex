@@ -117,9 +117,9 @@ func _test_save() -> void:
 	_equal(Automation.is_enabled(Balance.Auto.MEMORIES), false, "설정 복원")
 	_equal(Automation.is_enabled(Balance.Auto.PRESTIGE), true, "다른 설정은 켬")
 	Save.from_dict({"save_version": 1})
-	_equal(Automation.enabled, [true, true, true, true, true, true], "옛 저장은 전부 켬")
+	_equal(Automation.enabled, [true, true, true, true, true, true, true], "옛 저장은 전부 켬")
 	Save.from_dict({"save_version": 1, "automation": {"enabled": [false]}})
-	_equal(Automation.enabled, [false, true, true, true, true, true], "짧은 배열은 앞만 적용")
+	_equal(Automation.enabled, [false, true, true, true, true, true, true], "짧은 배열은 앞만 적용")
 
 
 ## Automation과 Game의 프레임을 함께 돌린다

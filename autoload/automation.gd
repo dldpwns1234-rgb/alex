@@ -1,5 +1,5 @@
 extends Node
-## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화, 단련 자동 구매. 운명의 상점에서 해금했을 때만 동작한다.
+## 자동화 (GDD 7.7절 운명의 상점): 자동 회귀, 결정 자동 구매, 스킬 자동 사용, 동료 자동 강화, 단련 자동 구매, 운명 자동 구매. 운명의 상점에서 해금했을 때만 동작한다.
 ## 켜고 끄는 설정은 저장되고 회귀·환생해도 남는다 (데이터 초기화에서만 기본값으로). 상태 변경은 Prestige·Skills·Party·Promotions의 함수로만 한다.
 
 signal settings_changed()
@@ -32,6 +32,8 @@ func _process(delta: float) -> void:
 		buy_trainings()  # 동료 강화보다 먼저: 동료 강화는 살 수 있는 만큼 다 써서 뒤에 오면 단련 몫이 남지 않는다
 	if is_active(Balance.Auto.UPGRADE):
 		upgrade_companions()
+	if is_active(Balance.Auto.FATES):
+		buy_fates()  # 실은 환생·탑 보상으로만 들어와서 대개 바로 돌아간다
 
 
 ## 데이터 초기화에서만 부른다 (회귀·환생은 설정을 남긴다)
@@ -94,6 +96,17 @@ func buy_memories() -> void:
 			if Prestige.can_buy(i) and (pick < 0 or Prestige.memory_cost(i) < Prestige.memory_cost(pick)):
 				pick = i
 		if pick < 0 or not Prestige.buy(pick):
+			return
+
+
+## 운명을 싼 것부터 산다 (같으면 앞의 것). 다 찬 운명(해금형 자동화 등)은 건너뛴다
+func buy_fates() -> void:
+	while true:
+		var pick := -1
+		for i in Balance.FATES.size():
+			if Rebirth.can_buy(i) and (pick < 0 or Rebirth.fate_cost(i) < Rebirth.fate_cost(pick)):
+				pick = i
+		if pick < 0 or not Rebirth.buy(pick):
 			return
 
 
